@@ -9,12 +9,12 @@ carry on from that log's "Next steps".
 
 | Phase | Branch | Worktree | Log | Agent status |
 |---|---|---|---|---|
-| 3 Study Plan | `phase-3` | `D:/learning-harness-wt/phase-3` | `progress/phase-3.md` | not started |
-| 4 Teach | `phase-4` | `D:/learning-harness-wt/phase-4` | `progress/phase-4.md` | not started |
-| 5 Interactives | `phase-5` | `D:/learning-harness-wt/phase-5` | `progress/phase-5.md` | not started |
-| 6 Practice & Exams | `phase-6` | `D:/learning-harness-wt/phase-6` | `progress/phase-6.md` | not started |
-| 7 Retention | `phase-7` | `D:/learning-harness-wt/phase-7` | `progress/phase-7.md` | not started |
-| 8 Providers+ & usage | `phase-8` | `D:/learning-harness-wt/phase-8` | `progress/phase-8.md` | not started |
+| 3 Study Plan | `phase-3` | `D:/learning-harness-wt/phase-3` | `progress/phase-3.md` | running (started 2026-11-01) |
+| 4 Teach | `phase-4` | `D:/learning-harness-wt/phase-4` | `progress/phase-4.md` | running (started 2026-11-01) |
+| 5 Interactives | `phase-5` | `D:/learning-harness-wt/phase-5` | `progress/phase-5.md` | running (started 2026-11-01) |
+| 6 Practice & Exams | `phase-6` | `D:/learning-harness-wt/phase-6` | `progress/phase-6.md` | running (started 2026-11-01) |
+| 7 Retention | `phase-7` | `D:/learning-harness-wt/phase-7` | `progress/phase-7.md` | running (started 2026-11-01) |
+| 8 Providers+ & usage | `phase-8` | `D:/learning-harness-wt/phase-8` | `progress/phase-8.md` | running (started 2026-11-01) |
 | Merge | `main` | `D:/learning-harness` | this file | waiting |
 
 The coordinator (the session that started the agents) updates this table. Each agent keeps only its own log current.
