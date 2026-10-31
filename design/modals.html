@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Modals &amp; overlays — Distil</title>
+  <link rel="icon" href="assets/logo/distil-icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/brand.css">
+  <link rel="stylesheet" href="css/app.css">
+  <link rel="stylesheet" href="css/screens.css">
+</head>
+<body data-page="modals">
+<div class="app app--no-context">
+  <aside class="sb" data-sidebar aria-label="Sidebar"></aside>
+  <section class="main">
+    <header class="topbar">
+      <button class="btn btn--ghost btn--icon btn--sm topbar__menu" data-open-menu aria-label="Open menu"><svg class="icon icon--sm"><use href="#i-sidebar"/></svg></button>
+      <nav class="topbar__crumb"><strong>Modals &amp; overlays</strong><span class="hide-sm">· design gallery</span></nav>
+    </header>
+    <div class="scroll">
+      <div class="page page--wide">
+        <header class="page__head">
+          <p class="eyebrow">Design gallery</p>
+          <h1 class="display-lg" data-condense style="--condense-to:-.015em">Modals &amp; overlays</h1>
+          <p class="muted">Open each one. Esc always closes the topmost layer; focus returns to the button that opened it.</p>
+        </header>
+
+        <ol class="gallery">
+          <li><div><span class="num faint">01</span><strong>First run</strong><span class="caption muted">Three steps: connect a model, pick slots, create a subject (F1)</span></div><button class="btn btn--secondary btn--sm" data-dialog-open="onboard">Open</button></li>
+          <li><div><span class="num faint">02</span><strong>Command palette</strong><span class="caption muted">Ctrl K: jump to anything, run any action</span></div><button class="btn btn--secondary btn--sm" data-dialog-open="palette">Open</button></li>
+          <li><div><span class="num faint">03</span><strong>New folder</strong><span class="caption muted">Subject workspace; nesting depth shown</span></div><button class="btn btn--secondary btn--sm" data-dialog-open="new-folder">Open</button></li>
+          <li><div><span class="num faint">04</span><strong>Brief Compiler questions</strong><span class="caption muted">At most three, with Just go</span></div><button class="btn btn--secondary btn--sm" data-dialog-open="brief-q">Open</button></li>
+          <li><div><span class="num faint">05</span><strong>Pre-flight cost estimate</strong><span class="caption muted">Before large ingestion</span></div><a class="btn btn--secondary btn--sm" href="app-workspace.html">On Ledger page</a></li>
+          <li><div><span class="num faint">06</span><strong>Lesson recap</strong><span class="caption muted">End of a teach session</span></div><button class="btn btn--secondary btn--sm" data-dialog-open="recap">Open</button></li>
+          <li><div><span class="num faint">07</span><strong>Fully distilled</strong><span class="caption muted">The one celebration: coverage complete</span></div><button class="btn btn--secondary btn--sm" data-dialog-open="distilled">Open</button></li>
+          <li><div><span class="num faint">08</span><strong>Cap reached</strong><span class="caption muted">Hard stop at 100%</span></div><a class="btn btn--secondary btn--sm" href="app-usage.html">On Usage page</a></li>
+          <li><div><span class="num faint">09</span><strong>Google sign-in warning</strong><span class="caption muted">Experimental provider</span></div><a class="btn btn--secondary btn--sm" href="app-settings.html">On Settings page</a></li>
+          <li><div><span class="num faint">10</span><strong>Delete folder</strong><span class="caption muted">Moves to trash for 30 days</span></div><button class="btn btn--secondary btn--sm" data-dialog-open="delete-folder">Open</button></li>
+          <li><div><span class="num faint">11</span><strong>Toasts</strong><span class="caption muted">Inverted, bottom centre, max two</span></div><button class="btn btn--secondary btn--sm" data-toast="Chat moved to Unit 2 · Fourier." data-toast-action="Undo">Show</button></li>
+          <li><div><span class="num faint">12</span><strong>Error with a way out</strong><span class="caption muted">Model stopped mid-answer</span></div><button class="btn btn--secondary btn--sm" data-toast="The model stopped mid-answer (output limit)." data-toast-action="Continue">Show</button></li>
+        </ol>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- 01 Onboarding -->
+<div class="dialog-root" id="dlg-onboard" hidden>
+  <div class="dialog-scrim"></div>
+  <div class="dialog dialog--wide onboard" role="dialog" aria-modal="true" aria-labelledby="ob-t" data-onboard>
+    <button class="btn btn--ghost btn--icon btn--sm dialog__close" data-dialog-close aria-label="Close"><svg class="icon icon--sm"><use href="#i-x"/></svg></button>
+    <div class="onboard__steps"><span class="is-on"></span><span></span><span></span></div>
+    <section class="onboard__pane is-on" data-ob-step="0">
+      <div class="dialog__head"><p class="eyebrow">Step 1 of 3</p><h2 class="display-md" id="ob-t">Connect a model</h2><p class="muted body-sm">Distil runs on your own model account. Nothing is sent anywhere else.</p></div>
+      <div class="dialog__body">
+        <ul class="choose">
+          <li><label><input type="radio" name="prov" checked><span><strong>Google AI Studio</strong><span class="caption muted">Free API key in about 30 seconds</span></span><span class="chip chip--accent">Recommended</span></label></li>
+          <li><label><input type="radio" name="prov"><span><strong>Anthropic, OpenAI, OpenRouter…</strong><span class="caption muted">Paste an API key</span></span></label></li>
+          <li><label><input type="radio" name="prov"><span><strong>Local model</strong><span class="caption muted">Ollama, LM Studio or any compatible endpoint</span></span></label></li>
+          <li><label><input type="radio" name="prov"><span><strong>Sign in with Google</strong><span class="caption muted">No key. Risk of account restriction</span></span><span class="chip chip--danger">Experimental</span></label></li>
+        </ul>
+      </div>
+    </section>
+    <section class="onboard__pane" data-ob-step="1">
+      <div class="dialog__head"><p class="eyebrow">Step 2 of 3</p><h2 class="display-md">Pick your models</h2><p class="muted body-sm">Sensible defaults for Google AI Studio. Change them any time.</p></div>
+      <div class="dialog__body slots">
+        <label class="field"><span class="field__label">Strong</span><select class="select"><option>Gemini 3 Pro</option></select><span class="field__hint">Teaching, extraction, planning, grading</span></label>
+        <label class="field"><span class="field__label">Cheap</span><select class="select"><option>Gemini 3 Flash</option></select><span class="field__hint">Names, flashcards, briefs</span></label>
+      </div>
+    </section>
+    <section class="onboard__pane" data-ob-step="2">
+      <div class="dialog__head"><p class="eyebrow">Step 3 of 3</p><h2 class="display-md">What are you learning?</h2></div>
+      <div class="dialog__body">
+        <label class="field"><span class="field__label">Subject</span><input class="input" placeholder="e.g. Digital Signal Processing, or Learn Rust"></label>
+        <div class="dropzone"><svg class="icon"><use href="#i-upload"/></svg><span class="body-sm"><strong>Drop your material</strong>: syllabus, slides, notes, photos, links. Or leave it empty and Distil will research the topic.</span></div>
+      </div>
+    </section>
+    <div class="dialog__foot"><button class="btn btn--ghost spacer" data-ob-back>Back</button><button class="btn btn--primary" data-ob-next>Continue</button></div>
+  </div>
+</div>
+
+<!-- 02 Command palette -->
+<div class="dialog-root dialog-root--top" id="dlg-palette" hidden>
+  <div class="dialog-scrim"></div>
+  <div class="dialog palette" role="dialog" aria-modal="true" aria-label="Command palette">
+    <div class="palette__search"><svg class="icon"><use href="#i-search"/></svg><input class="palette__input" placeholder="Search chats, items, cards, or type a command…" value="fourier" autofocus></div>
+    <div class="palette__list">
+      <p class="eyebrow">Chats</p>
+      <a class="palette__row is-active" href="app-teach.html"><svg class="icon icon--sm"><use href="#i-book"/></svg><span><mark>Fourier</mark> series: Teaching</span><span class="caption faint">DSP · Unit 2</span></a>
+      <p class="eyebrow">Ledger items</p>
+      <a class="palette__row" href="app-workspace.html"><svg class="icon icon--sm"><use href="#i-list"/></svg><span><mark>Fourier</mark> coefficients, analysis equation</span><span class="anchor">p.10</span></a>
+      <a class="palette__row" href="app-workspace.html"><svg class="icon icon--sm"><use href="#i-list"/></svg><span><mark>Fourier</mark> transform pairs</span><span class="anchor">p.31</span></a>
+      <p class="eyebrow">Actions</p>
+      <button class="palette__row"><svg class="icon icon--sm"><use href="#i-target"/></svg><span>Make a practice set on <mark>Fourier</mark> series</span><span class="kbd">Enter</span></button>
+    </div>
+    <div class="palette__foot caption faint"><span><span class="kbd">↑</span> <span class="kbd">↓</span> move</span><span><span class="kbd">Enter</span> open</span><span><span class="kbd">Esc</span> close</span></div>
+  </div>
+</div>
+
+<!-- 03 New folder -->
+<div class="dialog-root" id="dlg-new-folder" hidden>
+  <div class="dialog-scrim"></div>
+  <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="nf-t">
+    <button class="btn btn--ghost btn--icon btn--sm dialog__close" data-dialog-close aria-label="Close"><svg class="icon icon--sm"><use href="#i-x"/></svg></button>
+    <div class="dialog__head"><p class="eyebrow">Semester 5 › DSP</p><h2 class="heading-lg" id="nf-t">New folder</h2></div>
+    <div class="dialog__body">
+      <label class="field"><span class="field__label">Name</span><input class="input" value="Unit 4 · Z-transform" autofocus></label>
+      <label class="check"><input type="checkbox" checked> Inherit materials from DSP</label>
+      <p class="caption faint">Level 3 of 5. Two more levels of folders can go inside this one.</p>
+    </div>
+    <div class="dialog__foot"><button class="btn btn--ghost" data-dialog-close>Cancel</button><button class="btn btn--primary" data-dialog-close data-toast="Folder created.">Create</button></div>
+  </div>
+</div>
+
+<!-- 04 Brief questions -->
+<div class="dialog-root" id="dlg-brief-q" hidden>
+  <div class="dialog-scrim"></div>
+  <div class="dialog dialog--wide" role="dialog" aria-modal="true" aria-labelledby="bq-t">
+    <div class="dialog__head"><p class="eyebrow">Study brief · 2 questions</p><h2 class="heading-lg" id="bq-t">Two things Distil couldn't work out</h2><p class="body-sm muted">Everything else is filled in. You can change it later.</p></div>
+    <div class="dialog__body">
+      <div class="bq"><p class="heading-sm">When is the exam?</p><div class="qchips"><button class="btn btn--secondary btn--sm">This week</button><button class="btn btn--secondary btn--sm">In 2 weeks</button><button class="btn btn--secondary btn--sm">Pick a date…</button><button class="btn btn--ghost btn--sm">No exam</button></div></div>
+      <div class="bq"><p class="heading-sm">Is the exam more numericals or theory?</p><div class="qchips"><button class="btn btn--secondary btn--sm" aria-pressed="true">Mostly numericals</button><button class="btn btn--secondary btn--sm">Mostly theory</button><button class="btn btn--secondary btn--sm">Even mix</button></div></div>
+      <dl class="bq-defaults"><div><dt>Goal</dt><dd>Pass DSP mid-sem, Unit 3</dd></div><div><dt>Level</dt><dd>Calculus yes, transforms new</dd></div><div><dt>Depth</dt><dd>Exam-ready</dd></div></dl>
+    </div>
+    <div class="dialog__foot"><button class="btn btn--ghost spacer" data-dialog-close>Just go with defaults</button><button class="btn btn--primary" data-dialog-close data-toast="Building your plan. 41 items to cover.">Build plan</button></div>
+  </div>
+</div>
+
+<!-- 06 Recap -->
+<div class="dialog-root" id="dlg-recap" hidden>
+  <div class="dialog-scrim"></div>
+  <div class="dialog dialog--wide" role="dialog" aria-modal="true" aria-labelledby="rc-t">
+    <button class="btn btn--ghost btn--icon btn--sm dialog__close" data-dialog-close aria-label="Close"><svg class="icon icon--sm"><use href="#i-x"/></svg></button>
+    <div class="dialog__head"><p class="eyebrow">Lesson complete · 34 min</p><h2 class="display-md" id="rc-t">Fourier series</h2></div>
+    <div class="dialog__body recap">
+      <div class="recap__cols">
+        <div><p class="eyebrow">Solid</p><ul><li>Synthesis and analysis equations</li><li>Why harmonics are orthogonal</li><li>Odd harmonics of a square wave</li></ul></div>
+        <div><p class="eyebrow" style="color:var(--warning)">Shaky</p><ul><li>Gibbs overshoot is about 9%, not 0%</li></ul></div>
+      </div>
+      <div class="coverage">
+        <div class="coverage__row"><span class="eyebrow">Taught</span><div class="coverage__track"><div class="coverage__fill" style="--v:100%"></div></div><span class="num">9/9</span></div>
+        <div class="coverage__row"><span class="eyebrow">Checked</span><div class="coverage__track"><div class="coverage__fill" style="--v:89%"></div></div><span class="num">8/9</span></div>
+      </div>
+      <p class="body-sm muted">6 flashcards added. Unit 2 coverage went from 34% to 56% checked.</p>
+    </div>
+    <div class="dialog__foot"><button class="btn btn--ghost spacer" data-dialog-close>Review the cards</button><button class="btn btn--accent" data-dialog-close>Next: Gibbs phenomenon</button></div>
+  </div>
+</div>
+
+<!-- 07 Fully distilled -->
+<div class="dialog-root" id="dlg-distilled" hidden>
+  <div class="dialog-scrim"></div>
+  <div class="dialog distilled" role="dialog" aria-modal="true" aria-labelledby="fd-t" data-distilled>
+    <div class="distilled__bars"><i></i><i></i><i></i></div>
+    <span class="distilled__drop"></span>
+    <h2 class="display-lg" id="fd-t">Fully distilled.</h2>
+    <p class="body-sm muted">All 41 items in Unit 2 are planned, taught and checked.</p>
+    <button class="btn btn--primary" data-dialog-close>Continue</button>
+  </div>
+</div>
+
+<!-- 10 Delete folder -->
+<div class="dialog-root" id="dlg-delete-folder" hidden>
+  <div class="dialog-scrim"></div>
+  <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="df-t">
+    <div class="dialog__head"><h2 class="heading-lg" id="df-t">Move "Operating Systems" to trash?</h2></div>
+    <div class="dialog__body"><p class="body-sm muted">2 subfolders, 6 chats, 4 files and 88 cards go with it. You can restore it from Trash for 30 days.</p></div>
+    <div class="dialog__foot"><button class="btn btn--ghost" data-dialog-close>Cancel</button><button class="btn btn--danger" data-dialog-close data-toast="Moved to trash." data-toast-action="Undo">Move to trash</button></div>
+  </div>
+</div>
+
+<script type="module" src="js/shell.js"></script>
+<script type="module" src="js/screens.js"></script>
+</body>
+</html>

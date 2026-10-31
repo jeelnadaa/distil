@@ -24,6 +24,7 @@ practice exams, flashcards, a knowledge graph and progress tracking.
 |---|---|
 | [plan.md](plan.md) | Full scope, decisions, feature IDs, phases |
 | [DESIGN.md](DESIGN.md) | UX flows, screens, visual system |
+| [design/](design/index.html) | Clickable mock-ups. Run `bash design/scripts/fetch-fonts.sh` once (Satoshi can't be committed), then `python -m http.server 4173 --directory design` |
 | [PROGRESS.md](PROGRESS.md) | Current status |
 | [AGENTS.md](AGENTS.md) | Rules for coding agents working on this repo |
 

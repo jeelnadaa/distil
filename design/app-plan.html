@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Digital Signal Processing · Plan — Distil</title>
+  <link rel="icon" href="assets/logo/distil-icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/brand.css">
+  <link rel="stylesheet" href="css/app.css">
+  <link rel="stylesheet" href="css/screens.css">
+</head>
+<body data-page="plan">
+<div class="app app--no-context">
+  <aside class="sb" data-sidebar aria-label="Sidebar"></aside>
+
+  <section class="main">
+    <header class="topbar">
+      <button class="btn btn--ghost btn--icon btn--sm topbar__menu" data-open-menu aria-label="Open menu"><svg class="icon icon--sm"><use href="#i-sidebar"/></svg></button>
+      <nav class="topbar__crumb"><span class="hide-sm">Semester 5</span><svg class="icon icon--sm hide-sm"><use href="#i-chevron-right"/></svg><strong>Digital Signal Processing</strong></nav>
+      <span class="topbar__spacer"></span>
+      <button class="btn btn--secondary btn--sm" data-dialog-open="brief"><svg class="icon icon--sm"><use href="#i-sliders"/></svg>Edit brief</button>
+    </header>
+
+    <div class="scroll">
+      <div class="page page--wide">
+        <header class="ws__head">
+          <h1 class="display-lg" data-condense style="--condense-to:-.015em">Digital Signal Processing</h1>
+          <p class="muted">12 lessons · 3 units · 211 of 214 items mapped · 6 study days left</p>
+        </header>
+        <nav class="subtabs" aria-label="Workspace">
+          <a href="#">Materials</a><a href="app-workspace.html">Ledger</a><a href="#" aria-current="page">Plan</a><a href="app-review.html">Deck</a><a href="#">Progress</a><a href="#">Chats</a>
+        </nav>
+
+        <div class="plan__bar">
+          <div class="segmented" data-plan-view><button aria-pressed="true" data-value="map">Map</button><button aria-pressed="false" data-value="outline">Outline</button></div>
+          <span class="caption faint">Deadline mode · 2 h a day · rebalanced this morning (+1 lesson ahead)</span>
+        </div>
+
+        <div class="sched" aria-label="Schedule">
+          <div class="sched__day is-past"><span class="eyebrow">Tue 28</span><i style="--w:1"></i></div>
+          <div class="sched__day is-past"><span class="eyebrow">Wed 29</span><i style="--w:2"></i></div>
+          <div class="sched__day is-past"><span class="eyebrow">Thu 30</span><i style="--w:2"></i></div>
+          <div class="sched__day is-today"><span class="eyebrow">Fri 31</span><i style="--w:2" class="is-now"></i></div>
+          <div class="sched__day"><span class="eyebrow">Sat 1</span><i style="--w:2"></i></div>
+          <div class="sched__day"><span class="eyebrow">Sun 2</span><i style="--w:1"></i></div>
+          <div class="sched__day"><span class="eyebrow">Mon 3</span><i style="--w:2"></i></div>
+          <div class="sched__day"><span class="eyebrow">Tue 4</span><i class="is-mock" style="--w:2"></i></div>
+          <div class="sched__day"><span class="eyebrow">Wed 5</span><i class="is-rev" style="--w:2"></i></div>
+          <div class="sched__day is-exam"><span class="eyebrow">Thu 6</span><span class="drop"></span></div>
+        </div>
+
+        <div class="plan-map panel" data-plan-panel="map">
+          <svg viewBox="0 0 980 420" class="pmap" role="img" aria-label="Lesson dependency map">
+            <g class="pmap__units">
+              <text x="20" y="28">UNIT 1 · SIGNALS</text><text x="350" y="28">UNIT 2 · FOURIER</text><text x="720" y="28">UNIT 3 · LAPLACE</text>
+              <line x1="330" y1="16" x2="330" y2="404"/><line x1="700" y1="16" x2="700" y2="404"/>
+            </g>
+            <g class="pmap__edges" fill="none">
+              <path d="M170 90 H190 V150 H210"/><path d="M170 210 H190 V150 H210"/><path d="M290 150 H310 V120 H360"/>
+              <path d="M290 150 H310 V260 H360"/><path d="M500 120 H530 V190 H560"/><path d="M500 260 H530 V190 H560"/>
+              <path d="M500 120 H530 V60 H560"/><path d="M640 190 H670 V150 H730"/><path d="M640 190 H670 V280 H730"/><path d="M870 150 H890 V215 H910"/><path d="M870 280 H890 V215 H910"/>
+            </g>
+            <g class="pmap__nodes">
+              <g class="is-done"><rect x="20" y="70" width="150" height="40" rx="8"/><text x="36" y="95">Signals &amp; systems</text></g>
+              <g class="is-done"><rect x="20" y="190" width="150" height="40" rx="8"/><text x="36" y="215">LTI &amp; impulse resp.</text></g>
+              <g class="is-done"><rect x="210" y="130" width="80" height="40" rx="8"/><text x="222" y="155">Convolution</text></g>
+              <g class="is-done"><rect x="360" y="100" width="140" height="40" rx="8"/><text x="376" y="125">Periodic signals</text></g>
+              <g class="is-current"><rect x="360" y="240" width="140" height="40" rx="8"/><text x="376" y="265">Fourier series</text><circle cx="500" cy="240" r="6"/></g>
+              <g class="is-next"><rect x="560" y="40" width="120" height="40" rx="8"/><text x="576" y="65">Gibbs</text></g>
+              <g class="is-next"><rect x="560" y="170" width="80" height="40" rx="8"/><text x="572" y="195">Parseval</text></g>
+              <g><rect x="730" y="130" width="140" height="40" rx="8"/><text x="746" y="155">Fourier transform</text></g>
+              <g><rect x="730" y="260" width="140" height="40" rx="8"/><text x="746" y="285">Sampling</text></g>
+              <g class="is-mock"><rect x="910" y="195" width="60" height="40" rx="8"/><text x="921" y="220">Mock</text></g>
+            </g>
+            <g class="pmap__counts">
+              <text x="160" y="125">14</text><text x="160" y="245">18</text><text x="490" y="155">9</text><text x="490" y="295">9</text>
+            </g>
+          </svg>
+          <div class="pmap__legend caption muted">
+            <span><i class="lg lg--done"></i>Done</span><span><i class="lg lg--current"></i>Current</span><span><i class="lg lg--next"></i>Next</span><span><i class="lg"></i>Upcoming</span>
+            <span class="spacer"></span><span class="mono">numbers = items per lesson</span>
+          </div>
+        </div>
+
+        <ol class="outline" data-plan-panel="outline" hidden>
+          <li class="outline__unit"><span class="eyebrow">Unit 1 · Signals &amp; systems</span><span class="caption faint">52 items · done</span></li>
+          <li class="outline__lesson is-done"><span class="num">L1</span><div><strong>Signals &amp; systems</strong><span class="caption muted">14 items · 40 min</span></div><span class="status status--checked"><i></i>Checked</span></li>
+          <li class="outline__lesson is-done"><span class="num">L2</span><div><strong>LTI systems and impulse response</strong><span class="caption muted">18 items · 45 min</span></div><span class="status status--checked"><i></i>Checked</span></li>
+          <li class="outline__lesson is-done"><span class="num">L3</span><div><strong>Convolution</strong><span class="caption muted">20 items · 50 min · 2 shaky</span></div><span class="status status--taught"><i></i>Taught</span></li>
+          <li class="outline__unit"><span class="eyebrow">Unit 2 · Fourier analysis</span><span class="caption faint">41 items</span></li>
+          <li class="outline__lesson is-done"><span class="num">L4</span><div><strong>Periodic signals</strong><span class="caption muted">9 items · 25 min</span></div><span class="status status--checked"><i></i>Checked</span></li>
+          <li class="outline__lesson is-current"><span class="num">L5</span><div><strong>Fourier series</strong><span class="caption muted">9 items · 35 min · in progress</span></div><a class="btn btn--accent btn--sm" href="app-teach.html">Continue</a></li>
+          <li class="outline__lesson"><span class="num">L6</span><div><strong>Gibbs phenomenon</strong><span class="caption muted">6 items · 20 min · simulation suggested</span></div><button class="btn btn--ghost btn--sm">Start</button></li>
+        </ol>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div class="dialog-root" id="dlg-brief" hidden>
+  <div class="dialog-scrim"></div>
+  <div class="dialog dialog--wide" role="dialog" aria-modal="true" aria-labelledby="br-t">
+    <button class="btn btn--ghost btn--icon btn--sm dialog__close" data-dialog-close aria-label="Close"><svg class="icon icon--sm"><use href="#i-x"/></svg></button>
+    <div class="dialog__head"><p class="eyebrow">Study brief</p><h2 class="heading-lg" id="br-t">What this plan is built for</h2></div>
+    <div class="dialog__body brief-form">
+      <label class="field"><span class="field__label">Goal</span><input class="input" value="Pass DSP mid-semester (Units 1–3)"></label>
+      <div class="brief-form__row">
+        <label class="field"><span class="field__label">Exam date</span><input class="input" type="date" value="2026-11-06"></label>
+        <label class="field"><span class="field__label">Hours per day</span><input class="input" type="number" value="2" min="0.5" step="0.5"></label>
+      </div>
+      <div class="field"><span class="field__label">Depth</span><div class="segmented"><button aria-pressed="false">Survey</button><button aria-pressed="false">Standard</button><button aria-pressed="true">Exam-ready</button><button aria-pressed="false">Mastery</button></div></div>
+      <label class="field"><span class="field__label">What you already know</span><textarea class="textarea" rows="2">Comfortable with calculus and complex numbers. New to transforms.</textarea><span class="field__hint">Inferred from your probe answers. Edit if it's wrong.</span></label>
+      <div class="field"><span class="field__label">A question Distil couldn't infer</span>
+        <div class="qchips"><span class="body-sm">Does your exam allow a formula sheet?</span><button class="btn btn--secondary btn--sm">Yes</button><button class="btn btn--secondary btn--sm">No</button><button class="btn btn--ghost btn--sm">Not sure</button></div>
+      </div>
+    </div>
+    <div class="dialog__foot"><span class="caption faint spacer">Changing the brief rebuilds the plan. Coverage is re-checked.</span><button class="btn btn--ghost" data-dialog-close>Cancel</button><button class="btn btn--primary" data-dialog-close data-toast="Plan rebuilt. 211 of 214 items mapped.">Rebuild plan</button></div>
+  </div>
+</div>
+
+<script type="module" src="js/shell.js"></script>
+<script type="module" src="js/screens.js"></script>
+</body>
+</html>

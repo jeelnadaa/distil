@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Distil — learn anything, miss nothing</title>
+  <meta name="description" content="Distil turns your syllabus, slides and notes into a study plan that covers every item, then teaches it, tests it and keeps it. Open source, local-first, bring your own model.">
+  <link rel="preload" href="assets/fonts/Satoshi-Variable.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/fonts/InstrumentSerif-Regular.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="icon" href="assets/logo/distil-icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/brand.css">
+  <link rel="stylesheet" href="css/landing.css">
+</head>
+<body class="landing">
+  <a class="skip" href="#main">Skip to content</a>
+
+  <header class="nav" data-nav>
+    <div class="nav__inner">
+      <a href="#top" class="nav__brand" data-slot="lockup" aria-label="Distil home"></a>
+      <nav class="nav__links" aria-label="Primary">
+        <a href="#how">How it works</a>
+        <a href="#coverage">Coverage</a>
+        <a href="#modes">Modes</a>
+        <a href="#keys">Your keys</a>
+      </nav>
+      <div class="nav__actions">
+        <button class="btn btn--ghost btn--icon btn--sm" data-theme-toggle aria-label="Toggle theme"></button>
+        <a class="btn btn--primary btn--sm" href="#download">Download</a>
+      </div>
+    </div>
+  </header>
+
+  <main id="main">
+    <!-- ============ HERO ============ -->
+    <section class="hero" id="top">
+      <div class="hero__copy">
+        <p class="eyebrow" data-reveal>Open source · Local-first · Bring your own model</p>
+        <h1 class="display-2xl hero__title" data-condense style="--condense-to:-.025em">Everything in your syllabus, <em>distilled.</em></h1>
+        <p class="hero__lede body-lg muted" data-reveal style="--i:2">
+          Drop in slides, PDFs, photos of notes or a YouTube lecture. Distil pulls out every formula,
+          definition and worked example, builds a plan that covers all of it, and teaches you until it
+          feels obvious.
+        </p>
+        <div class="hero__ctas" data-reveal style="--i:3">
+          <a class="btn btn--primary btn--lg" href="#download"><svg class="icon"><use href="#i-windows"/></svg>Download for Windows</a>
+          <a class="btn btn--ghost btn--lg" href="#how">See how it works<svg class="icon"><use href="#i-arrow-right"/></svg></a>
+        </div>
+        <p class="hero__meta mono faint" data-reveal style="--i:4">v0.1 preview · MIT · Windows, or any OS as a local web app</p>
+      </div>
+
+      <div class="still" data-still aria-label="Interactive demo: raw syllabus fragments are distilled into a ledger of learning items">
+        <div class="still__field" data-field>
+          <span class="still__label eyebrow">Raw material · unit2.pdf</span>
+        </div>
+        <div class="still__filter" data-filter aria-hidden="true"><span></span></div>
+        <div class="still__ledger">
+          <div class="still__ledger-head">
+            <span class="eyebrow">Coverage ledger</span>
+            <span class="mono"><span class="num" data-count>0</span><span class="faint"> / <span data-total>0</span> items</span></span>
+          </div>
+          <ol class="still__rows" data-rows></ol>
+          <div class="still__foot">
+            <div class="still__bar"><span data-bar></span></div>
+            <span class="still__done" data-done><span class="drop drop--lg"></span>Fully distilled</span>
+          </div>
+        </div>
+        <button class="btn btn--accent still__run" data-run>
+          <svg class="icon icon--sm"><use href="#i-play"/></svg><span>Distil this</span>
+        </button>
+        <p class="still__hint caption faint" data-hint>Move your cursor over the material to bring it into focus.</p>
+      </div>
+    </section>
+
+    <!-- ============ PROBLEM ============ -->
+    <section class="section brief" id="brief">
+      <div class="brief__copy">
+        <p class="eyebrow" data-reveal>The Brief Compiler</p>
+        <h2 class="display-xl" data-condense>Bad prompt in. <em>Best plan out.</em></h2>
+        <p class="body-lg muted" data-reveal>
+          You shouldn't need to be good at prompting to get a great plan. Distil turns whatever you type
+          into a complete study brief, asks at most three questions, and fills the rest with defaults you can see and change.
+        </p>
+      </div>
+      <div class="brief__demo" data-brief-demo>
+        <div class="brief__prompt">
+          <span class="eyebrow">You typed</span>
+          <p class="brief__typed mono"><span data-typed></span><span class="caret"></span></p>
+        </div>
+        <div class="brief__arrow" aria-hidden="true"><hr class="filter-line filter-line--accent"></div>
+        <dl class="brief__card panel">
+          <div class="brief__card-head"><span class="eyebrow">Study brief</span><span class="chip chip--accent">Compiled</span></div>
+          <div class="brief__field"><dt>Goal</dt><dd>Pass DSP mid-semester, Unit 3</dd></div>
+          <div class="brief__field"><dt>Scope</dt><dd>Unit 3 of <span class="anchor">syllabus.pdf · p.2</span> — 41 items</dd></div>
+          <div class="brief__field"><dt>Level</dt><dd>Comfortable with calculus, new to transforms</dd></div>
+          <div class="brief__field"><dt>Depth</dt><dd>Exam-ready · numericals-heavy</dd></div>
+          <div class="brief__field"><dt>Deadline</dt><dd>Thu 6 Nov · 2 h a day · 6 sessions</dd></div>
+          <div class="brief__field"><dt>Visuals</dt><dd>Balanced</dd></div>
+        </dl>
+      </div>
+    </section>
+
+    <!-- ============ HOW IT WORKS (scroll-driven) ============ -->
+    <section class="how" id="how" data-how>
+      <div class="how__sticky">
+        <div class="how__rail">
+          <p class="eyebrow">How it works</p>
+          <ol class="how__steps">
+            <li data-step="0"><span class="num">01</span><div><h3>Extract</h3><p>Every page is mined separately, then audited for anything missed.</p></div></li>
+            <li data-step="1"><span class="num">02</span><div><h3>Plan</h3><p>Items are ordered by what depends on what. The plan is checked in code to cover 100%.</p></div></li>
+            <li data-step="2"><span class="num">03</span><div><h3>Teach</h3><p>One reasoning step at a time, with a check after every step and repair before moving on.</p></div></li>
+            <li data-step="3"><span class="num">04</span><div><h3>Retain</h3><p>Flashcards on a spaced schedule, mock exams and a map of what you really know.</p></div></li>
+          </ol>
+          <div class="how__progress"><span data-how-progress></span></div>
+        </div>
+
+        <div class="how__stage" aria-hidden="true">
+          <!-- 1 Extract -->
+          <div class="scene scene--extract" data-scene="0">
+            <div class="pages">
+              <div class="page"><i></i><i></i><i></i><i></i><i></i></div>
+              <div class="page"><i></i><i></i><i></i><i></i><i></i></div>
+              <div class="page"><i></i><i></i><i></i><i></i><i></i></div>
+            </div>
+            <hr class="scene__filter">
+            <ul class="items">
+              <li><span class="chip">Formula</span>Euler's identity<span class="anchor">p.3</span></li>
+              <li><span class="chip">Definition</span>Periodic signal<span class="anchor">p.5</span></li>
+              <li><span class="chip">Theorem</span>Dirichlet conditions<span class="anchor">p.9</span></li>
+              <li><span class="chip">Example</span>Square wave series<span class="anchor">p.11</span></li>
+              <li><span class="chip">Procedure</span>Finding cₙ<span class="anchor">p.12</span></li>
+            </ul>
+          </div>
+          <!-- 2 Plan -->
+          <div class="scene scene--plan" data-scene="1">
+            <svg viewBox="0 0 520 320" class="dag">
+              <g class="dag__edges" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M120 60 C 180 60, 180 120, 240 120"/>
+                <path d="M120 180 C 180 180, 180 120, 240 120"/>
+                <path d="M120 180 C 180 180, 180 250, 240 250"/>
+                <path d="M340 120 C 380 120, 380 185, 420 185"/>
+                <path d="M340 250 C 380 250, 380 185, 420 185"/>
+              </g>
+              <g class="dag__nodes">
+                <g><rect x="20" y="40" width="100" height="40" rx="8"/><text x="70" y="65">Complex exp.</text></g>
+                <g><rect x="20" y="160" width="100" height="40" rx="8"/><text x="70" y="185">Periodicity</text></g>
+                <g class="is-current"><rect x="240" y="100" width="100" height="40" rx="8"/><text x="290" y="125">Fourier series</text><circle cx="340" cy="100" r="5"/></g>
+                <g><rect x="240" y="230" width="100" height="40" rx="8"/><text x="290" y="255">Dirichlet</text></g>
+                <g><rect x="420" y="165" width="90" height="40" rx="8"/><text x="465" y="190">Parseval</text></g>
+              </g>
+            </svg>
+            <div class="scene__badge mono"><span class="drop"></span>41 / 41 items mapped</div>
+          </div>
+          <!-- 3 Teach -->
+          <div class="scene scene--teach" data-scene="2">
+            <div class="check-mini panel">
+              <div class="check-mini__head"><span class="eyebrow">Check 3 / 7</span><span class="eyebrow">Teaching</span></div>
+              <p class="heading-sm">A square wave has only odd harmonics. Why?</p>
+              <ul>
+                <li><span class="kbd">1</span>It is periodic</li>
+                <li class="is-picked"><span class="kbd">2</span>It has half-wave symmetry</li>
+                <li><span class="kbd">3</span>Its mean is zero</li>
+              </ul>
+              <div class="check-mini__sweep"></div>
+              <p class="check-mini__ok caption"><svg class="icon icon--sm"><use href="#i-check"/></svg>Right, and you were sure. Next step: Parseval.</p>
+            </div>
+          </div>
+          <!-- 4 Retain -->
+          <div class="scene scene--retain" data-scene="3">
+            <div class="flash">
+              <div class="flash__inner">
+                <div class="flash__face flash__front"><span class="eyebrow">Card · Fourier</span><p class="display-md">Parseval's theorem</p></div>
+                <div class="flash__face flash__back"><span class="eyebrow">Answer</span><p class="math-block">P = Σ |c<sub>n</sub>|²</p></div>
+              </div>
+            </div>
+            <div class="heat" data-heat></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ COVERAGE (scrubbed) ============ -->
+    <section class="coverage-sec" id="coverage" data-cov>
+      <div class="coverage-sec__sticky">
+        <p class="eyebrow">Coverage Ledger</p>
+        <h2 class="display-xl">Miss <em>nothing.</em></h2>
+        <p class="body-lg muted coverage-sec__lede">Every item in your material is tracked three times: planned, taught and checked. Until all three are full, Distil tells you exactly what's left.</p>
+        <div class="cov-bars" data-cov-bars>
+          <div class="cov-bar"><span class="eyebrow">Planned</span><div class="cov-bar__track"><span data-cov-fill="0"></span></div><span class="num" data-cov-num="0">0%</span></div>
+          <div class="cov-bar"><span class="eyebrow">Taught</span><div class="cov-bar__track"><span data-cov-fill="1"></span></div><span class="num" data-cov-num="1">0%</span></div>
+          <div class="cov-bar"><span class="eyebrow">Checked</span><div class="cov-bar__track"><span data-cov-fill="2"></span></div><span class="num" data-cov-num="2">0%</span></div>
+          <div class="cov-drop" data-cov-drop><span class="drop"></span><span class="display-md">Fully distilled.</span></div>
+        </div>
+        <p class="mono faint coverage-sec__stats">214 items · 3 files · 0 missed</p>
+      </div>
+    </section>
+
+    <!-- ============ INTERACTIVES ============ -->
+    <section class="section touch" id="touch">
+      <div class="touch__copy">
+        <p class="eyebrow" data-reveal>Interactive learning</p>
+        <h2 class="display-xl" data-condense>Learn it by <em>touching</em> it.</h2>
+        <p class="body-lg muted" data-reveal>When a concept moves, Distil builds something you can move: plots, simulations, step-through derivations, small apps. Each one is tested before you see it.</p>
+        <div class="touch__dial" data-reveal>
+          <span class="eyebrow">How much?</span>
+          <div class="segmented" data-dial>
+            <button aria-pressed="false" data-value="text">Text-only</button>
+            <button aria-pressed="true" data-value="balanced">Balanced</button>
+            <button aria-pressed="false" data-value="visual">Visual-heavy</button>
+          </div>
+          <p class="caption muted" data-dial-note>Visuals only when a concept is dynamic, spatial or a process.</p>
+        </div>
+      </div>
+      <figure class="widget panel" data-reveal>
+        <figcaption class="widget__bar">
+          <span class="eyebrow">Simulation · Fourier series of a square wave</span>
+          <span class="widget__tools">
+            <span class="chip">v2</span>
+            <button class="btn btn--ghost btn--icon btn--sm" aria-label="Helpful"><svg class="icon icon--sm"><use href="#i-thumbs-up"/></svg></button>
+            <button class="btn btn--ghost btn--icon btn--sm" aria-label="Full screen"><svg class="icon icon--sm"><use href="#i-expand"/></svg></button>
+          </span>
+        </figcaption>
+        <canvas class="widget__canvas" data-fourier height="260" aria-label="Plot of a square wave approximated by a sum of sine harmonics"></canvas>
+        <div class="widget__controls">
+          <label class="widget__slider">
+            <span class="body-sm">Harmonics</span>
+            <input type="range" min="1" max="40" value="5" data-harmonics>
+            <span class="num" data-harmonics-out>5</span>
+          </label>
+          <label class="check"><input type="checkbox" data-components> Show components</label>
+        </div>
+      </figure>
+    </section>
+
+    <!-- ============ MODES ============ -->
+    <section class="section modes" id="modes">
+      <p class="eyebrow" data-reveal>Four ways to study</p>
+      <h2 class="display-xl" data-condense>One app. <em>No tab-hopping.</em></h2>
+      <ol class="modes__list">
+        <li data-reveal><span class="num faint">01</span><h3 class="display-md">Plan</h3><p class="muted">Units, lessons and steps in dependency order. Give it an exam date and it becomes a schedule that rebalances when life happens.</p><svg class="icon"><use href="#i-arrow-right"/></svg></li>
+        <li data-reveal><span class="num faint">02</span><h3 class="display-md">Teach</h3><p class="muted">It finds where your understanding ends, then builds from there, one step at a time, with a check after every step.</p><svg class="icon"><use href="#i-arrow-right"/></svg></li>
+        <li data-reveal><span class="num faint">03</span><h3 class="display-md">Practice</h3><p class="muted">Problem sets and timed mock exams in your course's style. Solutions and rubrics are written before you answer. Photograph handwritten work.</p><svg class="icon"><use href="#i-arrow-right"/></svg></li>
+        <li data-reveal><span class="num faint">04</span><h3 class="display-md">Ask</h3><p class="muted">Quick answers grounded in your own material, with the page each one came from.</p><svg class="icon"><use href="#i-arrow-right"/></svg></li>
+      </ol>
+    </section>
+
+    <!-- ============ RETAIN ============ -->
+    <section class="section retain">
+      <div class="retain__copy">
+        <p class="eyebrow" data-reveal>Retention</p>
+        <h2 class="display-xl" data-condense>Keep what <em>you learn.</em></h2>
+        <p class="body-lg muted" data-reveal>Cards made from what you were actually taught, reviewed on a spaced schedule. Mastery that fades if you stop reviewing, and a knowledge map that links every idea back to where you learned it.</p>
+      </div>
+      <div class="retain__panel panel" data-reveal>
+        <div class="retain__stats">
+          <div><span class="display-md num-display" data-count-to="18">0</span><span class="caption muted">cards due today</span></div>
+          <div><span class="display-md num-display" data-count-to="12">0</span><span class="caption muted">day streak</span></div>
+          <div><span class="display-md num-display" data-count-to="71">0</span><span class="caption muted">% mastered</span></div>
+        </div>
+        <div class="mastery" data-mastery aria-label="Mastery by lesson, darker is stronger"></div>
+        <div class="mastery__legend caption muted"><span>New</span><i></i><i></i><i></i><i></i><span>Mastered</span></div>
+      </div>
+    </section>
+
+    <!-- ============ KEYS ============ -->
+    <section class="section keys" id="keys">
+      <div class="keys__copy">
+        <p class="eyebrow" data-reveal>Your keys, your data</p>
+        <h2 class="display-xl" data-condense>Runs on <em>your</em> machine.</h2>
+        <ul class="keys__list">
+          <li data-reveal><svg class="icon"><use href="#i-key"/></svg><div><strong>Bring any model.</strong> Gemini, OpenAI, Anthropic, OpenRouter, DeepSeek, local models through Ollama, or any compatible endpoint.</div></li>
+          <li data-reveal><svg class="icon"><use href="#i-lock"/></svg><div><strong>Nothing leaves your disk</strong> except the requests you send to your own provider. No account, no tracking.</div></li>
+          <li data-reveal><svg class="icon"><use href="#i-chart"/></svg><div><strong>Every token counted.</strong> Live meters, daily and monthly graphs, and caps that warn at 80% and stop at 100%.</div></li>
+        </ul>
+      </div>
+      <div class="usage panel" data-reveal>
+        <div class="usage__head">
+          <span class="eyebrow">Tokens · last 14 days</span>
+          <span class="mono"><span class="num">1.84M</span> <span class="faint">/ 3M cap</span></span>
+        </div>
+        <svg class="usage__chart" viewBox="0 0 420 180" data-usage-chart role="img" aria-label="Stacked bar chart of daily input and output tokens with a cap line"></svg>
+        <div class="usage__legend caption">
+          <span><i style="background:var(--viz-1)"></i>Input</span>
+          <span><i style="background:var(--viz-2)"></i>Output</span>
+          <span><i style="background:var(--viz-3)"></i>Cached</span>
+          <span class="faint">- - Daily cap</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ CREDIT ============ -->
+    <section class="section credit">
+      <hr class="filter-line filter-line--faint">
+      <div class="credit__grid">
+        <p class="eyebrow">Standing on shoulders</p>
+        <p class="body-lg">Distil's teaching loop (probe, plan, teach one step, check, practise) and its knowledge graph build on ideas from <a href="https://github.com/amosblomqvist/learnharness">LearnHarness</a>. Distil is an independent implementation that adds material ingestion, an enforced coverage ledger, subject workspaces, schedules, flashcards and mock exams.</p>
+      </div>
+    </section>
+
+    <!-- ============ CTA ============ -->
+    <section class="cta" id="download">
+      <div class="cta__mark" data-slot="mark-animated"></div>
+      <h2 class="display-2xl" data-condense style="--condense-to:-.025em">Learn anything. <em>Miss nothing.</em></h2>
+      <div class="cta__actions">
+        <a class="btn btn--primary btn--lg" href="#"><svg class="icon"><use href="#i-windows"/></svg>Download for Windows</a>
+        <a class="btn btn--secondary btn--lg" href="#"><svg class="icon"><use href="#i-github"/></svg>Run from source</a>
+      </div>
+      <p class="mono faint">Free and open source. Pay only your model provider, or nothing with local models.</p>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <span data-slot="lockup-small"></span>
+    <nav class="footer__links caption muted" aria-label="Footer">
+      <a href="#">GitHub</a><a href="#">Docs</a><a href="#">Changelog</a><a href="#">Privacy</a>
+    </nav>
+    <span class="caption faint">MIT licence · made for people with exams on Thursday</span>
+  </footer>
+
+  <script type="module" src="js/landing.js"></script>
+</body>
+</html>

@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mock exam #1 — Distil</title>
+  <link rel="icon" href="assets/logo/distil-icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/brand.css">
+  <link rel="stylesheet" href="css/app.css">
+  <link rel="stylesheet" href="css/screens.css">
+</head>
+<body data-page="exam" class="exam-body">
+  <header class="exam-top">
+    <button class="btn btn--ghost btn--sm" data-dialog-open="leave-exam"><svg class="icon icon--sm"><use href="#i-x"/></svg>Exit</button>
+    <div class="exam-top__title"><span class="eyebrow">Mock exam #1 · Units 1–2 · Exam mode</span></div>
+    <div class="exam-top__right">
+      <span class="exam-timer num" data-timer aria-live="off">58:42</span>
+      <button class="btn btn--primary btn--sm" data-exam-submit>Submit paper</button>
+    </div>
+  </header>
+  <div class="exam-progress"><span style="--p:.4"></span></div>
+
+  <main class="exam" data-exam>
+    <nav class="exam-index" aria-label="Questions">
+      <span class="eyebrow">Section A · 20 marks</span>
+      <a href="#q1" class="is-done">1</a><a href="#q2" class="is-done">2</a><a href="#q3" aria-current="true">3</a><a href="#q4">4</a>
+      <span class="eyebrow">Section B · 30 marks</span>
+      <a href="#q5">5</a><a href="#q6" class="is-flag">6</a>
+    </nav>
+
+    <article class="exam-paper">
+      <section class="exam-q" id="q3">
+        <header><span class="eyebrow">Question 3 · 6 marks</span><button class="btn btn--ghost btn--sm"><svg class="icon icon--sm"><use href="#i-target"/></svg>Flag</button></header>
+        <p class="body-lg">A periodic signal x(t) with period T = 2 ms is defined over one period as x(t) = 1 for 0 ≤ t &lt; 1 ms and x(t) = −1 for 1 ≤ t &lt; 2 ms.</p>
+        <ol class="exam-parts" type="a">
+          <li><span>State whether x(t) satisfies the Dirichlet conditions. Justify briefly.</span><span class="num faint">[2]</span></li>
+          <li><span>Find the complex Fourier coefficients c<sub>n</sub>.</span><span class="num faint">[3]</span></li>
+          <li><span>Explain why c<sub>n</sub> = 0 for even n without computing the integral.</span><span class="num faint">[1]</span></li>
+        </ol>
+        <div class="answer">
+          <div class="answer__tabs segmented"><button aria-pressed="true">Type</button><button aria-pressed="false">Photo of handwriting</button></div>
+          <textarea class="textarea answer__box" rows="7" placeholder="Write your answer. Maths like c_n = 2/(jπn) is fine.">(a) Yes: one period has finitely many discontinuities (two jumps), it is bounded, and it is absolutely integrable.
+
+(b) c_n = (1/T) ∫ x(t) e^{-jnω₀t} dt …</textarea>
+          <div class="answer__foot"><span class="caption faint">Autosaved · 14:02</span><span class="caption faint">Hints are off in exam mode</span></div>
+        </div>
+      </section>
+    </article>
+  </main>
+
+  <!-- Report, shown after submit -->
+  <section class="report" data-report hidden>
+    <div class="report__inner">
+      <p class="eyebrow">Mock exam #1 · report</p>
+      <div class="report__score"><span class="display-xl num-display" data-score>0</span><span class="display-md faint">/ 50</span></div>
+      <p class="body-lg muted">Strong on Fourier, slower on convolution. 3 cards were added for what didn't come to mind.</p>
+      <div class="report__units">
+        <div class="coverage__row"><span class="eyebrow">Unit 1</span><div class="coverage__track"><div class="coverage__fill" style="--v:62%"></div></div><span class="num">62%</span></div>
+        <div class="coverage__row"><span class="eyebrow">Unit 2</span><div class="coverage__track"><div class="coverage__fill" style="--v:88%"></div></div><span class="num">88%</span></div>
+      </div>
+      <table class="table">
+        <thead><tr><th>Question</th><th>Time</th><th class="num">Score</th><th>Didn't come to mind</th></tr></thead>
+        <tbody>
+          <tr><td>1 · LTI properties</td><td class="mono">4:10</td><td class="num">4 / 4</td><td class="faint">—</td></tr>
+          <tr><td>2 · Convolution</td><td class="mono">11:32</td><td class="num">3 / 6</td><td>Flip-and-shift limits</td></tr>
+          <tr><td>3 · Fourier series</td><td class="mono">7:05</td><td class="num">6 / 6</td><td class="faint">—</td></tr>
+        </tbody>
+      </table>
+      <div class="report__actions"><button class="btn btn--accent btn--lg">Fix these: 2 weak items</button><a class="btn btn--ghost btn--lg" href="app-today.html">Back to Today</a></div>
+    </div>
+  </section>
+
+<div class="dialog-root" id="dlg-leave-exam" hidden>
+  <div class="dialog-scrim"></div>
+  <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="le-t">
+    <div class="dialog__head"><p class="eyebrow">Exam in progress</p><h2 class="heading-lg" id="le-t">Leave the exam?</h2></div>
+    <div class="dialog__body"><p class="body-sm muted">Your answers are saved and the timer pauses. You can come back to it from the sidebar.</p></div>
+    <div class="dialog__foot"><button class="btn btn--ghost" data-dialog-close>Keep going</button><a class="btn btn--primary" href="app-today.html">Pause and leave</a></div>
+  </div>
+</div>
+
+<script type="module" src="js/shell.js"></script>
+<script type="module" src="js/screens.js"></script>
+</body>
+</html>

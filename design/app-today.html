@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Today — Distil</title>
+  <link rel="icon" href="assets/logo/distil-icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/brand.css">
+  <link rel="stylesheet" href="css/app.css">
+  <link rel="stylesheet" href="css/screens.css">
+</head>
+<body data-page="today">
+<div class="app app--no-context">
+  <aside class="sb" data-sidebar aria-label="Sidebar"></aside>
+
+  <section class="main">
+    <header class="topbar">
+      <button class="btn btn--ghost btn--icon btn--sm topbar__menu" data-open-menu aria-label="Open menu"><svg class="icon icon--sm"><use href="#i-sidebar"/></svg></button>
+      <nav class="topbar__crumb"><strong>Today</strong></nav>
+      <span class="topbar__spacer"></span>
+      <span class="streak mono hide-sm"><svg class="icon icon--sm"><use href="#i-flame"/></svg>12-day streak</span>
+      <button class="meter meter--warn" data-dialog-open="cap-warn" title="Daily token cap"><span>171k / 220k today</span><span class="meter__track" style="--v:78%"><span></span></span></button>
+    </header>
+
+    <div class="scroll">
+      <div class="page page--wide today">
+        <header class="today__head">
+          <p class="eyebrow">Friday 31 October</p>
+          <h1 class="display-lg" data-condense style="--condense-to:-.015em">Thursday is the <em>DSP mid-sem.</em></h1>
+          <p class="body-lg muted">Two lessons and 18 cards today keeps you on schedule. You're 1 lesson ahead.</p>
+        </header>
+
+        <section class="upnext" data-reveal>
+          <div class="upnext__main">
+            <span class="eyebrow">Up next</span>
+            <h2 class="display-md">Fourier series</h2>
+            <p class="muted">Unit 2 · Lesson 4 of 12 · ~35 min · 9 items · you stopped at check 3</p>
+            <div class="upnext__actions">
+              <a class="btn btn--accent btn--lg" href="app-teach.html"><svg class="icon icon--sm"><use href="#i-play"/></svg>Continue lesson</a>
+              <a class="btn btn--ghost btn--lg" href="app-plan.html">See the plan</a>
+            </div>
+          </div>
+          <ol class="upnext__later">
+            <li><span class="num faint">2</span><div><strong>Gibbs phenomenon</strong><span class="caption muted">Unit 2 · ~20 min</span></div></li>
+            <li><span class="num faint">3</span><div><strong>18 flashcards</strong><span class="caption muted">Review · ~12 min</span></div></li>
+            <li><span class="num faint">4</span><div><strong>Practice set: convolution</strong><span class="caption muted">Weak spot · 5 problems</span></div></li>
+          </ol>
+        </section>
+
+        <div class="today__grid">
+          <section class="tcard" data-reveal style="--i:1">
+            <header><span class="eyebrow">Review</span><a class="btn btn--ghost btn--sm" href="app-review.html">Start<svg class="icon icon--sm"><use href="#i-arrow-right"/></svg></a></header>
+            <p class="display-md num-display">18</p>
+            <p class="caption muted">cards due · 6 new · ~12 min</p>
+            <div class="spark" aria-hidden="true"><i style="--h:.4"></i><i style="--h:.6"></i><i style="--h:.3"></i><i style="--h:.8"></i><i style="--h:.5"></i><i style="--h:.7"></i><i style="--h:1"></i></div>
+          </section>
+
+          <section class="tcard" data-reveal style="--i:2">
+            <header><span class="eyebrow">Weak spots</span></header>
+            <ul class="weak">
+              <li><span>Convolution integral</span><span class="status"><i></i>Shaky</span></li>
+              <li><span>Z-transform region of convergence</span><span class="status"><i></i>Shaky</span></li>
+              <li><span>Sampling theorem proof</span><span class="status status--taught"><i></i>Fading</span></li>
+            </ul>
+            <button class="btn btn--secondary btn--sm">Make a practice set</button>
+          </section>
+
+          <section class="tcard" data-reveal style="--i:3">
+            <header><span class="eyebrow">Digital Signal Processing</span><a class="btn btn--ghost btn--sm" href="app-workspace.html">Open</a></header>
+            <div class="coverage">
+              <div class="coverage__row"><span class="eyebrow">Planned</span><div class="coverage__track"><div class="coverage__fill" style="--v:100%"></div></div><span class="num">100%</span></div>
+              <div class="coverage__row"><span class="eyebrow">Taught</span><div class="coverage__track"><div class="coverage__fill" style="--v:48%"></div></div><span class="num">48%</span></div>
+              <div class="coverage__row"><span class="eyebrow">Checked</span><div class="coverage__track"><div class="coverage__fill" style="--v:31%"></div></div><span class="num">31%</span></div>
+            </div>
+            <p class="caption muted">214 items · exam in 6 days</p>
+          </section>
+        </div>
+
+        <section class="week" data-reveal>
+          <header class="week__head"><span class="eyebrow">This week</span><span class="caption faint">2 h a day · rebalances automatically</span></header>
+          <div class="week__days">
+            <div class="day is-today"><span class="eyebrow">Fri 31</span><b>Fourier series</b><b>Gibbs</b><i class="day__cards">18 cards</i></div>
+            <div class="day"><span class="eyebrow">Sat 1</span><b>Parseval</b><b>Fourier transform</b></div>
+            <div class="day"><span class="eyebrow">Sun 2</span><b>FT properties</b><i class="day__cards">24 cards</i></div>
+            <div class="day"><span class="eyebrow">Mon 3</span><b>Sampling</b><b>Aliasing</b></div>
+            <div class="day"><span class="eyebrow">Tue 4</span><b class="day__exam">Mock exam</b><i class="day__cards">Revision</i></div>
+            <div class="day"><span class="eyebrow">Wed 5</span><b>Weak spots</b><i class="day__cards">31 cards</i></div>
+            <div class="day day--exam"><span class="eyebrow">Thu 6</span><span class="drop drop--lg"></span><b>Mid-sem</b></div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div class="dialog-root" id="dlg-cap-warn" hidden>
+  <div class="dialog-scrim"></div>
+  <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="cw-t">
+    <button class="btn btn--ghost btn--icon btn--sm dialog__close" data-dialog-close aria-label="Close"><svg class="icon icon--sm"><use href="#i-x"/></svg></button>
+    <div class="dialog__head"><p class="eyebrow" style="color:var(--warning)">78% of today's cap</p><h2 class="heading-lg" id="cw-t">171k of 220k tokens used today</h2></div>
+    <div class="dialog__body"><p class="body-sm muted">Resets in 6 h 12 m. At 100% new requests stop until you raise the cap or it resets; running jobs pause instead of failing.</p></div>
+    <div class="dialog__foot"><a class="btn btn--ghost spacer" href="app-usage.html">Open usage</a><button class="btn btn--primary" data-dialog-close>OK</button></div>
+  </div>
+</div>
+
+<script type="module" src="js/shell.js"></script>
+<script type="module" src="js/screens.js"></script>
+</body>
+</html>

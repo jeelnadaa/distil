@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Usage — Distil</title>
+  <link rel="icon" href="assets/logo/distil-icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/brand.css">
+  <link rel="stylesheet" href="css/app.css">
+  <link rel="stylesheet" href="css/screens.css">
+</head>
+<body data-page="usage">
+<div class="app app--no-context">
+  <aside class="sb" data-sidebar aria-label="Sidebar"></aside>
+  <section class="main">
+    <header class="topbar">
+      <button class="btn btn--ghost btn--icon btn--sm topbar__menu" data-open-menu aria-label="Open menu"><svg class="icon icon--sm"><use href="#i-sidebar"/></svg></button>
+      <nav class="topbar__crumb"><strong>Usage</strong></nav>
+      <span class="topbar__spacer"></span>
+      <button class="btn btn--ghost btn--sm"><svg class="icon icon--sm"><use href="#i-download"/></svg>Export CSV</button>
+    </header>
+    <div class="scroll">
+      <div class="page page--wide">
+        <header class="usage-head">
+          <div><h1 class="display-lg" data-condense style="--condense-to:-.015em">Usage</h1><p class="muted">Estimated from each provider's published prices. Subscription logins show tokens only.</p></div>
+          <div class="segmented" data-period><button aria-pressed="false" data-value="day">Day</button><button aria-pressed="true" data-value="week">Week</button><button aria-pressed="false" data-value="month">Month</button></div>
+        </header>
+
+        <div class="kpis">
+          <div class="kpi"><span class="eyebrow">Input</span><span class="display-md">1.21M</span><span class="caption faint">+18% vs last week</span></div>
+          <div class="kpi"><span class="eyebrow">Output</span><span class="display-md">402k</span><span class="caption faint">incl. 96k reasoning</span></div>
+          <div class="kpi"><span class="eyebrow">Cached</span><span class="display-md">228k</span><span class="caption faint">saved ~$0.31</span></div>
+          <div class="kpi"><span class="eyebrow">Spend</span><span class="display-md">$2.84</span><span class="caption faint">of $10 monthly cap</span></div>
+        </div>
+
+        <section class="chart-card">
+          <header><span class="eyebrow">Tokens per day</span>
+            <div class="usage__legend caption"><span><i style="background:var(--viz-1)"></i>Input</span><span><i style="background:var(--viz-2)"></i>Output</span><span><i style="background:var(--viz-3)"></i>Cached</span><span><i style="background:var(--viz-4)"></i>Reasoning</span><span><i style="background:var(--viz-5)"></i>Background jobs</span></div>
+          </header>
+          <svg class="bigchart" viewBox="0 0 900 260" data-bigchart role="img" aria-label="Stacked daily token usage for the last 14 days with a dashed daily cap line"></svg>
+          <div class="chart-tip" data-tip hidden></div>
+        </section>
+
+        <div class="usage-grid">
+          <section>
+            <h2 class="heading-md">By role</h2>
+            <table class="table">
+              <thead><tr><th>Role</th><th>Model</th><th class="num">Tokens</th><th class="num">Cost</th></tr></thead>
+              <tbody>
+                <tr><td>Teacher</td><td class="body-sm muted">Gemini 3 Pro</td><td class="num">812k</td><td class="num">$1.42</td></tr>
+                <tr><td>Extractor + audit</td><td class="body-sm muted">Gemini 3 Pro</td><td class="num">544k</td><td class="num">$0.88</td></tr>
+                <tr><td>Problem generator</td><td class="body-sm muted">Claude Sonnet 5.5</td><td class="num">121k</td><td class="num">$0.39</td></tr>
+                <tr><td>Card maker, namer</td><td class="body-sm muted">Gemini 3 Flash</td><td class="num">354k</td><td class="num">$0.15</td></tr>
+              </tbody>
+            </table>
+          </section>
+          <section>
+            <h2 class="heading-md">By subject</h2>
+            <ul class="bars-h">
+              <li><span>Digital Signal Processing</span><div class="bars-h__track"><i style="--v:.74"></i></div><span class="num">1.36M</span></li>
+              <li><span>Operating Systems</span><div class="bars-h__track"><i style="--v:.18"></i></div><span class="num">330k</span></li>
+              <li><span>Learn Rust</span><div class="bars-h__track"><i style="--v:.08"></i></div><span class="num">145k</span></li>
+            </ul>
+          </section>
+        </div>
+
+        <section class="caps">
+          <header><h2 class="heading-md">Caps</h2><p class="caption muted">Warn at the threshold. Stop new requests at 100% until the period resets or you raise the cap.</p></header>
+          <div class="cap-row">
+            <div><strong>Daily · all providers</strong><span class="caption muted">171k of 220k tokens · resets in 6 h 12 m</span></div>
+            <div class="cap-row__bar"><div class="coverage__track"><div class="coverage__fill cap-fill--warn" style="--v:78%"></div></div><span class="cap-row__tick" style="--t:80%"></span></div>
+            <label class="field cap-row__in"><span class="sr-only">Daily cap</span><input class="input" value="220k"></label>
+            <label class="field cap-row__in"><span class="sr-only">Warn at</span><input class="input" value="80%"></label>
+          </div>
+          <div class="cap-row">
+            <div><strong>Monthly · spend</strong><span class="caption muted">$2.84 of $10.00 · resets 1 Nov</span></div>
+            <div class="cap-row__bar"><div class="coverage__track"><div class="coverage__fill" style="--v:28%"></div></div><span class="cap-row__tick" style="--t:80%"></span></div>
+            <label class="field cap-row__in"><span class="sr-only">Monthly cap</span><input class="input" value="$10"></label>
+            <label class="field cap-row__in"><span class="sr-only">Warn at</span><input class="input" value="80%"></label>
+          </div>
+          <div class="cap-row">
+            <div><strong>Google sign-in (experimental)</strong><span class="caption muted">Tokens only · 640k this week</span></div>
+            <div class="cap-row__bar"><div class="coverage__track"><div class="coverage__fill" style="--v:42%"></div></div><span class="cap-row__tick" style="--t:80%"></span></div>
+            <label class="field cap-row__in"><span class="sr-only">Cap</span><input class="input" value="1.5M"></label>
+            <label class="field cap-row__in"><span class="sr-only">Warn at</span><input class="input" value="80%"></label>
+          </div>
+          <button class="btn btn--secondary btn--sm" data-dialog-open="cap-hit" style="justify-self:start">Preview the 100% stop</button>
+        </section>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div class="dialog-root" id="dlg-cap-hit" hidden>
+  <div class="dialog-scrim"></div>
+  <div class="dialog dialog--wide" role="dialog" aria-modal="true" aria-labelledby="ch-t">
+    <button class="btn btn--ghost btn--icon btn--sm dialog__close" data-dialog-close aria-label="Close"><svg class="icon icon--sm"><use href="#i-x"/></svg></button>
+    <div class="dialog__head"><p class="eyebrow" style="color:var(--danger)">Daily cap reached</p><h2 class="heading-lg" id="ch-t">220k of 220k tokens used today</h2></div>
+    <div class="dialog__body">
+      <p class="body-sm muted">Your message wasn't sent. 2 background jobs are paused, not lost, and continue when the cap allows.</p>
+      <svg class="bigchart bigchart--mini" viewBox="0 0 900 140" data-minichart aria-hidden="true"></svg>
+    </div>
+    <div class="dialog__foot"><button class="btn btn--ghost spacer" data-dialog-close>Wait · resets in 6 h 12 m</button><button class="btn btn--secondary" data-dialog-close>Switch provider</button><button class="btn btn--primary" data-dialog-close data-toast="Daily cap raised to 300k for today.">Raise cap for today</button></div>
+  </div>
+</div>
+
+<script type="module" src="js/shell.js"></script>
+<script type="module" src="js/screens.js"></script>
+</body>
+</html>

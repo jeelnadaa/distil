@@ -8,9 +8,9 @@ Living status log. Update in the same commit as every change.
 
 ## Next up
 
-1. Owner reviews `DESIGN.md` (answer §13 open design questions).
-2. Logo: 3 SVG directions, recommendation, icon-only, monochrome and animated versions.
-3. Landing page (responsive, interactive hero, scroll-driven animation).
+1. Owner reviews the clickable mock-ups in `design/` (run `bash design/scripts/fetch-fonts.sh`, then serve `design/` and open `index.html`), approves or requests changes.
+2. Owner answers `DESIGN.md` §13 open design questions.
+3. Logo: 3 SVG directions, recommendation, icon-only, monochrome and animated versions (current mark is provisional).
 
 ## Phase checklist
 
@@ -18,7 +18,7 @@ Living status log. Update in the same commit as every change.
 - [ ] Phase 0b — Owner approves `plan.md`
 - [ ] Phase 0c — `DESIGN.md` written (done) and approved (pending)
 - [ ] Phase 0d — Logo directions
-- [ ] Phase 0e — Landing page
+- [ ] Phase 0e — Landing page and app mock-ups built (done), approved (pending)
 - [ ] Phase 1 — Foundation
 - [ ] Phase 2 — Materials & Coverage Ledger
 - [ ] Phase 3 — Study Plan
@@ -38,6 +38,9 @@ Living status log. Update in the same commit as every change.
 
 - Product named **Distil** (owner decision); `plan.md` §2 and §18 updated, README retitled.
 - Drafted `DESIGN.md`: Satoshi + Instrument Serif + JetBrains Mono, warm paper/ink palette with one copper accent (all text pairs AA, measured), spring and duration motion tokens, signature moments, UX flows F1–F9, key screens S1–S9.
+
+- Built clickable mock-ups in `design/` (static HTML/CSS/ES modules, no deps): landing page with interactive hero and scroll-driven sections; app screens Teach, Today, Workspace/Ledger, Plan, Exam, Review, Usage, Settings; modal gallery (onboarding, palette, brief questions, recap, Fully distilled, cap, Google warning, deletes). Light/dark, reduced motion, mobile checked.
+- Satoshi licence forbids repo distribution: font files gitignored, fetched by `design/scripts/fetch-fonts.sh`.
 
 ## Open questions
 

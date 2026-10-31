@@ -41,5 +41,8 @@ Read this file fully before doing anything in this repo.
 | `README.md` | User-facing overview, setup, credits |
 | `AGENTS.md` | This file |
 | `CLAUDE.md` | Pointer to this file |
+| `design/` | Clickable design mock-ups (landing, app screens, dialogs) on the real tokens; open `design/index.html` |
+| `design/scripts/fetch-fonts.sh` | Downloads Satoshi (licence forbids committing it) |
+| `.claude/launch.json` | Preview server `design` on port 4173 |
 
 Extend this table as code directories are created.

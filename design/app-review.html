@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Review — Distil</title>
+  <link rel="icon" href="assets/logo/distil-icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/brand.css">
+  <link rel="stylesheet" href="css/app.css">
+  <link rel="stylesheet" href="css/screens.css">
+</head>
+<body data-page="review">
+<div class="app app--no-context">
+  <aside class="sb" data-sidebar aria-label="Sidebar"></aside>
+  <section class="main">
+    <header class="topbar">
+      <button class="btn btn--ghost btn--icon btn--sm topbar__menu" data-open-menu aria-label="Open menu"><svg class="icon icon--sm"><use href="#i-sidebar"/></svg></button>
+      <nav class="topbar__crumb"><strong>Review</strong><span class="hide-sm">· All subjects</span></nav>
+      <span class="topbar__spacer"></span>
+      <span class="mono faint" style="font-size:12px"><span class="num" data-left>18</span> left</span>
+    </header>
+    <div class="review-progress"><span data-review-progress style="--p:0"></span></div>
+
+    <div class="scroll">
+      <div class="review" data-review>
+        <div class="card3d" data-card tabindex="0" aria-live="polite">
+          <div class="card3d__inner">
+            <div class="card3d__face card3d__front">
+              <div class="card3d__meta"><span class="eyebrow">DSP · Unit 2 · Formula</span><span class="anchor">unit2.pdf · p.14</span></div>
+              <p class="display-lg card3d__q" data-q>Parseval's theorem for a periodic signal</p>
+              <p class="caption faint">Space to reveal</p>
+            </div>
+            <div class="card3d__face card3d__back">
+              <div class="card3d__meta"><span class="eyebrow">Answer</span><button class="btn btn--ghost btn--sm"><svg class="icon icon--sm"><use href="#i-wand"/></svg>Explain this</button></div>
+              <p class="math-block" data-a>P = (1/T) ∫<sub>T</sub> |x(t)|² dt = Σ |c<sub>n</sub>|²</p>
+              <p class="body-sm muted">Average power is the same in time and in frequency: each harmonic contributes |c<sub>n</sub>|².</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="grades" data-grades>
+          <button class="grade" data-grade="again"><span class="kbd">1</span><strong>Again</strong><span class="num faint">1m</span></button>
+          <button class="grade" data-grade="hard"><span class="kbd">2</span><strong>Hard</strong><span class="num faint">8m</span></button>
+          <button class="grade" data-grade="good"><span class="kbd">3</span><strong>Good</strong><span class="num faint">3d</span></button>
+          <button class="grade" data-grade="easy"><span class="kbd">4</span><strong>Easy</strong><span class="num faint">9d</span></button>
+        </div>
+        <button class="btn btn--primary btn--lg review__reveal" data-reveal-card>Show answer <span class="kbd" style="background:transparent;color:inherit;border-color:currentColor;opacity:.6">Space</span></button>
+      </div>
+
+      <div class="review-done" data-review-done hidden>
+        <span class="drop drop--lg"></span>
+        <h2 class="display-lg">All caught up.</h2>
+        <p class="body-lg muted">18 cards in 11 minutes. Next review tomorrow: 24 cards.</p>
+        <a class="btn btn--primary btn--lg" href="app-today.html">Back to Today</a>
+      </div>
+    </div>
+  </section>
+</div>
+<script type="module" src="js/shell.js"></script>
+<script type="module" src="js/screens.js"></script>
+</body>
+</html>

@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Distil design preview</title>
+  <link rel="icon" href="assets/logo/distil-icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/brand.css">
+  <style>
+    .hub { width: min(880px, 100% - 32px); margin: 0 auto; padding: var(--s-8) 0 var(--s-9); display: grid; gap: var(--s-6); }
+    .hub__top { display: flex; justify-content: space-between; align-items: center; }
+    .hub ol { list-style: none; padding: 0; border-top: 1px solid var(--text); }
+    .hub li a { display: grid; grid-template-columns: 48px 1fr auto; gap: var(--s-4); align-items: baseline; padding: var(--s-4) 0; border-bottom: 1px solid var(--border); text-decoration: none; transition: padding var(--dur-slow) var(--spring-smooth); }
+    .hub li a:hover { padding-left: var(--s-3); }
+    .hub li a:hover .icon { color: var(--accent); transform: translateX(4px); }
+    .hub .icon { color: var(--text-faint); transition: transform var(--dur-slow) var(--spring-snappy); align-self: center; }
+    .hub .num { font-size: 12px; color: var(--text-faint); }
+    .hub h2 { font-family: var(--font-display); font-weight: 400; font-size: 30px; line-height: 1.1; }
+    .hub p.caption { margin-top: 4px; }
+  </style>
+</head>
+<body>
+  <main class="hub">
+    <div class="hub__top"><span data-slot="lockup"></span><button class="btn btn--ghost btn--icon btn--sm" data-theme-toggle aria-label="Toggle theme"></button></div>
+    <header style="display:grid;gap:var(--s-3)">
+      <p class="eyebrow">Design preview · v1 draft</p>
+      <h1 class="display-xl" data-condense>Every screen, <em>clickable.</em></h1>
+      <p class="body-lg muted">Static mock-ups built on the real tokens in <span class="mono">css/tokens.css</span>. Toggle the theme here or in the sidebar. Everything works with the keyboard; Esc closes the topmost layer.</p>
+    </header>
+    <ol>
+      <li><a href="landing.html"><span class="num">01</span><div><h2>Landing page</h2><p class="caption muted">Interactive hero, scroll-driven "how it works", live Fourier widget</p></div><svg class="icon"><use href="#i-arrow-right"/></svg></a></li>
+      <li><a href="app-today.html"><span class="num">02</span><div><h2>Today</h2><p class="caption muted">Up next, review, weak spots, the week's schedule</p></div><svg class="icon"><use href="#i-arrow-right"/></svg></a></li>
+      <li><a href="app-teach.html"><span class="num">03</span><div><h2>Teach session</h2><p class="caption muted">Lesson document, step-through derivation, check card (press 1–4), lesson panel</p></div><svg class="icon"><use href="#i-arrow-right"/></svg></a></li>
+      <li><a href="app-workspace.html"><span class="num">04</span><div><h2>Workspace · Ledger</h2><p class="caption muted">Coverage, live ingestion, gaps banner, items table, pre-flight modal</p></div><svg class="icon"><use href="#i-arrow-right"/></svg></a></li>
+      <li><a href="app-plan.html"><span class="num">05</span><div><h2>Workspace · Plan</h2><p class="caption muted">Deadline schedule, dependency map or outline, study brief modal</p></div><svg class="icon"><use href="#i-arrow-right"/></svg></a></li>
+      <li><a href="app-exam.html"><span class="num">06</span><div><h2>Mock exam</h2><p class="caption muted">Distraction-free paper with timer; submit for the report</p></div><svg class="icon"><use href="#i-arrow-right"/></svg></a></li>
+      <li><a href="app-review.html"><span class="num">07</span><div><h2>Flashcard review</h2><p class="caption muted">Space to flip, 1–4 to grade</p></div><svg class="icon"><use href="#i-arrow-right"/></svg></a></li>
+      <li><a href="app-usage.html"><span class="num">08</span><div><h2>Usage &amp; caps</h2><p class="caption muted">Token graphs with hover, breakdowns, cap editor, the 100% stop</p></div><svg class="icon"><use href="#i-arrow-right"/></svg></a></li>
+      <li><a href="app-settings.html"><span class="num">09</span><div><h2>Settings</h2><p class="caption muted">Providers, the Google sign-in warning, models, learning, appearance and motion</p></div><svg class="icon"><use href="#i-arrow-right"/></svg></a></li>
+      <li><a href="modals.html"><span class="num">10</span><div><h2>Modals &amp; overlays</h2><p class="caption muted">First run, command palette, brief questions, recap, "Fully distilled", toasts</p></div><svg class="icon"><use href="#i-arrow-right"/></svg></a></li>
+    </ol>
+  </main>
+  <script type="module">
+    import { initTheme, toggleTheme, currentTheme, observeReveals } from "./js/motion.js";
+    import { injectIcons, icon } from "./js/icons.js";
+    import { lockupHTML } from "./js/brand.js";
+    initTheme();
+    injectIcons();
+    document.querySelector('[data-slot="lockup"]').innerHTML = lockupHTML({ size: 26 });
+    const btn = document.querySelector("[data-theme-toggle]");
+    const paint = () => { btn.innerHTML = icon(currentTheme() === "dark" ? "sun" : "moon", "icon icon--sm"); };
+    paint();
+    btn.addEventListener("click", () => { toggleTheme(); paint(); });
+    observeReveals();
+  </script>
+</body>
+</html>

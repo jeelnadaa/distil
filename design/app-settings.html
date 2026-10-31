@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Settings — Distil</title>
+  <link rel="icon" href="assets/logo/distil-icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/brand.css">
+  <link rel="stylesheet" href="css/app.css">
+  <link rel="stylesheet" href="css/screens.css">
+</head>
+<body data-page="settings">
+<div class="app app--no-context">
+  <aside class="sb" data-sidebar aria-label="Sidebar"></aside>
+  <section class="main">
+    <header class="topbar">
+      <button class="btn btn--ghost btn--icon btn--sm topbar__menu" data-open-menu aria-label="Open menu"><svg class="icon icon--sm"><use href="#i-sidebar"/></svg></button>
+      <nav class="topbar__crumb"><strong>Settings</strong></nav>
+    </header>
+    <div class="scroll">
+      <div class="page page--wide settings">
+        <nav class="settings__nav" aria-label="Settings sections">
+          <a href="#providers" aria-current="true"><svg class="icon icon--sm"><use href="#i-key"/></svg>Providers</a>
+          <a href="#models"><svg class="icon icon--sm"><use href="#i-layers"/></svg>Models</a>
+          <a href="#learning"><svg class="icon icon--sm"><use href="#i-book"/></svg>Learning</a>
+          <a href="#limits"><svg class="icon icon--sm"><use href="#i-chart"/></svg>Limits</a>
+          <a href="#appearance"><svg class="icon icon--sm"><use href="#i-type"/></svg>Appearance</a>
+          <a href="#keyboard"><svg class="icon icon--sm"><use href="#i-keyboard"/></svg>Keyboard</a>
+          <a href="#data"><svg class="icon icon--sm"><use href="#i-database"/></svg>Data</a>
+        </nav>
+
+        <div class="settings__body">
+          <section id="providers" class="sset">
+            <header><h2 class="display-md">Providers</h2><p class="muted">Keys stay on this machine, in your system's credential store.</p></header>
+            <ul class="prov">
+              <li><div class="prov__name"><strong>Google AI Studio</strong><span class="caption muted">API key · free tier available</span></div><span class="chip chip--success">Connected</span><span class="mono faint prov__key">AIza••••••••3kQ</span><button class="btn btn--ghost btn--sm">Edit</button></li>
+              <li><div class="prov__name"><strong>Anthropic</strong><span class="caption muted">API key</span></div><span class="chip chip--success">Connected</span><span class="mono faint prov__key">sk-ant••••••••w2</span><button class="btn btn--ghost btn--sm">Edit</button></li>
+              <li><div class="prov__name"><strong>OpenAI</strong><span class="caption muted">API key</span></div><span class="chip">Not set</span><span class="prov__key"></span><button class="btn btn--secondary btn--sm" data-dialog-open="add-key">Add key</button></li>
+              <li><div class="prov__name"><strong>Ollama</strong><span class="caption muted">Custom endpoint · http://localhost:11434</span></div><span class="chip chip--warning">Offline</span><span class="prov__key"></span><button class="btn btn--ghost btn--sm">Retry</button></li>
+              <li class="prov--exp">
+                <div class="prov__name"><strong>Sign in with Google</strong><span class="caption muted">Gemini without an API key</span></div>
+                <span class="chip chip--danger">Experimental</span><span class="prov__key"></span>
+                <label class="switch" aria-label="Enable Google sign-in"><input type="checkbox" data-google-switch></label>
+              </li>
+            </ul>
+            <button class="btn btn--ghost btn--sm"><svg class="icon icon--sm"><use href="#i-plus"/></svg>Add provider or endpoint</button>
+          </section>
+
+          <section id="models" class="sset">
+            <header><h2 class="display-md">Models</h2><p class="muted">Two slots cover every job. Override per role if you want.</p></header>
+            <div class="slots">
+              <label class="field"><span class="field__label">Strong <span class="faint caption">teaching, extraction, planning, grading</span></span><select class="select"><option>Gemini 3 Pro · Google AI Studio</option><option>Claude Sonnet 5.5 · Anthropic</option></select></label>
+              <label class="field"><span class="field__label">Cheap <span class="faint caption">naming, cards, briefs</span></span><select class="select"><option>Gemini 3 Flash · Google AI Studio</option></select></label>
+            </div>
+            <details class="think"><summary><svg class="icon icon--sm"><use href="#i-chevron-right"/></svg>Per-role overrides (2 set)</summary><p class="body-sm muted">Problem generator → Claude Sonnet 5.5 · Visual maker → Gemini 3 Pro</p></details>
+          </section>
+
+          <section id="learning" class="sset">
+            <header><h2 class="display-md">Learning</h2></header>
+            <div class="srow"><div><strong>Interactivity</strong><span class="caption muted">Default for new subjects and chats</span></div><div class="segmented"><button aria-pressed="false">Text-only</button><button aria-pressed="true">Balanced</button><button aria-pressed="false">Visual-heavy</button></div></div>
+            <div class="srow"><div><strong>Streaks and XP</strong><span class="caption muted">XP only for verified learning: checks passed, cards reviewed</span></div><label class="switch"><input type="checkbox" checked></label></div>
+            <div class="srow"><div><strong>Teach-phase checks start collapsed</strong><span class="caption muted">Read the step first, then open the check</span></div><label class="switch"><input type="checkbox" checked></label></div>
+          </section>
+
+          <section id="limits" class="sset">
+            <header><h2 class="display-md">Limits</h2></header>
+            <div class="srow"><div><strong>Token and spend caps</strong><span class="caption muted">Daily 220k tokens · monthly $10 · warn at 80%</span></div><a class="btn btn--secondary btn--sm" href="app-usage.html">Edit on Usage</a></div>
+            <div class="srow"><div><strong>Ask before expensive actions</strong><span class="caption muted">Show an estimate when a job will use more than this</span></div><input class="input mono" style="width:96px;text-align:right" value="50k"></div>
+            <div class="srow"><div><strong>Background jobs at once</strong></div><div class="segmented"><button aria-pressed="false">1</button><button aria-pressed="true">3</button><button aria-pressed="false">5</button></div></div>
+          </section>
+
+          <section id="appearance" class="sset">
+            <header><h2 class="display-md">Appearance</h2></header>
+            <div class="srow"><div><strong>Theme</strong></div><div class="segmented" data-theme-seg><button aria-pressed="true" data-value="system">System</button><button aria-pressed="false" data-value="light">Light</button><button aria-pressed="false" data-value="dark">Dark</button></div></div>
+            <div class="srow"><div><strong>Motion</strong><span class="caption muted">Reduced replaces movement with quick fades</span></div><div class="segmented" data-motion-seg><button aria-pressed="true" data-value="system">System</button><button aria-pressed="false" data-value="full">Full</button><button aria-pressed="false" data-value="reduce">Reduced</button></div></div>
+            <div class="srow"><div><strong>Lesson text size</strong></div><div class="segmented"><button aria-pressed="false">16</button><button aria-pressed="true">18</button><button aria-pressed="false">20</button></div></div>
+          </section>
+
+          <section id="keyboard" class="sset">
+            <header><h2 class="display-md">Keyboard</h2></header>
+            <div class="srow"><span>Search and commands</span><span class="kbd">Ctrl K</span></div>
+            <div class="srow"><span>Pick an answer</span><span><span class="kbd">1</span> – <span class="kbd">4</span></span></div>
+            <div class="srow"><span>Flip a card / grade it</span><span><span class="kbd">Space</span> then <span class="kbd">1</span> – <span class="kbd">4</span></span></div>
+            <div class="srow"><span>Close the topmost layer</span><span class="kbd">Esc</span></div>
+          </section>
+
+          <section id="data" class="sset">
+            <header><h2 class="display-md">Data</h2></header>
+            <div class="srow"><div><strong>Data folder</strong><span class="caption muted mono">D:\Distil\data</span></div><button class="btn btn--secondary btn--sm">Change</button></div>
+            <div class="srow"><div><strong>Back up everything</strong><span class="caption muted">One .zip with chats, materials, ledger and cards</span></div><button class="btn btn--secondary btn--sm">Export</button></div>
+            <div class="srow srow--danger"><div><strong>Delete all data</strong><span class="caption muted">Cannot be undone</span></div><button class="btn btn--danger btn--sm" data-dialog-open="delete-all">Delete…</button></div>
+          </section>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div class="dialog-root" id="dlg-google" hidden>
+  <div class="dialog-scrim"></div>
+  <div class="dialog dialog--danger" role="dialog" aria-modal="true" aria-labelledby="g-t">
+    <div class="dialog__head"><p class="eyebrow" style="color:var(--danger)">Experimental</p><h2 class="heading-lg" id="g-t">Sign in with Google</h2></div>
+    <div class="dialog__body">
+      <p class="body-sm">This uses the same Google login as Google's own command-line tools, so you can use Gemini without an API key.</p>
+      <div class="risk"><svg class="icon"><use href="#i-warning"/></svg><p class="body-sm"><strong>Google may restrict or suspend accounts</strong> that use this login from third-party apps. Don't use an account you can't afford to lose access to.</p></div>
+      <p class="body-sm muted">The safe path is a free API key from Google AI Studio. It takes about 30 seconds.</p>
+      <label class="check"><input type="checkbox" data-risk-ack> I understand the risk</label>
+    </div>
+    <div class="dialog__foot"><button class="btn btn--ghost spacer" data-dialog-close>Get a free API key instead</button><button class="btn btn--ghost" data-dialog-close>Cancel</button><button class="btn btn--danger" data-risk-go disabled>Continue to Google</button></div>
+  </div>
+</div>
+
+<div class="dialog-root" id="dlg-add-key" hidden>
+  <div class="dialog-scrim"></div>
+  <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="k-t">
+    <button class="btn btn--ghost btn--icon btn--sm dialog__close" data-dialog-close aria-label="Close"><svg class="icon icon--sm"><use href="#i-x"/></svg></button>
+    <div class="dialog__head"><p class="eyebrow">Provider</p><h2 class="heading-lg" id="k-t">Add an OpenAI key</h2></div>
+    <div class="dialog__body">
+      <label class="field"><span class="field__label">API key</span><input class="input mono" type="password" placeholder="sk-…" autocomplete="off"><span class="field__hint">Stored in Windows Credential Manager. Only ever sent to api.openai.com.</span></label>
+    </div>
+    <div class="dialog__foot"><button class="btn btn--ghost" data-dialog-close>Cancel</button><button class="btn btn--primary" data-dialog-close>Test and save</button></div>
+  </div>
+</div>
+
+<div class="dialog-root" id="dlg-delete-all" hidden>
+  <div class="dialog-scrim"></div>
+  <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="d-t">
+    <div class="dialog__head"><h2 class="heading-lg" id="d-t">Delete all Distil data?</h2></div>
+    <div class="dialog__body"><p class="body-sm muted">4 subjects, 23 chats, 11 files, 612 cards and your usage history will be removed from this machine. Export a backup first if you might want them.</p>
+      <label class="field"><span class="field__label">Type <span class="mono">delete</span> to confirm</span><input class="input mono" data-confirm-input></label></div>
+    <div class="dialog__foot"><button class="btn btn--ghost" data-dialog-close>Cancel</button><button class="btn btn--danger" data-confirm-go disabled>Delete everything</button></div>
+  </div>
+</div>
+
+<script type="module" src="js/shell.js"></script>
+<script type="module" src="js/screens.js"></script>
+</body>
+</html>

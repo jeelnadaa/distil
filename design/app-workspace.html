@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Digital Signal Processing · Ledger — Distil</title>
+  <link rel="icon" href="assets/logo/distil-icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/brand.css">
+  <link rel="stylesheet" href="css/app.css">
+  <link rel="stylesheet" href="css/screens.css">
+</head>
+<body data-page="workspace">
+<div class="app app--no-context">
+  <aside class="sb" data-sidebar aria-label="Sidebar"></aside>
+
+  <section class="main">
+    <header class="topbar">
+      <button class="btn btn--ghost btn--icon btn--sm topbar__menu" data-open-menu aria-label="Open menu"><svg class="icon icon--sm"><use href="#i-sidebar"/></svg></button>
+      <nav class="topbar__crumb"><span class="hide-sm">Semester 5</span><svg class="icon icon--sm hide-sm"><use href="#i-chevron-right"/></svg><strong>Digital Signal Processing</strong></nav>
+      <span class="topbar__spacer"></span>
+      <button class="btn btn--secondary btn--sm" data-dialog-open="preflight"><svg class="icon icon--sm"><use href="#i-upload"/></svg>Add material</button>
+      <button class="btn btn--primary btn--sm hide-sm"><svg class="icon icon--sm"><use href="#i-plus"/></svg>New chat</button>
+    </header>
+
+    <div class="scroll">
+      <div class="page page--wide">
+        <header class="ws__head">
+          <h1 class="display-lg" data-condense style="--condense-to:-.015em">Digital Signal Processing</h1>
+          <p class="muted">3 files · 214 items · mid-sem Thu 6 Nov · Balanced visuals</p>
+        </header>
+
+        <nav class="subtabs" aria-label="Workspace">
+          <a href="#">Materials</a>
+          <a href="#" aria-current="page">Ledger</a>
+          <a href="app-plan.html">Plan</a>
+          <a href="app-review.html">Deck</a>
+          <a href="#">Progress</a>
+          <a href="#">Chats</a>
+        </nav>
+
+        <div class="ws__top">
+          <section class="panel ws__coverage">
+            <div class="ws__coverage-head"><span class="eyebrow">Coverage</span><button class="btn btn--ghost btn--sm" data-toast="Recall audit started for 3 files." data-toast-action="View"><svg class="icon icon--sm"><use href="#i-refresh"/></svg>What did we miss?</button></div>
+            <div class="coverage">
+              <div class="coverage__row"><span class="eyebrow">Planned</span><div class="coverage__track"><div class="coverage__fill" style="--v:98.6%"></div></div><span class="num">211</span></div>
+              <div class="coverage__row"><span class="eyebrow">Taught</span><div class="coverage__track"><div class="coverage__fill" style="--v:48%"></div></div><span class="num">103</span></div>
+              <div class="coverage__row"><span class="eyebrow">Checked</span><div class="coverage__track"><div class="coverage__fill" style="--v:31%"></div></div><span class="num">66</span></div>
+            </div>
+          </section>
+
+          <section class="panel ws__ingest" aria-live="polite">
+            <div class="ws__ingest-head"><span class="eyebrow">Distilling unit3.pdf</span><span class="mono faint" style="font-size:12px">~$0.18</span></div>
+            <div class="mini-still" data-mini-still>
+              <div class="mini-still__raw"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+              <div class="mini-still__filter"></div>
+              <ul class="mini-still__out" data-mini-out></ul>
+            </div>
+            <p class="mono" style="font-size:12px"><span class="num" data-mini-count>34</span><span class="faint"> pages · </span><span class="num" data-mini-items>18</span><span class="faint"> items · auditing next</span></p>
+          </section>
+        </div>
+
+        <div class="banner banner--warning" style="margin-block:var(--s-5)">
+          <svg class="icon"><use href="#i-warning"/></svg>
+          <span><strong>3 items aren't in any lesson yet.</strong> The plan can't be marked complete until they are mapped or skipped.</span>
+          <span class="spacer"></span>
+          <button class="btn btn--secondary btn--sm">Map to lessons</button>
+          <button class="btn btn--ghost btn--sm">Mark as skip</button>
+        </div>
+
+        <div class="filters">
+          <input class="input" type="search" placeholder="Filter 214 items…" aria-label="Filter items">
+          <div class="segmented" aria-label="Status filter"><button aria-pressed="true">All</button><button aria-pressed="false">Unmapped</button><button aria-pressed="false">Untaught</button><button aria-pressed="false">Skipped</button></div>
+          <span class="spacer" style="flex:1"></span>
+          <button class="btn btn--ghost btn--sm"><svg class="icon icon--sm"><use href="#i-plus"/></svg>Add item</button>
+        </div>
+
+        <div class="table-wrap">
+          <table class="table ledger">
+            <thead><tr><th style="width:28px"><span class="sr-only">Select</span></th><th>Type</th><th>Item</th><th>Source</th><th>Lesson</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr class="ledger__group"><td colspan="6"><span class="eyebrow">Unit 2 · Fourier analysis</span><span class="caption faint"> · 41 items</span></td></tr>
+              <tr><td><label class="check"><input type="checkbox" aria-label="Select"></label></td><td><span class="chip">Formula</span></td><td><strong>Synthesis equation</strong><div class="caption faint math-inline">x(t) = Σ cₙ e^{jnω₀t}</div></td><td><a class="anchor" href="#">unit2.pdf · p.3</a></td><td class="body-sm">L4 Fourier series</td><td><span class="status status--checked"><i></i>Checked</span></td></tr>
+              <tr><td><label class="check"><input type="checkbox" aria-label="Select"></label></td><td><span class="chip">Formula</span></td><td><strong>Analysis equation</strong><div class="caption faint math-inline">cₙ = 1/T ∫ x(t) e^{−jnω₀t} dt</div></td><td><a class="anchor" href="#">unit2.pdf · p.10</a></td><td class="body-sm">L4 Fourier series</td><td><span class="status status--taught"><i></i>Taught</span></td></tr>
+              <tr><td><label class="check"><input type="checkbox" aria-label="Select"></label></td><td><span class="chip">Theorem</span></td><td><strong>Dirichlet conditions</strong></td><td><a class="anchor" href="#">unit2.pdf · p.9</a> <a class="anchor" href="#">slides · 14</a></td><td class="body-sm">L4 Fourier series</td><td><span class="status"><i></i>Planned</span></td></tr>
+              <tr class="is-gap"><td><label class="check"><input type="checkbox" aria-label="Select"></label></td><td><span class="chip">Diagram</span></td><td><strong>Line spectrum of a pulse train</strong></td><td><a class="anchor" href="#">unit2.pdf · p.19</a></td><td class="body-sm"><span style="color:var(--warning)">Unmapped</span></td><td><span class="status"><i></i>Pending</span></td></tr>
+              <tr><td><label class="check"><input type="checkbox" aria-label="Select"></label></td><td><span class="chip">Concept</span></td><td><strong>Gibbs phenomenon</strong></td><td><a class="anchor" href="#">lecture6 · 32:10</a></td><td class="body-sm">L5 Gibbs</td><td><span class="status"><i></i>Planned</span></td></tr>
+              <tr><td><label class="check"><input type="checkbox" aria-label="Select"></label></td><td><span class="chip">Example</span></td><td><strong>Square wave coefficients</strong></td><td><a class="anchor" href="#">unit2.pdf · p.11</a></td><td class="body-sm">L4 Fourier series</td><td><span class="status"><i></i>Planned</span></td></tr>
+              <tr class="ledger__group"><td colspan="6"><span class="eyebrow">Unit 1 · Signals &amp; systems</span><span class="caption faint"> · 52 items</span></td></tr>
+              <tr><td><label class="check"><input type="checkbox" aria-label="Select"></label></td><td><span class="chip">Definition</span></td><td><strong>LTI system</strong></td><td><a class="anchor" href="#">unit1.pdf · p.4</a></td><td class="body-sm">L2 Systems</td><td><span class="status status--mastered"><i></i>Mastered</span></td></tr>
+              <tr><td><label class="check"><input type="checkbox" aria-label="Select"></label></td><td><span class="chip">Procedure</span></td><td><strong>Evaluating the convolution integral</strong></td><td><a class="anchor" href="#">unit1.pdf · p.21</a></td><td class="body-sm">L3 Convolution</td><td><span class="status status--taught"><i></i>Shaky</span></td></tr>
+              <tr class="is-skipped"><td><label class="check"><input type="checkbox" aria-label="Select"></label></td><td><span class="chip">Fact</span></td><td><strong>History of the Fourier series</strong></td><td><a class="anchor" href="#">unit2.pdf · p.1</a></td><td class="body-sm faint">Not in syllabus</td><td><span class="status"><i></i>Skipped</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div class="dialog-root" id="dlg-preflight" hidden>
+  <div class="dialog-scrim"></div>
+  <div class="dialog dialog--wide" role="dialog" aria-modal="true" aria-labelledby="pf-t">
+    <button class="btn btn--ghost btn--icon btn--sm dialog__close" data-dialog-close aria-label="Close"><svg class="icon icon--sm"><use href="#i-x"/></svg></button>
+    <div class="dialog__head"><p class="eyebrow">Add material</p><h2 class="heading-lg" id="pf-t">Distil 3 sources into the ledger</h2></div>
+    <div class="dialog__body">
+      <div class="dropzone"><svg class="icon"><use href="#i-upload"/></svg><span class="body-sm"><strong>Drop files</strong> or paste a link. PDF, slides, docs, images, web pages, YouTube.</span></div>
+      <table class="table">
+        <thead><tr><th>Source</th><th>Size</th><th class="num">Est. tokens</th></tr></thead>
+        <tbody>
+          <tr><td><span class="pf-src"><svg class="icon icon--sm"><use href="#i-file"/></svg>unit3.pdf</span></td><td class="body-sm muted">120 pages</td><td class="num">142k</td></tr>
+          <tr><td><span class="pf-src"><svg class="icon icon--sm"><use href="#i-image"/></svg>whiteboard-notes.jpg</span></td><td class="body-sm muted">1 image · handwriting</td><td class="num">3k</td></tr>
+          <tr><td><span class="pf-src"><svg class="icon icon--sm"><use href="#i-video"/></svg>Lecture 7 · Laplace</span></td><td class="body-sm muted">54 min transcript</td><td class="num">38k</td></tr>
+        </tbody>
+      </table>
+      <div class="pf-total"><span class="body-sm muted">Extraction + recall audit on <strong>Gemini 3 Pro</strong> (strong slot)</span><span class="mono"><span class="num">~183k tokens</span> <span class="faint">· ~$0.41 · 6 min</span></span></div>
+      <p class="caption faint">Uses 83% of today's remaining cap. The job runs in the background; you can keep studying.</p>
+    </div>
+    <div class="dialog__foot"><button class="btn btn--ghost" data-dialog-close>Cancel</button><button class="btn btn--accent" data-dialog-close data-toast="Distilling 3 sources. You can keep studying." data-toast-action="Watch">Distil it</button></div>
+  </div>
+</div>
+
+<script type="module" src="js/shell.js"></script>
+<script type="module" src="js/screens.js"></script>
+</body>
+</html>

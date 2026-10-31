@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Fourier series: Teaching — Distil</title>
+  <link rel="icon" href="assets/logo/distil-icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/brand.css">
+  <link rel="stylesheet" href="css/app.css">
+  <link rel="stylesheet" href="css/screens.css">
+</head>
+<body data-page="teach">
+<div class="app">
+  <aside class="sb" data-sidebar aria-label="Sidebar"></aside>
+
+  <section class="main">
+    <header class="topbar">
+      <button class="btn btn--ghost btn--icon btn--sm topbar__menu" data-open-menu aria-label="Open menu"><svg class="icon icon--sm"><use href="#i-sidebar"/></svg></button>
+      <nav class="topbar__crumb" aria-label="Breadcrumb"><span class="hide-sm">DSP</span><svg class="icon icon--sm hide-sm"><use href="#i-chevron-right"/></svg><span class="hide-sm">Unit 2 · Fourier</span><svg class="icon icon--sm hide-sm"><use href="#i-chevron-right"/></svg><strong>Fourier series: Teaching</strong></nav>
+      <span class="topbar__spacer"></span>
+      <button class="meter" data-dialog-open="usage-pop" title="Context window"><span>38.2k / 1M</span><span class="meter__track" style="--v:4%"><span></span></span></button>
+      <button class="btn btn--ghost btn--icon btn--sm" data-toggle-context aria-label="Toggle lesson panel"><svg class="icon icon--sm"><use href="#i-panel"/></svg></button>
+    </header>
+
+    <div class="scroll">
+      <article class="page lesson">
+        <header class="page__head">
+          <p class="eyebrow">Lesson 4 of 12 · Unit 2 · ~35 min · 9 items</p>
+          <h1 class="display-lg" data-condense style="--condense-to:-.015em">Fourier series</h1>
+        </header>
+
+        <!-- Opening retrieval -->
+        <div class="check-card check-card--done">
+          <div class="check-card__head"><span class="eyebrow">Recall · from lesson 3</span><span class="chip chip--success">Sure · correct</span></div>
+          <p class="heading-sm">What makes a signal periodic?</p>
+          <p class="muted body-sm">x(t) = x(t + T) for every t, for some smallest T &gt; 0 (the fundamental period).</p>
+        </div>
+
+        <div class="phase"><hr class="filter-line filter-line--faint"><span class="eyebrow">Probe</span><hr class="filter-line filter-line--faint"></div>
+
+        <div class="learner">
+          <span class="eyebrow">You · 15:41</span>
+          <p>I kind of get that you can add sines together, but I don't see why <em>any</em> periodic signal can be built that way. Also not sure where the e<sup>jnω₀t</sup> comes from instead of sin and cos.</p>
+        </div>
+
+        <div class="prose">
+          <p>Good. That second question is the right one to start with, because once it clicks the formula stops being something to memorise.</p>
+        </div>
+
+        <div class="phase"><hr class="filter-line filter-line--faint"><span class="eyebrow">Teaching · 6 steps</span><hr class="filter-line filter-line--faint"></div>
+
+        <div class="prose">
+          <h3>One rotation instead of two waves</h3>
+          <p>You already hold Euler's identity: <span class="math">e<sup>jθ</sup> = cos θ + j sin θ</span>. Read it as a point going round the unit circle. Its shadow on the real axis is a cosine; its shadow on the imaginary axis is a sine.</p>
+          <p>So instead of tracking a sine <em>and</em> a cosine at every frequency, we track one spinning arrow. A frequency <span class="math">nω₀</span> is just an arrow spinning <span class="math">n</span> times faster than the slowest one.</p>
+        </div>
+
+        <div class="callout"><span class="eyebrow">Key idea</span>A periodic signal is a sum of arrows spinning at whole-number multiples of one base speed, <span class="math">ω₀ = 2π / T</span>.</div>
+
+        <figure class="widget-frame panel" data-derivation>
+          <figcaption class="widget-frame__bar">
+            <span class="eyebrow">Step-through · Finding c<sub>n</sub></span>
+            <span class="widget-frame__tools"><span class="chip">v1</span>
+              <button class="btn btn--ghost btn--icon btn--sm" aria-label="Helpful"><svg class="icon icon--sm"><use href="#i-thumbs-up"/></svg></button>
+              <button class="btn btn--ghost btn--icon btn--sm" aria-label="Not helpful"><svg class="icon icon--sm"><use href="#i-thumbs-down"/></svg></button>
+              <button class="btn btn--ghost btn--icon btn--sm" aria-label="Full screen"><svg class="icon icon--sm"><use href="#i-expand"/></svg></button>
+            </span>
+          </figcaption>
+          <ol class="derivation">
+            <li><span class="derivation__eq">x(t) = Σ c<sub>k</sub> e<sup>jkω₀t</sup></span><span class="derivation__why">Start from the series we want.</span></li>
+            <li><span class="derivation__eq">x(t) e<sup>−jnω₀t</sup> = Σ c<sub>k</sub> e<sup>j(k−n)ω₀t</sup></span><span class="derivation__why">Multiply both sides by an arrow spinning backwards at speed n.</span></li>
+            <li><span class="derivation__eq">∫<sub>T</sub> e<sup>j(k−n)ω₀t</sup> dt = 0 unless k = n</span><span class="derivation__why">Any arrow that is still spinning averages to zero over a full period.</span></li>
+            <li><span class="derivation__eq">∫<sub>T</sub> x(t) e<sup>−jnω₀t</sup> dt = c<sub>n</sub> T</span><span class="derivation__why">Only the k = n term survives; it is constant, so it integrates to c<sub>n</sub>T.</span></li>
+            <li><span class="derivation__eq derivation__eq--final">c<sub>n</sub> = (1/T) ∫<sub>T</sub> x(t) e<sup>−jnω₀t</sup> dt</span><span class="derivation__why">Divide by T. That's the analysis equation.</span></li>
+          </ol>
+          <div class="widget-frame__foot">
+            <span class="caption faint num" data-deriv-count>Line 1 of 5</span>
+            <span class="spacer"></span>
+            <button class="btn btn--ghost btn--sm" data-deriv-reset>Reset</button>
+            <button class="btn btn--primary btn--sm" data-deriv-next>Next line <svg class="icon icon--sm"><use href="#i-arrow-right"/></svg></button>
+          </div>
+        </figure>
+
+        <div class="block-actions">
+          <button class="btn btn--ghost btn--sm">Explain differently</button>
+          <button class="btn btn--ghost btn--sm">Simpler</button>
+          <button class="btn btn--ghost btn--sm">Deeper</button>
+          <button class="btn btn--ghost btn--sm">Show an example</button>
+          <span class="anchor" style="margin-left:auto">unit2.pdf · p.10</span>
+        </div>
+
+        <!-- Check after the step -->
+        <section class="check-card" data-check aria-labelledby="q3">
+          <div class="check-card__sweep"></div>
+          <div class="check-card__head"><span class="eyebrow">Check 3 / 6</span><span class="eyebrow">Teaching</span></div>
+          <p class="heading-sm" id="q3">Why does multiplying by e<sup>−jnω₀t</sup> and integrating isolate c<sub>n</sub>?</p>
+          <ul class="options" role="list">
+            <li><button class="option" data-opt><span class="kbd">1</span><span>Because e<sup>−jnω₀t</sup> is always real</span></button></li>
+            <li><button class="option" data-opt data-correct><span class="kbd">2</span><span>Every other term is still spinning, so it averages to zero over a period</span></button></li>
+            <li><button class="option" data-opt><span class="kbd">3</span><span>Because x(t) is zero outside one period</span></button></li>
+            <li><button class="option" data-opt><span class="kbd">4</span><span>The integral of any exponential is zero</span></button></li>
+          </ul>
+          <details class="think">
+            <summary><svg class="icon icon--sm"><use href="#i-chevron-right"/></svg>Think out loud</summary>
+            <textarea class="textarea" placeholder="Talk through your reasoning: what you're sure of, what feels shaky…"></textarea>
+          </details>
+          <div class="check-card__row">
+            <div class="segmented" aria-label="Confidence">
+              <button aria-pressed="false">Guess</button>
+              <button aria-pressed="false">Unsure</button>
+              <button aria-pressed="true">Sure</button>
+            </div>
+            <div style="display:flex;gap:var(--s-2)">
+              <button class="btn btn--ghost">I don't know</button>
+              <button class="btn btn--primary" data-submit disabled>Check answer</button>
+            </div>
+          </div>
+          <div class="verdict verdict--ok" data-verdict-ok><strong>Right, and you were sure.</strong><span class="muted">"Analysis equation" is now checked. Next: what happens to |c<sub>n</sub>| for a square wave.</span></div>
+          <div class="verdict verdict--repair" data-verdict-repair><strong>Not quite. Let's repair this before moving on.</strong><span class="muted">Picture the arrow for k = 3 when n = 1: after multiplying it still spins twice per period…</span></div>
+        </section>
+
+        <div class="prose">
+          <h3>Why a square wave has only odd harmonics</h3>
+          <p>Flip the second half of a square wave upside down and slide it back half a period, and you get the first half exactly. Any even harmonic would break that symmetry, so its coefficient has to be zero.</p>
+        </div>
+
+        <div class="collapsed-check">
+          <div><span class="eyebrow">Check 4 / 6</span><p class="body-sm muted">Read the step first, then open the check when you're ready.</p></div>
+          <button class="btn btn--secondary btn--sm">Check your understanding</button>
+        </div>
+
+        <div class="streaming"><span class="drop drop--pulse"></span><span class="caption faint">Writing the next step…</span></div>
+      </article>
+    </div>
+
+    <div class="composer-wrap">
+      <div class="queued"><span class="chip">Queued · "can you also show the spectrum?"</span></div>
+      <div class="composer">
+        <textarea rows="1" placeholder="Answer, ask, or steer the lesson…" aria-label="Message"></textarea>
+        <div class="composer__bar">
+          <div class="segmented composer__mode" aria-label="Mode">
+            <button aria-pressed="false">Plan</button>
+            <button aria-pressed="true">Teach</button>
+            <button aria-pressed="false">Practice</button>
+            <button aria-pressed="false">Ask</button>
+          </div>
+          <span class="spacer"></span>
+          <button class="btn btn--ghost btn--icon btn--sm" aria-label="Attach"><svg class="icon icon--sm"><use href="#i-paperclip"/></svg></button>
+          <button class="btn btn--ghost btn--sm hide-sm" data-dialog-open="dial" aria-label="Interactivity"><svg class="icon icon--sm"><use href="#i-sliders"/></svg>Balanced</button>
+          <button class="btn btn--primary btn--icon btn--sm" aria-label="Send"><svg class="icon icon--sm"><use href="#i-arrow-up"/></svg></button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <aside class="ctx" aria-label="Lesson panel">
+    <div class="ctx__rail"><button class="btn btn--ghost btn--icon btn--sm" data-toggle-context aria-label="Expand panel"><svg class="icon icon--sm"><use href="#i-panel"/></svg></button></div>
+    <div class="ctx__head">
+      <div class="tabs" role="tablist"><button role="tab" aria-selected="true">Steps</button><button role="tab" aria-selected="false">Items</button><button role="tab" aria-selected="false">Sources</button></div>
+    </div>
+    <div class="ctx__body">
+      <ol class="steps">
+        <li class="is-done"><span class="steps__dot"><svg class="icon"><use href="#i-check"/></svg></span><span>Periodic signals, recap</span></li>
+        <li class="is-done"><span class="steps__dot"><svg class="icon"><use href="#i-check"/></svg></span><span>Arrows instead of waves</span></li>
+        <li class="is-current"><span class="steps__dot"></span><span>Finding c<sub>n</sub><span class="steps__meta">Check 3 of 6 · now</span></span></li>
+        <li class="is-next"><span class="steps__dot"></span><span>Square wave, odd harmonics</span></li>
+        <li><span class="steps__dot"></span><span>Gibbs phenomenon</span></li>
+        <li><span class="steps__dot"></span><span>Parseval and power</span></li>
+      </ol>
+      <div>
+        <p class="eyebrow" style="margin-bottom:var(--s-2)">This lesson's items</p>
+        <ul class="items-mini">
+          <li><span class="chip">Formula</span><span>Synthesis equation</span><span class="status status--checked"><i></i>Checked</span></li>
+          <li><span class="chip">Formula</span><span>Analysis equation</span><span class="status status--taught"><i></i>Taught</span></li>
+          <li><span class="chip">Concept</span><span>Orthogonality of harmonics</span><span class="status status--taught"><i></i>Taught</span></li>
+          <li><span class="chip">Example</span><span>Square wave series</span><span class="status"><i></i>Planned</span></li>
+          <li><span class="chip">Concept</span><span>Gibbs phenomenon</span><span class="status"><i></i>Planned</span></li>
+          <li><span class="chip">Theorem</span><span>Parseval's theorem</span><span class="status"><i></i>Planned</span></li>
+        </ul>
+      </div>
+      <div class="coverage">
+        <div class="coverage__row"><span class="eyebrow">Taught</span><div class="coverage__track"><div class="coverage__fill" style="--v:44%"></div></div><span class="num">4/9</span></div>
+        <div class="coverage__row"><span class="eyebrow">Checked</span><div class="coverage__track"><div class="coverage__fill" style="--v:22%"></div></div><span class="num">2/9</span></div>
+      </div>
+    </div>
+  </aside>
+</div>
+
+<div class="dialog-root" id="dlg-dial" hidden>
+  <div class="dialog-scrim"></div>
+  <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dial-t">
+    <button class="btn btn--ghost btn--icon btn--sm dialog__close" data-dialog-close aria-label="Close"><svg class="icon icon--sm"><use href="#i-x"/></svg></button>
+    <div class="dialog__head"><p class="eyebrow">This chat</p><h2 class="heading-lg" id="dial-t">Interactivity</h2></div>
+    <div class="dialog__body">
+      <div class="segmented" style="justify-self:start"><button aria-pressed="false">Text-only</button><button aria-pressed="true">Balanced</button><button aria-pressed="false">Visual-heavy</button></div>
+      <p class="body-sm muted">Balanced: diagrams, plots and small apps only when a concept is dynamic, spatial or a process. You can always say "no visuals here" in chat.</p>
+      <label class="check"><input type="checkbox" checked> Use this for every chat in <strong>DSP</strong></label>
+    </div>
+    <div class="dialog__foot"><button class="btn btn--ghost" data-dialog-close>Cancel</button><button class="btn btn--primary" data-dialog-close>Save</button></div>
+  </div>
+</div>
+
+<script type="module" src="js/shell.js"></script>
+<script type="module" src="js/screens.js"></script>
+</body>
+</html>

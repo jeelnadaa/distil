@@ -1,0 +1,4 @@
+# Satoshi may be self-hosted but not redistributed via a public repo (ITF FFL).
+# Run design/scripts/fetch-fonts.sh to download it.
+design/assets/fonts/Satoshi-*.woff2
+design/assets/fonts/Satoshi-LICENSE-FFL.txt

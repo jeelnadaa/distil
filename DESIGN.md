@@ -2,6 +2,9 @@
 
 > Status: **DRAFT v1, awaiting owner review.** Scope lives in `plan.md`; this file decides how
 > Distil looks, moves and flows. Feature IDs (`F-xxx`) point into `plan.md`.
+>
+> **Living reference:** `design/` holds clickable mock-ups of the landing page, every key screen and
+> every dialog, built on the real tokens (`design/css/tokens.css`). Open `design/index.html`.
 
 ---
 
@@ -59,8 +62,9 @@ The mono adds a "lab notebook" precision for numbers and sources.
 and mono load lazily. Subset to Latin + Latin-Extended + math symbols. No Google Fonts or Fontshare
 CDN at runtime, because the app is local-first and must work offline.
 
-> ⚠ The Fontshare licence lets apps and sites embed Satoshi, but restricts redistributing the font
-> files on their own. Shipping them in a public repo needs a licence check (see §13).
+> ⚠ Satoshi's ITF Free Font Licence allows embedding in apps and sites but forbids distributing the
+> files from a repository or public server. So the font files are gitignored and
+> `design/scripts/fetch-fonts.sh` downloads them from Fontshare; the app build will do the same.
 
 ### Type scale
 
@@ -420,7 +424,7 @@ Limits · Appearance · Keyboard · Prompts · Data.
 
 ## 13. Open design questions
 
-1. **Satoshi licence:** the Fontshare licence restricts redistributing font files. Options: (a) keep Satoshi and have the build download it from Fontshare on first install; (b) ship it and confirm the licence allows bundling in an open-source app; (c) switch to a close SIL OFL alternative such as *Outfit* or *Manrope*. Recommendation: confirm (b), with (a) as the fallback.
+1. **Satoshi licence:** checked. The licence forbids distributing the files from a repo or public server, so (b) is out. Current approach is (a): the build downloads Satoshi from Fontshare. The alternative is (c), switching to a SIL OFL face such as *Outfit* or *Manrope*, which could ship in the repo.
 2. **Copper accent:** OK, or would you prefer a different single accent (deep teal, oxblood, olive)?
 3. **Learner cards vs bubbles:** the design follows LearnHarness's "document, not chat" idea for Teach mode. Should Ask mode use the same treatment, or a lighter conversational one?
 4. **Default theme on first run:** System (proposed), or always dark/light?
