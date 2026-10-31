@@ -44,7 +44,9 @@
       await scrollToEnd();
       if (pending.chatId === chatId) {
         const text = pending.text;
+        if (pending.model) model = pending.model;
         pending.chatId = null;
+        pending.model = null;
         send(text);
       }
     });

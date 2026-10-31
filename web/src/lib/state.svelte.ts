@@ -1,5 +1,5 @@
 // App-wide state: route, library tree, providers and models, settings and toasts.
-import { api, ApiError, type Chat, type Folder, type ModelInfo, type Provider, type SettingsView } from "./api.ts";
+import { api, ApiError, type Chat, type Folder, type ModelInfo, type ModelRef, type Provider, type SettingsView } from "./api.ts";
 
 export type FolderTab = "materials" | "ledger";
 // home: the one place a chat starts (logo and New chat); folderId when it was started from a folder.
@@ -58,7 +58,8 @@ export async function loadModels(refresh = false) {
 }
 
 // A message typed on the home screen, sent once its new chat opens.
-export const pending = $state({ chatId: null as string | null, text: "" });
+// The first message typed on the start screen, and the model picked there, handed to the new chat.
+export const pending = $state({ chatId: null as string | null, text: "", model: null as ModelRef | null });
 
 type Toast = { id: number; text: string; tone: "info" | "error" };
 export const toasts = $state([] as Toast[]);

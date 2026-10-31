@@ -107,20 +107,11 @@ a { color: inherit; text-decoration-thickness: 1px; text-underline-offset: 3px; 
   50% { transform: scale(.6); opacity: .5; }
 }
 
-/* Condense: diffuse type settles into crisp type. Triggered by motion.js. */
-[data-condense] {
-  opacity: 0;
-  letter-spacing: .12em;
-  filter: blur(6px);
-}
-[data-condense].is-condensed {
-  opacity: 1;
-  letter-spacing: var(--condense-to, -.02em);
-  filter: blur(0);
-  transition:
-    opacity var(--dur-deliberate) var(--ease-condense),
-    letter-spacing var(--dur-deliberate) var(--ease-condense),
-    filter var(--dur-deliberate) var(--ease-condense);
+/* Condense: diffuse type settles into crisp type, once, when the element appears. */
+[data-condense] { animation: condense var(--dur-deliberate) var(--ease-condense) both; }
+@keyframes condense {
+  from { opacity: 0; letter-spacing: .12em; filter: blur(6px); }
+  to { opacity: 1; letter-spacing: var(--condense-to, -.02em); filter: blur(0); }
 }
 
 /* Reveal: generic entrance for blocks, staggered with --i. */
@@ -324,7 +315,7 @@ a { color: inherit; text-decoration-thickness: 1px; text-underline-offset: 3px; 
     transition-delay: 0ms !important;
     scroll-behavior: auto !important;
   }
-  [data-condense], [data-condense].is-condensed { letter-spacing: var(--condense-to, -.02em); filter: none; }
+  [data-condense] { animation: none; }
   [data-reveal], [data-reveal].is-revealed { transform: none; }
   .drop--pulse { animation: none; }
 }
@@ -332,5 +323,5 @@ a { color: inherit; text-decoration-thickness: 1px; text-underline-offset: 3px; 
   animation-duration: 1ms !important; animation-iteration-count: 1 !important;
   transition-duration: 120ms !important; transition-delay: 0ms !important;
 }
-:root[data-motion="reduce"] [data-condense] { letter-spacing: var(--condense-to, -.02em); filter: none; }
+:root[data-motion="reduce"] [data-condense] { animation: none; }
 :root[data-motion="reduce"] [data-reveal] { transform: none; }
