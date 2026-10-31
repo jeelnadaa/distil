@@ -81,6 +81,7 @@ quality and completeness.
 | Ledger review | **No manual review; the model's ledger is trusted** as long as every item is well-formed: a valid type, a title, a real statement, and a source anchor whose quote is on that page. These are checked automatically. Tuning ledger and answer quality is the last phase (Phase 10). Decided 2026-10-31, replacing "owner judges completeness" as the Phase 2 exit test. |
 | Study sounds | **Generated in the app** (rain, ocean, brown noise, fan) with play/pause and volume in every top bar; the sound and volume are remembered, and playback starts on a click. Nothing is downloaded. Decided 2026-10-31 (F-1313). |
 | Built-in tutorial | **One "How to use Distil" chat**, shipped with the app, that walks through the whole app in the chat window and answers questions about it. Built last, when the app is done (Phase 9, F-1312). Decided 2026-10-31. |
+| Parallel build | **Phases 3–8 are built at the same time**, one agent per phase on its own branch and worktree, against a shared contract (one schema migration and `server/learning/`) committed first; Phases 9 and 10 run after the merge. Each phase keeps a resumable log in `progress/phase-N.md`. Agents decide what `plan.md` and `DESIGN.md` leave open themselves and list each such choice under "Needs owner review". They may add well-known npm packages, each named and justified in the log; no other downloads. Tests and browser checks use a fake model; each agent may run one short smoke test with the owner's Google key. Decided 2026-11-01. |
 
 ---
 

@@ -11,7 +11,7 @@ Read this file fully before doing anything in this repo.
 
 ## 2. Workflow rules
 
-- **Work in phases** as defined in `plan.md` §15. One phase at a time.
+- **Work in phases** as defined in `plan.md` §15. One phase at a time, except the parallel build of Phases 3–8 (owner, 2026-11-01): each runs on its own `phase-N` branch and worktree under the rules in `progress/README.md`, and keeps its own log in `progress/phase-N.md` instead of editing `PROGRESS.md`.
 - **Ask, don't assume.** If a product decision is not covered by `plan.md` / `DESIGN.md`, ask the owner. Record the answer in `plan.md` §2 (Decisions) before acting on it.
 - **Commit, never push.** Commit each finished feature or coherent step locally with a clear message referencing feature IDs (e.g. `feat(ledger): recall audit loop (F-302)`). Never `git push`.
 - **Docs move with code.** In the same commit as the feature, update:
@@ -61,6 +61,8 @@ Read this file fully before doing anything in this repo.
 | `server/secrets.ts` | API keys in `<data>/secrets.json`: several labelled keys per provider, first is the default |
 | `server/materials/` | Phase 2 ingest: `store` (copies in `<data>/materials/`, re-import keeps unchanged chunks), `parse` (PDF, DOCX, PPTX, Markdown, text, images; flags visual pages), `chunk`, `ingest` (parse job), `render` (PDF pages to JPEG for vision), `web` (links → article Markdown or file), `youtube` (transcripts: Gemini or pasted), `search` (FTS5 keyword index, anchored hits) |
 | `server/ledger/` | Coverage Ledger: `store` (items, sources, merge candidates) and `extract` (extract → audit → merge job, estimate) |
+| `server/learning/` | Shared by every learning mode: `types.ts` (Study Brief schema, item statuses, evidence kinds, chat modes) and `learner.ts` (evidence per item; statuses only move forward) |
+| `progress/` | Parallel build of Phases 3–8: `README.md` (ownership, ports, resume and merge steps), one log per phase, `fake-llm.mjs` |
 | `server/jobs.ts` | Background job runner backed by SQLite (resumes after restart) |
 | `server/llm.ts` | One-shot model calls for agents: walks the slot's fallback list (rate limit, outage, quota, cap → next entry; waits only when all are busy), usage by role, images and videos, validated JSON with one retry |
 | `server/constants.ts` | Limits shared with the browser (no Node imports) |

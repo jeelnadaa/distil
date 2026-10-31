@@ -4,11 +4,13 @@ Living status log. Update in the same commit as every change.
 
 ## Current phase
 
-**Phase 2 — Materials & Coverage Ledger** is done. **Phase 3 — Study Plan** is next.
+**Phases 3–8 are being built in parallel** (owner, 2026-11-01): one agent per phase on its own branch and worktree. Live status, ownership and resume steps: `progress/README.md`; each phase's log: `progress/phase-N.md`.
 
 ## Next up
 
-1. Phase 3: Brief Compiler, planner with code-enforced coverage, plan map and outline, deadline schedule, today view.
+1. Finish Phases 3–8 on their branches (each log's "Next steps").
+2. Merge them in order 3 → 8 on `master`, full test and browser pass, fold the logs into this file.
+3. Phase 9 (Ship), then Phase 10 (Tune).
 
 ## Phase checklist
 
@@ -117,6 +119,11 @@ Living status log. Update in the same commit as every change.
 - Check on the textbook ledger (1,006 items, 1,047 anchors): no bad types, empty titles, short statements, unanchored items or anchors outside their section. 819 quotes match the page exactly, 145 apart from spacing, 51 are on pages read from images (formulas drawn as pictures), 32 differ in typography (split headings, hyphenation). 28 titles appear more than once: merge misses, left for Phase 10.
 - Study sounds (F-1313): rain, ocean, brown noise and fan, generated live with the Web Audio API; play/pause and volume from a headphones button in every top bar; sound and volume remembered.
 - New-chat screen: model picker in the composer; its heading (which never appeared, waiting for a class nothing added) now animates on its own.
+
+### 2026-11-01 · Parallel build of Phases 3–8
+- Owner decision: Phases 3–8 run at once, one agent each; Ship and Tune after the merge. Agents pick and flag open decisions, may add logged npm packages, test against a fake model and run one smoke test each with the owner's key (`plan.md` §2).
+- Shared contract committed before the branches were cut: migration 9 (briefs, plans, units, lessons, lesson items and prerequisites, `chats.lesson_id`, `items.provenance`, learner evidence `item_events`, `cards`), `server/learning/types.ts` (Brief schema, statuses, event kinds) and `server/learning/learner.ts` (evidence log; statuses only move forward). 113 tests.
+- Coordination in `progress/`: ownership of files, APIs and routes per phase, ports and data copies, resume and merge steps, a fake model server.
 
 ## Open questions
 

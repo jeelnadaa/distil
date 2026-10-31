@@ -163,6 +163,96 @@ const MIGRATIONS = [
   END;
   INSERT INTO chunks_fts(chunks_fts) VALUES ('rebuild');
   `,
+  `
+  -- Phases 3–8 shared contract (built in parallel; see progress/README.md). Phases append their own
+  -- migrations after this one and never edit it.
+  -- The Study Brief per folder (F-101…F-104), as validated JSON (server/learning/types.ts).
+  CREATE TABLE briefs (
+    folder_id  TEXT PRIMARY KEY REFERENCES folders(id) ON DELETE CASCADE,
+    data       TEXT NOT NULL,
+    updated_at INTEGER NOT NULL
+  );
+  -- Study plan (F-501): one active plan per folder, units of ordered lessons, each teaching ordered items.
+  CREATE TABLE plans (
+    id         TEXT PRIMARY KEY,
+    folder_id  TEXT NOT NULL REFERENCES folders(id) ON DELETE CASCADE,
+    status     TEXT NOT NULL CHECK (status IN ('draft', 'active', 'archived')),
+    schedule   TEXT,
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL
+  );
+  CREATE INDEX plans_folder ON plans(folder_id, status);
+  CREATE TABLE plan_units (
+    id      TEXT PRIMARY KEY,
+    plan_id TEXT NOT NULL REFERENCES plans(id) ON DELETE CASCADE,
+    ord     INTEGER NOT NULL,
+    title   TEXT NOT NULL,
+    summary TEXT NOT NULL DEFAULT ''
+  );
+  CREATE TABLE lessons (
+    id            TEXT PRIMARY KEY,
+    plan_id       TEXT NOT NULL REFERENCES plans(id) ON DELETE CASCADE,
+    unit_id       TEXT NOT NULL REFERENCES plan_units(id) ON DELETE CASCADE,
+    ord           INTEGER NOT NULL,
+    title         TEXT NOT NULL,
+    summary       TEXT NOT NULL DEFAULT '',
+    minutes       INTEGER NOT NULL DEFAULT 0,
+    status        TEXT NOT NULL DEFAULT 'todo' CHECK (status IN ('todo', 'in_progress', 'done')),
+    scheduled_for TEXT,
+    created_at    INTEGER NOT NULL,
+    updated_at    INTEGER NOT NULL
+  );
+  CREATE INDEX lessons_plan ON lessons(plan_id, ord);
+  CREATE TABLE lesson_items (
+    lesson_id TEXT NOT NULL REFERENCES lessons(id) ON DELETE CASCADE,
+    item_id   TEXT NOT NULL REFERENCES items(id) ON DELETE CASCADE,
+    ord       INTEGER NOT NULL,
+    PRIMARY KEY (lesson_id, item_id)
+  );
+  CREATE INDEX lesson_items_item ON lesson_items(item_id);
+  CREATE TABLE lesson_prereqs (
+    lesson_id   TEXT NOT NULL REFERENCES lessons(id) ON DELETE CASCADE,
+    requires_id TEXT NOT NULL REFERENCES lessons(id) ON DELETE CASCADE,
+    PRIMARY KEY (lesson_id, requires_id)
+  );
+  -- Where an item's content comes from: the folder's material, an extra topic added from a labelled
+  -- answer (F-314, Phase 4), or a researcher's syllabus built from the model (F-205, Phase 8).
+  ALTER TABLE items ADD COLUMN provenance TEXT NOT NULL DEFAULT 'material' CHECK (provenance IN ('material', 'extra', 'generated'));
+  -- A Teach chat belongs to its lesson. chats.mode is one of ask, teach, practice, exam.
+  ALTER TABLE chats ADD COLUMN lesson_id TEXT REFERENCES lessons(id) ON DELETE SET NULL;
+  -- Learner evidence per item (F-610, F-807, F-911): every probe, check, practice or exam answer and
+  -- card review. Mastery and statuses are derived from it in code (server/learning/learner.ts).
+  CREATE TABLE item_events (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    item_id    TEXT NOT NULL REFERENCES items(id) ON DELETE CASCADE,
+    folder_id  TEXT NOT NULL,
+    kind       TEXT NOT NULL CHECK (kind IN ('taught', 'probe', 'check', 'practice', 'exam', 'review')),
+    score      REAL CHECK (score BETWEEN 0 AND 1),
+    confidence TEXT CHECK (confidence IN ('guess', 'unsure', 'sure')),
+    with_help  INTEGER NOT NULL DEFAULT 0,
+    chat_id    TEXT,
+    message_id TEXT,
+    ref        TEXT,
+    at         INTEGER NOT NULL
+  );
+  CREATE INDEX item_events_item ON item_events(item_id, at);
+  CREATE INDEX item_events_folder ON item_events(folder_id, at);
+  -- Flashcards (F-901…F-903); state is the scheduler's JSON (FSRS-class, Phase 7).
+  CREATE TABLE cards (
+    id         TEXT PRIMARY KEY,
+    folder_id  TEXT NOT NULL REFERENCES folders(id) ON DELETE CASCADE,
+    item_id    TEXT REFERENCES items(id) ON DELETE SET NULL,
+    kind       TEXT NOT NULL CHECK (kind IN ('basic', 'reverse', 'cloze', 'formula')),
+    front      TEXT NOT NULL,
+    back       TEXT NOT NULL,
+    origin     TEXT NOT NULL CHECK (origin IN ('taught', 'missed', 'manual', 'import')),
+    state      TEXT NOT NULL DEFAULT '{}',
+    due_at     INTEGER,
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL
+  );
+  CREATE INDEX cards_due ON cards(folder_id, due_at);
+  `,
 ];
 
 export function openDb(file: string): Db {
