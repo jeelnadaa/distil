@@ -1,5 +1,6 @@
 <script lang="ts">
   import ActivityDock from "./ActivityDock.svelte";
+  import SoundButton from "./SoundButton.svelte";
   import { tick } from "svelte";
   import { api, type ModelRef, type Provider, type ProviderKey, type Settings } from "../lib/api.ts";
   import { motionPref, palettePref, PALETTES, setMotion, setPalette, setTheme, themePref, type Motion, type PaletteId, type Theme } from "../lib/prefs.ts";
@@ -162,6 +163,7 @@
 <header class="topbar">
   <button type="button" class="btn btn--ghost btn--icon btn--sm topbar__menu" aria-label="Open menu" onclick={() => (nav.sidebarOpen = true)}><Icon name="sidebar" size="sm" /></button>
   <nav class="topbar__crumb"><strong>Settings</strong></nav>
+  <SoundButton />
   <ActivityDock />
 </header>
 

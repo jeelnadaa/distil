@@ -29,6 +29,7 @@ const ICONS: Record<string, string> = {
   pause: '<path d="M8 5v14M16 5v14"/>',
   cards: '<rect x="3.5" y="7" width="13" height="13" rx="1.5"/><path d="M7.5 4h11.5A1.5 1.5 0 0 1 20.5 5.5V17"/>',
   target: '<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r=".8" fill="currentColor"/>',
+  headphones: '<path d="M4 15v-3a8 8 0 0 1 16 0v3"/><rect x="3.5" y="14" width="4.5" height="6" rx="1.5"/><rect x="16" y="14" width="4.5" height="6" rx="1.5"/>',
   clock: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7v5l3 2"/>',
   book: '<path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H11v16H5.5A1.5 1.5 0 0 1 4 18.5z"/><path d="M20 5.5A1.5 1.5 0 0 0 18.5 4H13v16h5.5a1.5 1.5 0 0 0 1.5-1.5z"/>',
   graph: '<circle cx="6" cy="6" r="2.2"/><circle cx="18" cy="8" r="2.2"/><circle cx="9" cy="18" r="2.2"/><path d="m8 7 8 .7M7 8l1.6 7.8M16.4 9.6 10.6 16.4"/>',

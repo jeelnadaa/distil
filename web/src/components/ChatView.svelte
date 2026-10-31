@@ -1,5 +1,6 @@
 <script lang="ts">
   import ActivityDock from "./ActivityDock.svelte";
+  import SoundButton from "./SoundButton.svelte";
   import { tick, untrack } from "svelte";
   import { api, ApiError, type CapStatus, type Chat, type Message, type Meter, type ModelRef } from "../lib/api.ts";
   import { app, attempt, folderPath, library, loadModels, nav, pending, refreshLibrary, toast } from "../lib/state.svelte.ts";
@@ -153,6 +154,7 @@
       {#if contextPct !== null}<span class="meter__track"><span style:--v="{contextPct}%"></span></span>{/if}
     </span>
   {/if}
+  <SoundButton />
   <ActivityDock />
 </header>
 
