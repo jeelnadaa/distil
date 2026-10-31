@@ -1,7 +1,7 @@
 <script lang="ts">
   import { activity, isActive, jobPct, refreshActivity, resumable, resumeJob, stopJob } from "../lib/activity.svelte.ts";
   import type { Job } from "../lib/api.ts";
-  import { attempt, library } from "../lib/state.svelte.ts";
+  import { attempt, library, popoverAt } from "../lib/state.svelte.ts";
   import Icon from "./Icon.svelte";
 
   // The top-bar button and its panel: what is running anywhere in Distil, and how recent jobs ended.
@@ -9,6 +9,8 @@
   const STRATEGY: Record<string, string> = { balanced: "Balanced", thorough: "Thorough", economy: "Economy" };
 
   let root = $state<HTMLElement>();
+  let button = $state<HTMLElement>();
+  let pos = $state({ top: 0, left: 0, width: 0 });
   const running = $derived(activity.jobs.filter(isActive));
   const recent = $derived(activity.jobs.filter((j) => !isActive(j)).slice(0, 15));
   const folderName = (id: string | null) => library.folders.find((f) => f.id === id)?.name;
@@ -20,6 +22,9 @@
   $effect(() => {
     if (!activity.open) return;
     void refreshActivity();
+    const place = () => (pos = popoverAt(button!, 420));
+    place();
+    addEventListener("resize", place);
     const close = (e: Event) => { if (!root?.contains(e.target as Node)) activity.open = false; };
     const esc = (e: KeyboardEvent) => { if (e.key === "Escape") activity.open = false; };
     document.addEventListener("pointerdown", close);
@@ -27,12 +32,13 @@
     return () => {
       document.removeEventListener("pointerdown", close);
       document.removeEventListener("keydown", esc);
+      removeEventListener("resize", place);
     };
   });
 </script>
 
 <div class="dock" bind:this={root}>
-  <button type="button" class="btn btn--ghost btn--icon btn--sm dock__button" class:is-busy={running.length > 0}
+  <button bind:this={button} type="button" class="btn btn--ghost btn--icon btn--sm dock__button" class:is-busy={running.length > 0}
     aria-label={running.length ? `Activity: ${running.length} running` : "Activity"} aria-expanded={activity.open}
     data-tip={running.length ? `${running.length} running` : "Activity"} onclick={() => (activity.open = !activity.open)}>
     <Icon name="clock" size="sm" />
@@ -40,7 +46,7 @@
   </button>
 
   {#if activity.open}
-    <section class="dock__panel" aria-label="Activity">
+    <section class="dock__panel" aria-label="Activity" style:top="{pos.top}px" style:left="{pos.left}px" style:width="{pos.width}px">
       <header class="dock__head"><span class="eyebrow">Activity</span><span class="caption faint">Running now and the last 24 hours</span></header>
       {#if !activity.jobs.length}
         <p class="dock__empty body-sm muted">Nothing has run yet. Reading and distilling materials show up here.</p>
@@ -85,12 +91,12 @@
     background: var(--accent); color: var(--on-accent, #fff); font-size: 10px; font-weight: 700; line-height: 15px; text-align: center;
   }
   .dock__panel {
-    position: absolute; top: calc(100% + 6px); right: 0; z-index: 60; width: min(420px, calc(100vw - 32px));
+    position: fixed; z-index: 60;
     max-height: min(70vh, 560px); overflow: auto; padding: var(--s-3);
     background: var(--surface-raised, var(--surface)); border: 1px solid var(--border); border-radius: var(--r-md);
     box-shadow: 0 12px 32px rgb(0 0 0 / .28);
   }
-  .dock__head { display: flex; justify-content: space-between; align-items: baseline; gap: var(--s-3); padding: var(--s-1) var(--s-2) var(--s-3); }
+  .dock__head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: var(--s-1) var(--s-3); padding: var(--s-1) var(--s-2) var(--s-3); }
   .dock__empty { padding: var(--s-2); }
   .job { display: grid; gap: 6px; padding: var(--s-3) var(--s-2); border-top: 1px solid var(--border); }
   .job__top { display: flex; justify-content: space-between; gap: var(--s-3); align-items: baseline; }

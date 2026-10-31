@@ -58,6 +58,14 @@ export async function loadModels(refresh = false) {
 }
 
 // A message typed on the home screen, sent once its new chat opens.
+// Where a top-bar popover opens: under its button, right-aligned, kept inside the window.
+// Fixed positioning, so a narrow column can't clip it.
+export function popoverAt(button: HTMLElement, width: number) {
+  const r = button.getBoundingClientRect();
+  const w = Math.min(width, innerWidth - 32);
+  return { top: r.bottom + 6, left: Math.max(16, Math.min(r.right - w, innerWidth - w - 16)), width: w };
+}
+
 // The first message typed on the start screen, and the model picked there, handed to the new chat.
 export const pending = $state({ chatId: null as string | null, text: "", model: null as ModelRef | null });
 
