@@ -69,7 +69,6 @@
   // A merged item can be found twice on one page (in two chunks); each page is linked once.
   const anchors = (item: Item) => item.sources.filter((s, i, all) => all.findIndex((o) => o.materialId === s.materialId && o.loc === s.loc) === i);
 
-  const where = (s: Item["sources"][number]) => `${s.materialName} · ${locLabel(s.unit, s.loc)}`;
 
   async function patch(item: Item, change: Parameters<typeof api.updateItem>[1]) {
     await attempt(() => api.updateItem(item.id, change));
@@ -138,7 +137,7 @@
                   {#if item.statement}<div class="ledger__statement">{@html renderInline(item.statement)}</div>{/if}
                 </td>
                 <td class="sources">
-                  {#each anchors(item) as s (`${s.materialId}:${s.loc}`)}<a class="anchor" href="#/material/{s.materialId}/{s.loc}/{item.id}" data-tip={s.quote}>{where(s)}</a>{/each}
+                  {#each anchors(item) as s (`${s.materialId}:${s.loc}`)}<a class="anchor" href="#/material/{s.materialId}/{s.loc}/{item.id}" data-tip={s.quote}><span class="anchor__file">{s.materialName}</span>&nbsp;· {locLabel(s.unit, s.loc)}</a>{/each}
                 </td>
                 <td><span class="status status--{item.status}"><i></i>{item.mark ? MARKS[item.mark] : STATUS[item.status]}</span></td>
                 <td class="num"><Menu label="Actions for {item.title}" items={actions(item)} /></td>
