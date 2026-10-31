@@ -64,8 +64,8 @@ Read this file fully before doing anything in this repo.
 | `server/jobs.ts` | Background job runner backed by SQLite (resumes after restart) |
 | `server/llm.ts` | One-shot model calls for agents: walks the slot's fallback list (rate limit, outage, quota, cap → next entry; waits only when all are busy), usage by role, images and videos, validated JSON with one retry |
 | `server/constants.ts` | Limits shared with the browser (no Node imports) |
-| `web/src/components/` | Svelte screens and parts: `App`, `Sidebar`/`Tree`, `ChatView`, `SettingsView`, `Home` (the one new-chat screen), `ActivityDock`, `Select` (themed dropdown; use it, never `<select>`), `Tooltip` (reads `data-tip`), dialogs |
-| `web/src/lib/` | `api.ts` (typed client, SSE), `state.svelte.ts` (app state, routes `#/new/:folderId`, `#/chat/:id`, `#/folder/:id/:tab`, `#/material/:id/:loc/:item`, `#/settings/:section`), `markdown.ts`, `prefs.ts`, `icons.ts`, `viewer.ts` (sections, quote ranges, location labels), `activity.svelte.ts` (jobs for the activity panel) |
+| `web/src/components/` | Svelte screens and parts: `App`, `Sidebar`/`Tree`, `ChatView`, `SettingsView`, `Home` (the one new-chat screen), `ActivityDock`, `Select` (themed dropdown; use it, never `<select>`), `Tooltip` (reads `data-tip`), `SoundButton` (study sounds), dialogs |
+| `web/src/lib/` | `api.ts` (typed client, SSE), `state.svelte.ts` (app state, routes `#/new/:folderId`, `#/chat/:id`, `#/folder/:id/:tab`, `#/material/:id/:loc/:item`, `#/settings/:section`), `markdown.ts`, `prefs.ts`, `icons.ts`, `viewer.ts` (sections, quote ranges, location labels), `activity.svelte.ts` (jobs for the activity panel), `sound.svelte.ts` (generated study sounds, Web Audio) |
 | `web/src/styles/` | Design tokens, palettes, base and shell CSS ported from `design/` |
 | `test/` | Vitest suites; fake fetch and scripted models, never real LLMs or the network |
 | `.claude/launch.json` | Preview servers: `app` (Vite dev, 5173) and `design` (mock-ups, 4173) |

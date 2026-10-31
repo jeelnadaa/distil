@@ -78,6 +78,8 @@ quality and completeness.
 | Topics outside the material | **Offered, not added:** a labelled out-of-material answer has an "Add to this subject" button that adds it to the ledger as an *extra* item, so the plan, practice and cards include it. Decided 2026-10-31 (F-314). |
 | Topic-only subjects | **Web search when set up, else the model's knowledge.** The researcher cites web sources when a search key is added; otherwise the syllabus is built from the model and every item is marked *generated*. Decided 2026-10-31 (F-205). |
 | Memory | **Learner state in the database, not chat history** (§4.5): recent turns verbatim, a rolling summary per chat, per-item learner state (taught, mastery, mistakes, misconceptions) and the folder digest. Decided 2026-10-31 (F-1007). |
+| Ledger review | **No manual review; the model's ledger is trusted** as long as every item is well-formed: a valid type, a title, a real statement, and a source anchor whose quote is on that page. These are checked automatically. Tuning ledger and answer quality is the last phase (Phase 10). Decided 2026-10-31, replacing "owner judges completeness" as the Phase 2 exit test. |
+| Study sounds | **Generated in the app** (rain, ocean, brown noise, fan) with play/pause and volume in every top bar; the sound and volume are remembered, and playback starts on a click. Nothing is downloaded. Decided 2026-10-31 (F-1313). |
 | Built-in tutorial | **One "How to use Distil" chat**, shipped with the app, that walks through the whole app in the chat window and answers questions about it. Built last, when the app is done (Phase 9, F-1312). Decided 2026-10-31. |
 
 ---
@@ -490,6 +492,7 @@ Four layers, cheapest first:
 | F-1309 | Text font: Satoshi (default), Anthropic Sans (only if installed locally; never bundled), or added fonts (installed font name or uploaded .woff2/.woff/.ttf/.otf), each saved under an optional name as its own pill. Replaces Satoshi everywhere; display and mono unchanged | M |
 | F-1310 | Activity panel in every top bar: running jobs (progress, which fallback model is answering, stop) and the last 24 hours (done, stopped, failed, resume) | M |
 | F-1311 | Themed controls: Distil's own dropdown in place of the browser's, and a tooltip on every control | M |
+| F-1313 | Study sounds: rain, ocean, brown noise and fan, synthesised live (no files); play/pause and volume from a top-bar button; sound and volume remembered | S |
 | F-1312 | Built-in tutorial: one "How to use Distil" chat that explains the whole app in the chat window and answers questions about it; kept in step with the shipped features | M |
 
 ---
@@ -544,7 +547,7 @@ Each phase ends with: features working end-to-end, tests green, docs updated (`P
 |---|---|---|---|
 | 0 | Plan & design | `plan.md` ✅, `DESIGN.md` (UX flows, screens, visual system), architecture notes | Owner approves both |
 | 1 | Foundation | App shell, local data store, settings, BYOK providers + model picker, streaming chat, folders (5 levels) + chats, auto-naming, markdown/math/code rendering, token recording + chat meter + caps (F-1101, F-1102, F-1104, F-1105) | Create folder → chat → talk to a model; usage recorded; cap blocks |
-| 2 | Materials & Ledger | Ingestion (PDF/slides/docs/images/web/YouTube), chunking, extraction, recall audit, dedup, ledger UI, cost pre-flight, material viewer | A 4-unit syllabus PDF yields a ledger the owner judges complete |
+| 2 | Materials & Ledger | Ingestion (PDF/slides/docs/images/web/YouTube), chunking, extraction, recall audit, dedup, ledger UI, cost pre-flight, material viewer | A real textbook yields a well-formed ledger: every item typed, titled, stated and anchored to a page that holds its quote (checked automatically; owner review not required) |
 | 3 | Study Plan | Brief Compiler, planner with code-enforced coverage, plan map/outline (data-only rendering, §7.5), deadline schedule, today view | Plan covers 100 % of ledger; schedule re-balances |
 | 4 | Teach | Retrieval with keyword index + configurable embeddings (F-1004, F-1005), probe, session plan panel, checks + confidence + thinking, repair loop, item status updates, recap, quick actions | Full lesson from plan click to recap; ledger statuses move |
 | 5 | Interactives | Widget grammars + renderer in the design language (§7.5), SVG sanitiser, Distil kit for sandboxed mini-apps with test-before-show and design lint, visual maker, interactivity dial | Dial demonstrably changes behaviour; mini-app errors self-heal; every visual follows the active theme, palette and font with no hard-coded styling |
@@ -553,7 +556,9 @@ Each phase ends with: features working end-to-end, tests green, docs updated (`P
 | 8 | Providers+ & usage | Google sign-in (experimental), usage dashboard + graphs, custom endpoints, researcher/topic-only, web search | Gemini via Google login works behind the warning |
 | 9 | Ship | Windows installer, auto-update, export/import, keyboard pass, accessibility pass, README/credits, built-in tutorial chat (F-1312) | Installable build; the tutorial chat walks a new user through every mode |
 
-Phases 5–8 can be re-ordered on request.
+| 10 | Tune | Ledger quality (merge misses, quote matching across hyphenation and ligatures, extraction noise) and answer quality (grounding, teaching, grading), measured with saved evaluation sets and fixed against them | Agreed quality bar met on the textbook and the owner's own material |
+
+Phases 5–8 can be re-ordered on request. Quality tuning is deliberately last (owner, 2026-10-31).
 
 ---
 

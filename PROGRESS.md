@@ -4,12 +4,11 @@ Living status log. Update in the same commit as every change.
 
 ## Current phase
 
-**Phase 2 — Materials & Coverage Ledger** in progress: every input type (files, images, web pages, YouTube), extraction with vision, the ledger, the workspace, the viewer and re-import are done and browser-verified. Textbook chapters 1–2 are fully distilled; the owner's completeness judgement and the extraction-noise decision are what's left.
+**Phase 2 — Materials & Coverage Ledger** is done. **Phase 3 — Study Plan** is next.
 
 ## Next up
 
-1. Owner judges chapters 1–2 of the textbook ledger for completeness.
-2. Merge on the cheap model misses obvious duplicates (the "value = mean + (#ofSTDEVs)(standard deviation)" formula appears on pages 120 and 122).
+1. Phase 3: Brief Compiler, planner with code-enforced coverage, plan map and outline, deadline schedule, today view.
 
 ## Phase checklist
 
@@ -19,7 +18,7 @@ Living status log. Update in the same commit as every change.
 - [x] Phase 0d — Logo chosen: Condense
 - [x] Phase 0e — Landing page and app mock-ups built and approved
 - [x] Phase 1 — Foundation
-- [ ] Phase 2 — Materials & Coverage Ledger
+- [x] Phase 2 — Materials & Coverage Ledger
 - [ ] Phase 3 — Study Plan
 - [ ] Phase 4 — Teach
 - [ ] Phase 5 — Interactives
@@ -27,6 +26,7 @@ Living status log. Update in the same commit as every change.
 - [ ] Phase 7 — Retention
 - [ ] Phase 8 — Providers+ & usage dashboard
 - [ ] Phase 9 — Ship
+- [ ] Phase 10 — Tune (ledger and answer quality)
 
 ## Log
 
@@ -112,6 +112,12 @@ Living status log. Update in the same commit as every change.
 - Grounding and memory design recorded (`plan.md` §4.5): ledger for coverage, anchored retrieval for content, grounding labels on every answer (F-1006), layered chat memory with learner state in the database (F-1007). Owner decisions: uncovered questions are answered at once and labelled; out-of-material topics are offered as *extra* ledger items (F-314); topic-only subjects use web search when set up, else the model, marked *generated* (F-205).
 - 108 tests.
 
+### 2026-10-31 · Phase 2 closed; study sounds
+- Owner decision: the ledger is not reviewed by hand. It is accepted when every item is well-formed, checked automatically; quality tuning moves to a new last phase, Phase 10 (`plan.md` §2, §15).
+- Check on the textbook ledger (1,006 items, 1,047 anchors): no bad types, empty titles, short statements, unanchored items or anchors outside their section. 819 quotes match the page exactly, 145 apart from spacing, 51 are on pages read from images (formulas drawn as pictures), 32 differ in typography (split headings, hyphenation). 28 titles appear more than once: merge misses, left for Phase 10.
+- Study sounds (F-1313): rain, ocean, brown noise and fan, generated live with the Web Audio API; play/pause and volume from a headphones button in every top bar; sound and volume remembered.
+- New-chat screen: model picker in the composer; its heading (which never appeared, waiting for a class nothing added) now animates on its own.
+
 ## Open questions
 
 See `plan.md` §18.
@@ -127,6 +133,7 @@ See `plan.md` §18.
 - Caps are in tokens only. Cost caps need per-model prices; planned with the usage dashboard (Phase 8).
 - A cap is checked before each request, so one reply already in flight can finish past 100 %.
 - Keys are in a user-only file, not yet the OS credential store; the desktop build (Phase 9) moves them.
+- Ledger quality gaps for Phase 10: some duplicates survive merging on the cheap model (28 repeated titles on the textbook), and 32 quotes don't match their page text exactly.
 - Keyword search has an API but no screen yet; Ask with sources (Phase 4) is its first user.
 - A fallback model answering a chat is shown under the reply only while its model differs from the chat's own model.
 - `npm audit`: two low-severity advisories in a build-time dependency of the Svelte Vite plugin (deepmerge); nothing ships to users.
