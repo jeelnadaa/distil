@@ -147,6 +147,22 @@ const MIGRATIONS = [
   -- A line about how a running job is going, such as which fallback model is answering.
   ALTER TABLE jobs ADD COLUMN note TEXT;
   `,
+  `
+  -- Local keyword index over every chunk (BM25, stemmed), kept in step with chunks by triggers, so
+  -- importing, re-importing and deleting a material update it with no model involved.
+  CREATE VIRTUAL TABLE chunks_fts USING fts5(headings, text, content='chunks', content_rowid='rowid', tokenize='porter unicode61 remove_diacritics 2');
+  CREATE TRIGGER chunks_fts_insert AFTER INSERT ON chunks BEGIN
+    INSERT INTO chunks_fts(rowid, headings, text) VALUES (new.rowid, new.headings, new.text);
+  END;
+  CREATE TRIGGER chunks_fts_delete AFTER DELETE ON chunks BEGIN
+    INSERT INTO chunks_fts(chunks_fts, rowid, headings, text) VALUES ('delete', old.rowid, old.headings, old.text);
+  END;
+  CREATE TRIGGER chunks_fts_update AFTER UPDATE OF headings, text ON chunks BEGIN
+    INSERT INTO chunks_fts(chunks_fts, rowid, headings, text) VALUES ('delete', old.rowid, old.headings, old.text);
+    INSERT INTO chunks_fts(rowid, headings, text) VALUES (new.rowid, new.headings, new.text);
+  END;
+  INSERT INTO chunks_fts(chunks_fts) VALUES ('rebuild');
+  `,
 ];
 
 export function openDb(file: string): Db {

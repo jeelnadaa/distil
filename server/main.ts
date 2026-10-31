@@ -9,6 +9,7 @@ import { createLibrary } from "./library.ts";
 import { registerExtraction } from "./ledger/extract.ts";
 import { createLedger } from "./ledger/store.ts";
 import { registerIngest } from "./materials/ingest.ts";
+import { createSearch } from "./materials/search.ts";
 import { createMaterials } from "./materials/store.ts";
 import { createMessages } from "./messages.ts";
 import { createProviders } from "./providers/service.ts";
@@ -46,6 +47,7 @@ export function createServer({ port, dataDir = defaultDataDir(), fetch }: { port
     usage,
     fonts: createFonts(join(dataDir, "fonts")),
     materials,
+    search: createSearch(db),
     ledger,
     jobs,
     providers,

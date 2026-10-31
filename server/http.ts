@@ -7,6 +7,7 @@ import type { Fonts } from "./fonts.ts";
 import type { Jobs } from "./jobs.ts";
 import { estimateExtraction, type ExtractParams, extractLabel, inRange, visualPages } from "./ledger/extract.ts";
 import type { Ledger } from "./ledger/store.ts";
+import type { Search } from "./materials/search.ts";
 import { MAX_MATERIAL_BYTES, type Material, type Materials, type StoredChunk } from "./materials/store.ts";
 import { parseLabel, reimportLabel } from "./materials/ingest.ts";
 import { type FetchFn, fetchUrl, parseUrl } from "./materials/web.ts";
@@ -15,10 +16,10 @@ import { ProviderError } from "./providers/types.ts";
 import { ITEM_TYPES } from "./prompts.ts";
 import { SettingsPatch } from "./settings.ts";
 
-export type AppDeps = ChatDeps & { dataDir: string; allowedHosts: string[]; fonts: Fonts; materials: Materials; ledger: Ledger; jobs: Jobs; fetch?: FetchFn };
+export type AppDeps = ChatDeps & { dataDir: string; allowedHosts: string[]; fonts: Fonts; materials: Materials; search: Search; ledger: Ledger; jobs: Jobs; fetch?: FetchFn };
 
 const NullableId = z.string().min(1).nullable();
-const ModelRefBody = z.object({ provider: z.string().min(1), id: z.string().min(1) });
+const ModelRefBody = z.object({ provider: z.string().min(1), id: z.string().min(1), key: z.string().min(1).optional() });
 const StrategyBody = z.object({ strategy: z.enum(["balanced", "thorough", "economy"]).default("balanced") });
 const Location = z.coerce.number().int().positive().optional();
 const Scope = StrategyBody.extend({ materialId: z.string().min(1).optional(), from: Location, to: Location });
@@ -140,6 +141,12 @@ export function createApp(deps: AppDeps) {
 
   /* ---------- Materials (F-201…F-210) ---------- */
   app.get("/folders/:id/materials", (c) => c.json(materials.list(c.req.param("id"))));
+  // Keyword search over the folder's materials, each hit anchored to its page, slide or line.
+  app.get("/folders/:id/search", (c) => {
+    library.requireFolder(c.req.param("id"));
+    const q = (c.req.query("q") ?? "").slice(0, 500);
+    return c.json(deps.search.search(c.req.param("id"), q, Math.min(Number(c.req.query("limit")) || 20, 50)));
+  });
   app.post("/folders/:id/materials", async (c) => {
     if (Number(c.req.header("content-length") ?? 0) > MAX_MATERIAL_BYTES) throw new AppError(413, "file_too_large", "Files can be up to 200 MB.");
     const name = decodeURIComponent(c.req.header("x-file-name") ?? "");
