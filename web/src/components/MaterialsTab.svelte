@@ -17,6 +17,9 @@
   let over = $state(false);
   let uploading = $state(0);
   let removing = $state<FolderMaterial | null>(null);
+  let replaceInput = $state<HTMLInputElement>();
+  let replacing = $state<FolderMaterial | null>(null);
+  let diff = $state<FolderMaterial | null>(null);
   let link = $state("");
   let fetching = $state(false);
 
@@ -68,6 +71,27 @@
   }
   const host = (url: string) => { try { return new URL(url).hostname.replace(/^www\./, ""); } catch { return url; } };
 
+  // A new version (F-212): unchanged sections keep their items; the rest is read again and waits to be distilled.
+  const isVideo = (m: FolderMaterial) => !!m.source && /youtube\.com\/watch/.test(m.source);
+  async function replaceWith(file: File) {
+    const target = replacing!;
+    replacing = null;
+    if (await attempt(() => api.replaceMaterial(target.id, file))) onchange();
+  }
+  async function refetch(m: FolderMaterial) {
+    if (await attempt(() => api.refetchMaterial(m.id))) onchange();
+  }
+  async function dismiss(m: FolderMaterial) {
+    diff = null;
+    if (await attempt(() => api.dismissReimport(m.id))) onchange();
+  }
+  const changes = (m: FolderMaterial) => {
+    const r = m.reimport!;
+    const parts = [`${r.added} new or changed ${r.added === 1 ? "section" : "sections"}`];
+    if (r.items.length) parts.push(`${r.items.length} ${r.items.length === 1 ? "item" : "items"} removed`);
+    return `Updated: ${parts.join(", ")}.`;
+  };
+
   async function remove() {
     const target = removing!;
     removing = null;
@@ -91,6 +115,7 @@
   <input id="material-link" class="input" type="url" placeholder="Or paste a link to a web page, PDF or YouTube video" bind:value={link} disabled={fetching} />
   <button type="submit" class="btn btn--secondary btn--sm" disabled={!link.trim() || fetching}>{fetching ? "Fetching…" : "Add link"}</button>
 </form>
+<input type="file" accept={ACCEPT} hidden bind:this={replaceInput} onchange={(e) => { const t = e.currentTarget; if (t.files?.[0]) replaceWith(t.files[0]); t.value = ""; }} />
 <input type="file" multiple accept={ACCEPT} hidden bind:this={input} onchange={(e) => { const t = e.currentTarget; if (t.files?.length) upload(t.files); t.value = ""; }} />
 
 {#if materials.length}
@@ -106,6 +131,12 @@
               {#if m.source}<a class="caption faint source" href={m.source} target="_blank" rel="noopener noreferrer">{host(m.source)}</a>{/if}
               {#if m.inherited}<span class="caption faint"> · from a parent folder</span>{/if}
               {#if m.error}<div class="caption error">{m.error}</div>{/if}
+              {#if m.reimport && !m.inherited}
+                <div class="caption muted reimport">{changes(m)}
+                  {#if m.reimport.items.length}<button type="button" class="linkish" onclick={() => (diff = m)}>See removed</button>{/if}
+                  <button type="button" class="linkish" onclick={() => dismiss(m)}>Dismiss</button>
+                </div>
+              {/if}
             </td>
             <td class="body-sm muted">{size(m.size)}</td>
             <td class="body-sm muted">{length(m)}</td>
@@ -113,6 +144,13 @@
             <td class="num">
               {#if !m.inherited && m.status === "ready" && m.distilled < m.chunks && !extracting(m)}
                 <button type="button" class="btn btn--ghost btn--sm" onclick={() => ondistil(m)}>Distil…</button>
+              {/if}
+              {#if !m.inherited && m.status !== "queued" && m.status !== "parsing" && !isVideo(m)}
+                {#if m.source}
+                  <button type="button" class="btn btn--ghost btn--icon btn--sm" aria-label="Fetch {m.name} again" title="Fetch again" onclick={() => refetch(m)}><Icon name="refresh" size="sm" /></button>
+                {:else}
+                  <button type="button" class="btn btn--ghost btn--icon btn--sm" aria-label="Replace {m.name} with a new version" title="Replace with a new version" onclick={() => { replacing = m; replaceInput?.click(); }}><Icon name="upload" size="sm" /></button>
+                {/if}
               {/if}
               {#if !m.inherited}
                 <button type="button" class="btn btn--ghost btn--icon btn--sm" aria-label="Remove {m.name}" title="Remove" onclick={() => (removing = m)}><Icon name="trash" size="sm" /></button>
@@ -151,6 +189,19 @@
   {/snippet}
 </Dialog>
 
+<Dialog bind:open={() => !!diff, (v) => { if (!v) diff = null; }} title="Removed with the old text" eyebrow={diff?.name ?? ""}>
+  {#if diff?.reimport}
+    <p class="body-sm">These ledger items were only found in text the new version no longer has, so they left the ledger. Items you added by hand stay.</p>
+    <ul class="removed">
+      {#each diff.reimport.items as removedItem, i (i)}<li><span class="chip">{removedItem.type}</span>{removedItem.title}</li>{/each}
+    </ul>
+  {/if}
+  {#snippet footer()}
+    <button type="button" class="btn btn--ghost" onclick={() => (diff = null)}>Close</button>
+    <button type="button" class="btn btn--secondary" onclick={() => dismiss(diff!)}>Dismiss</button>
+  {/snippet}
+</Dialog>
+
 <Dialog bind:open={() => !!removing, (v) => { if (!v) removing = null; }} title="Remove {removing?.name}?" eyebrow="Remove material" danger>
   <p class="body-sm">Distil deletes its copy of the file. Ledger items found only in it go too; items you added by hand stay.</p>
   {#snippet footer()}
@@ -165,6 +216,11 @@
   .link-row .input { flex: 1; min-width: 0; padding-left: 34px; }
   .link-row__icon { position: absolute; left: 11px; display: flex; color: var(--text-faint); pointer-events: none; }
   .source { margin-left: var(--s-2); }
+  .reimport { display: flex; flex-wrap: wrap; gap: var(--s-2); align-items: baseline; margin-top: 2px; }
+  .linkish { color: var(--text-muted); text-decoration: underline; text-underline-offset: 3px; }
+  .linkish:hover { color: var(--text); }
+  .removed { display: grid; gap: var(--s-2); max-height: 50vh; overflow: auto; padding: 0; list-style: none; }
+  .removed li { display: flex; gap: var(--s-2); align-items: baseline; font-size: var(--t-body-sm); }
   .video-how { display: grid; gap: var(--s-3); justify-items: start; }
   .video-how .field { width: 100%; }
   .materials a.pf-src { color: inherit; text-decoration: none; max-width: 44ch; }

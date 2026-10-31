@@ -15,9 +15,10 @@ export function registerIngest(jobs: Jobs, materials: Materials, ledger: Ledger)
     try {
       const parsed = await parseMaterial(material.kind, materials.read(id).bytes);
       if (signal.aborted) return materials.setStatus(id, "error", "Stopped before it finished reading.");
-      materials.saveChunks(id, parsed.unit, parsed.length, chunkBlocks(parsed.unit, parsed.blocks), parsed.visual);
-      // Re-reading a material replaces its chunks; items that were only found in the old ones go too.
-      ledger.removeOrphans();
+      const chunks = materials.saveChunks(id, parsed.unit, parsed.length, chunkBlocks(parsed.unit, parsed.blocks), parsed.visual);
+      // Re-reading a material replaces its changed chunks; items that were only found in the old ones go too.
+      const removed = ledger.removeOrphans();
+      if ((job.params as { reimport?: boolean }).reimport) materials.setReimport(id, { at: Date.now(), ...chunks, items: removed.slice(0, 500) });
       progress(1, 1);
     } catch (err) {
       materials.setStatus(id, "error", err instanceof Error ? err.message : String(err));
@@ -27,3 +28,4 @@ export function registerIngest(jobs: Jobs, materials: Materials, ledger: Ledger)
 }
 
 export const parseLabel = (name: string) => `Reading ${name}`;
+export const reimportLabel = (name: string) => `Re-reading ${name}`;

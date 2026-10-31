@@ -139,6 +139,10 @@ const MIGRATIONS = [
   -- Phase 2: where a material was fetched from (a web page or video), so it can be fetched again.
   ALTER TABLE materials ADD COLUMN source TEXT;
   `,
+  `
+  -- Phase 2: what the last re-import of a material changed (F-212), as JSON.
+  ALTER TABLE materials ADD COLUMN reimport TEXT;
+  `,
 ];
 
 export function openDb(file: string): Db {

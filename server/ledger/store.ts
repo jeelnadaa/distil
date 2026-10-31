@@ -183,8 +183,12 @@ export function createLedger(db: Db, now = () => Date.now()) {
     },
 
     // Extracted items whose every source is gone (their material was deleted or re-read) go with it.
-    removeOrphans() {
-      db.prepare("DELETE FROM items WHERE origin != 'manual' AND id NOT IN (SELECT item_id FROM item_sources)").run();
+    // Items left with no anchor (their text was removed) go; the ones removed are returned for the re-import diff.
+    removeOrphans(): { type: string; title: string }[] {
+      const where = "origin != 'manual' AND id NOT IN (SELECT item_id FROM item_sources)";
+      const removed = db.prepare(`SELECT type, title FROM items WHERE ${where} ORDER BY created_at`).all() as { type: string; title: string }[];
+      db.prepare(`DELETE FROM items WHERE ${where}`).run();
+      return removed;
     },
   };
 }

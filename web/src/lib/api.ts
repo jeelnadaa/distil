@@ -92,6 +92,10 @@ export const api = {
   addLink: (folderId: string, url: string, transcript?: string) => json<FolderMaterial>("POST", `/folders/${folderId}/materials/url`, { url, transcript }),
   material: (id: string) => json<{ material: Material; chunks: StoredChunk[] }>("GET", `/materials/${id}`),
   deleteMaterial: (id: string) => done("DELETE", `/materials/${id}`),
+  replaceMaterial: async (id: string, file: File): Promise<Material> =>
+    (await call("POST", `/materials/${id}/replace`, undefined, undefined, file)).json(),
+  refetchMaterial: (id: string) => json<Material>("POST", `/materials/${id}/refetch`, {}),
+  dismissReimport: (id: string) => done("DELETE", `/materials/${id}/reimport`),
   estimate: (folderId: string, scope: DistilScope, reaudit = false) => {
     const query = new URLSearchParams(Object.entries(scope).filter(([, v]) => v !== undefined).map(([k, v]) => [k, String(v)]));
     if (reaudit) query.set("reaudit", "1");

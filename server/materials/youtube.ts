@@ -3,7 +3,7 @@ import { complete, type LlmDeps, videoSlot } from "../llm.ts";
 import { TRANSCRIBE_SYSTEM } from "../prompts.ts";
 import type { FetchFn, Fetched } from "./web.ts";
 
-// YouTube materials (F-205). YouTube offers no public caption download for other people's videos,
+// YouTube materials (F-204). YouTube offers no public caption download for other people's videos,
 // so a video becomes a transcript one of two ways: a Gemini model watches it (Google's API takes
 // YouTube links directly), or the learner pastes the transcript YouTube shows under the video.
 // Either way it is kept as Markdown with [mm:ss] times, so ledger anchors point into the video.

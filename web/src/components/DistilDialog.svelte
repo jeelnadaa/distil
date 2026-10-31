@@ -85,7 +85,7 @@
     {/if}
     <div class="pf-total">
       {#if estimate}
-        <span class="body-sm muted">{estimate.materials} {estimate.materials === 1 ? "file" : "files"} · {estimate.chunks} {estimate.chunks === 1 ? "part" : "parts"}{#if estimate.images} · {estimate.images} page {estimate.images === 1 ? "image" : "images"}{/if}</span>
+        <span class="body-sm muted">{estimate.materials} {estimate.materials === 1 ? "file" : "files"} · {estimate.chunks} {estimate.chunks === 1 ? "part" : "parts"}{#if estimate.images}{" · "}{estimate.images} page {estimate.images === 1 ? "image" : "images"}{/if}</span>
         <span class="mono">
           <span class="num">~{fmt.format(estimate.total).toLowerCase()} tokens</span>
           {#if estimate.cheap.input + estimate.cheap.output > 0}

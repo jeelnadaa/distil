@@ -3,7 +3,7 @@ import { parseHTML } from "linkedom";
 import { AppError } from "../errors.ts";
 import { MAX_MATERIAL_BYTES } from "./store.ts";
 
-// Web materials (F-204): a link is fetched once and kept as a copy, like a file. A web page becomes
+// Web materials (F-203): a link is fetched once and kept as a copy, like a file. A web page becomes
 // Markdown of its main article (Readability drops menus, ads and footers), with its maths kept as
 // LaTeX; a link straight to a PDF, image or text file is kept as that file.
 

@@ -16,8 +16,10 @@ export type MaterialStatus = "queued" | "parsing" | "ready" | "error";
 export type Material = {
   id: string; folderId: string; kind: MaterialKind; name: string; size: number; sha256: string;
   status: MaterialStatus; error: string | null; unit: LocUnit | null; length: number | null;
-  chunks: number; tokens: number; distilled: number; visual: number[]; source: string | null; createdAt: number;
+  chunks: number; tokens: number; distilled: number; visual: number[]; source: string | null; reimport: Reimport | null; createdAt: number;
 };
+// kept/added/removed count chunks (sections); items are the ledger items that left with removed text.
+export type Reimport = { at: number; kept: number; added: number; removed: number; items: { type: string; title: string }[] };
 export type StoredChunk = {
   id: string; ord: number; from: number; to: number; headings: string[]; text: string; tokens: number;
   marks: [number, number][]; extracted: boolean; auditRounds: number; audited: boolean;
@@ -25,11 +27,11 @@ export type StoredChunk = {
 
 type Row = {
   id: string; folder_id: string; kind: MaterialKind; name: string; size: number; sha256: string; status: MaterialStatus;
-  error: string | null; unit: LocUnit | null; length: number | null; created_at: number; chunks: number; tokens: number; distilled: number; visual: string; source: string | null;
+  error: string | null; unit: LocUnit | null; length: number | null; created_at: number; chunks: number; tokens: number; distilled: number; visual: string; source: string | null; reimport: string | null;
 };
 const toMaterial = (r: Row): Material => ({
   id: r.id, folderId: r.folder_id, kind: r.kind, name: r.name, size: r.size, sha256: r.sha256, status: r.status,
-  error: r.error, unit: r.unit, length: r.length, chunks: r.chunks, tokens: r.tokens, distilled: r.distilled, visual: JSON.parse(r.visual) as number[], source: r.source, createdAt: r.created_at,
+  error: r.error, unit: r.unit, length: r.length, chunks: r.chunks, tokens: r.tokens, distilled: r.distilled, visual: JSON.parse(r.visual) as number[], source: r.source, reimport: r.reimport ? JSON.parse(r.reimport) as Reimport : null, createdAt: r.created_at,
 });
 
 const SELECT = `SELECT m.*, COUNT(c.id) AS chunks, COALESCE(SUM(c.tokens), 0) AS tokens,
@@ -105,13 +107,52 @@ export function createMaterials(db: Db, dir: string, now = () => Date.now()) {
     },
 
     // Replaces the material's chunks in one transaction, so a re-parse never leaves a half-written set.
-    saveChunks(id: string, unit: LocUnit, length: number, chunks: Chunk[], visual: number[] = []) {
-      transaction(db, () => {
-        db.prepare("DELETE FROM chunks WHERE material_id = ?").run(id);
+    // A chunk whose text is unchanged keeps its id, its extraction progress and its ledger anchors
+    // (moved with it if it now starts elsewhere), so re-importing an edited file only re-mines what changed (F-212).
+    saveChunks(id: string, unit: LocUnit, length: number, chunks: Chunk[], visual: number[] = []): { kept: number; added: number; removed: number } {
+      return transaction(db, () => {
+        const old = db.prepare("SELECT id, text, loc_from FROM chunks WHERE material_id = ?").all(id) as { id: string; text: string; loc_from: number }[];
+        const byText = new Map<string, typeof old>();
+        for (const c of old) byText.set(c.text, [...(byText.get(c.text) ?? []), c]);
         const insert = db.prepare("INSERT INTO chunks (id, material_id, ord, loc_from, loc_to, headings, text, tokens, marks) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
-        chunks.forEach((c, i) => insert.run(randomUUID(), id, i, c.anchor.from, c.anchor.to, JSON.stringify(c.headings), c.text, c.tokens, JSON.stringify(c.marks)));
+        const update = db.prepare("UPDATE chunks SET ord = ?, loc_from = ?, loc_to = ?, headings = ?, marks = ? WHERE id = ?");
+        const shift = db.prepare("UPDATE item_sources SET loc = loc + ? WHERE chunk_id = ?");
+        const keep = new Set<string>();
+        chunks.forEach((c, i) => {
+          const same = byText.get(c.text)?.shift();
+          if (same) {
+            keep.add(same.id);
+            update.run(i, c.anchor.from, c.anchor.to, JSON.stringify(c.headings), JSON.stringify(c.marks), same.id);
+            if (c.anchor.from !== same.loc_from) shift.run(c.anchor.from - same.loc_from, same.id);
+          } else {
+            insert.run(randomUUID(), id, i, c.anchor.from, c.anchor.to, JSON.stringify(c.headings), c.text, c.tokens, JSON.stringify(c.marks));
+          }
+        });
+        const gone = old.filter((c) => !keep.has(c.id));
+        const remove = db.prepare("DELETE FROM chunks WHERE id = ?");
+        for (const c of gone) remove.run(c.id);
         db.prepare("UPDATE materials SET status = 'ready', error = NULL, unit = ?, length = ?, visual = ? WHERE id = ?").run(unit, length, JSON.stringify(visual), id);
+        return { kept: keep.size, added: chunks.length - keep.size, removed: gone.length };
       });
+    },
+
+    // A new version of the material: the file is swapped and read again (F-212). Its name follows the new file.
+    replace(id: string, fileName: string, bytes: Uint8Array): Material {
+      const material = get(id);
+      if (!bytes.length) throw new AppError(400, "empty_file", "That file is empty.");
+      if (bytes.length > MAX_MATERIAL_BYTES) throw new AppError(413, "file_too_large", "Files can be up to 200 MB.");
+      const sha256 = createHash("sha256").update(bytes).digest("hex");
+      if (sha256 === material.sha256) throw new AppError(409, "unchanged", material.source ? "The page hasn't changed since it was added." : "This is the same file as before; nothing changed.");
+      const name = fileName.replace(/[\\/]/g, "_").trim().slice(0, 200) || material.name;
+      const kind = detectKind(name, bytes);
+      writeFileSync(fileOf(id), bytes);
+      db.prepare("UPDATE materials SET name = ?, kind = ?, size = ?, sha256 = ?, status = 'queued', error = NULL WHERE id = ?").run(name, kind, bytes.length, sha256, id);
+      return get(id);
+    },
+
+    // What the last re-import changed, shown until the learner dismisses it.
+    setReimport(id: string, diff: Reimport | null) {
+      db.prepare("UPDATE materials SET reimport = ? WHERE id = ?").run(diff && JSON.stringify(diff), id);
     },
 
     chunks(id: string): StoredChunk[] {

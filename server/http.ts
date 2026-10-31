@@ -8,7 +8,7 @@ import type { Jobs } from "./jobs.ts";
 import { estimateExtraction, type ExtractParams, extractLabel, inRange, visualPages } from "./ledger/extract.ts";
 import type { Ledger } from "./ledger/store.ts";
 import { MAX_MATERIAL_BYTES, type Material, type Materials, type StoredChunk } from "./materials/store.ts";
-import { parseLabel } from "./materials/ingest.ts";
+import { parseLabel, reimportLabel } from "./materials/ingest.ts";
 import { type FetchFn, fetchUrl, parseUrl } from "./materials/web.ts";
 import { MAX_PASTED_CHARS, pastedTranscript, transcribeVideo, videoTitle, watchUrl, youtubeId } from "./materials/youtube.ts";
 import { ProviderError } from "./providers/types.ts";
@@ -50,7 +50,7 @@ export function createApp(deps: AppDeps) {
     if (origin && new URL(origin).host !== host) throw new AppError(403, "forbidden_origin", "Cross-origin requests are not allowed.");
     // File uploads are raw bytes; that content type can't be sent cross-site without a CORS preflight, which we never grant.
     const type = c.req.header("content-type") ?? "";
-    const upload = c.req.method === "POST" && /^\/api\/folders\/[^/]+\/materials$/.test(c.req.path) && type === "application/octet-stream";
+    const upload = c.req.method === "POST" && /^\/api\/(folders\/[^/]+\/materials|materials\/[^/]+\/replace)$/.test(c.req.path) && type === "application/octet-stream";
     if (c.req.method !== "GET" && c.req.method !== "DELETE" && !upload && !type.startsWith("application/json")) {
       throw new AppError(415, "json_only", "Send JSON.");
     }
@@ -143,8 +143,8 @@ export function createApp(deps: AppDeps) {
     jobs.enqueue("parse", parseLabel(material.name), { folderId: material.folderId, materialId: material.id });
     return c.json(material, 201);
   });
-  // A link: the page (or the file it points to) is fetched now and kept as a copy (F-204). A YouTube
-  // link becomes a transcript: the one pasted with it, or else one a Gemini model writes (F-205).
+  // A link: the page (or the file it points to) is fetched now and kept as a copy (F-203). A YouTube
+  // link becomes a transcript: the one pasted with it, or else one a Gemini model writes (F-204).
   app.post("/folders/:id/materials/url", async (c) => {
     const { url, transcript } = await body(c, z.object({ url: z.string().min(1).max(2000), transcript: z.string().max(MAX_PASTED_CHARS).optional() }));
     const folderId = c.req.param("id");
@@ -161,6 +161,31 @@ export function createApp(deps: AppDeps) {
     const material = materials.add(folderId, fetched.name, fetched.bytes, video ? watchUrl(video) : target.href);
     jobs.enqueue("parse", parseLabel(material.name), { folderId: material.folderId, materialId: material.id });
     return c.json(material, 201);
+  });
+  // A new version of a material (F-212): a replacement file, or its link fetched again. Unchanged
+  // sections keep their items; the rest is read again and waits to be distilled.
+  const reimport = (id: string, fetched: { name: string; bytes: Uint8Array }) => {
+    jobs.abortFor(id);
+    const material = materials.replace(id, fetched.name, fetched.bytes);
+    jobs.enqueue("parse", reimportLabel(material.name), { folderId: material.folderId, materialId: id, params: { reimport: true } });
+    return material;
+  };
+  app.post("/materials/:id/replace", async (c) => {
+    if (Number(c.req.header("content-length") ?? 0) > MAX_MATERIAL_BYTES) throw new AppError(413, "file_too_large", "Files can be up to 200 MB.");
+    const name = decodeURIComponent(c.req.header("x-file-name") ?? "");
+    return c.json(reimport(c.req.param("id"), { name, bytes: new Uint8Array(await c.req.arrayBuffer()) }));
+  });
+  app.post("/materials/:id/refetch", async (c) => {
+    const material = materials.get(c.req.param("id"));
+    if (!material.source) throw new AppError(400, "no_source", "This material was added as a file. Replace the file instead.");
+    const target = parseUrl(material.source);
+    if (youtubeId(target)) throw new AppError(400, "video_refetch", "A video doesn't change once published, so there is nothing to fetch again.");
+    return c.json(reimport(material.id, await fetchUrl(target, deps.fetch)));
+  });
+  app.delete("/materials/:id/reimport", (c) => {
+    materials.get(c.req.param("id"));
+    materials.setReimport(c.req.param("id"), null);
+    return c.body(null, 204);
   });
   app.get("/materials/:id", (c) => c.json({ material: materials.get(c.req.param("id")), chunks: materials.chunks(c.req.param("id")) }));
   app.get("/materials/:id/file", (c) => {

@@ -216,3 +216,44 @@ describe("extraction", () => {
     expect(t.materials.chunks(material.id).every((c) => c.extracted && c.audited)).toBe(true);
   });
 });
+
+describe("re-import", () => {
+  // Sections long enough that each is its own chunk.
+  const section = (name: string) => `# ${name}\n\n${`${name} is described in detail here, sentence after sentence. `.repeat(70)}`;
+  const doc = (...names: string[]) => names.map(section).join("\n\n");
+
+  it("keeps unchanged sections and their items, removes items of removed text and reports the diff", async () => {
+    const t = setup({ extract: (_req, prompt) => json({ items: [item(prompt.match(/# (\w+)/)?.[1] ?? prompt.match(/Section: (\w+)/)![1]!, "s", "described in detail")] }) });
+    const material = await t.addMaterial("notes.md", doc("Alpha", "Beta", "Gamma"));
+    expect(t.materials.chunks(material.id)).toHaveLength(3);
+    await t.extract(material.id);
+    const before = t.ledger.list(t.folder.id);
+    expect(before.map((i) => i.title).sort()).toEqual(["Alpha", "Beta", "Gamma"]);
+    const loc = (list: typeof before, title: string) => list.find((i) => i.title === title)!.sources[0]!.loc;
+    const alphaLoc = loc(before, "Alpha");
+    const gammaLoc = loc(before, "Gamma");
+
+    // The new version adds a section before the rest, drops Beta and keeps Alpha and Gamma word for word.
+    t.materials.replace(material.id, "notes v2.md", new TextEncoder().encode(doc("Intro", "Alpha", "Gamma")));
+    t.calls.length = 0;
+    const jobs = createJobs(t.db, { concurrency: 1 });
+    registerIngest(jobs, t.materials, t.ledger);
+    jobs.enqueue("parse", "x", { folderId: t.folder.id, materialId: material.id, params: { reimport: true } });
+    await jobs.idle();
+
+    const after = t.materials.get(material.id);
+    expect(after).toMatchObject({ name: "notes v2.md", status: "ready", chunks: 3, distilled: 2 });
+    expect(after.reimport).toMatchObject({ kept: 2, added: 1, removed: 1, items: [{ type: "concept", title: "Beta" }] });
+    const items = t.ledger.list(t.folder.id);
+    expect(items.map((i) => i.title).sort()).toEqual(["Alpha", "Gamma"]);
+    // Alpha moved down below Intro and its anchor moved with it; Gamma stayed on the same line, as Intro is as long as Beta was.
+    expect(loc(items, "Alpha")).toBe(alphaLoc + 4);
+    expect(loc(items, "Gamma")).toBe(gammaLoc);
+
+    // Only the new section is mined.
+    await t.extract(material.id);
+    expect(t.calls.filter((c) => c.role === "extract")).toHaveLength(1);
+    expect(t.ledger.list(t.folder.id).map((i) => i.title).sort()).toEqual(["Alpha", "Gamma", "Intro"]);
+    expect(() => t.materials.replace(material.id, "same.md", new TextEncoder().encode(doc("Intro", "Alpha", "Gamma")))).toThrow(/same file/);
+  });
+});
