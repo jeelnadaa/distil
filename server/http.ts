@@ -4,10 +4,13 @@ import { z } from "zod";
 import { type ChatDeps, meterFor, prepareTurn, streamTurn } from "./chat.ts";
 import { AppError, notFound } from "./errors.ts";
 import type { Fonts } from "./fonts.ts";
+import type { Jobs } from "./jobs.ts";
+import { MAX_MATERIAL_BYTES, type Materials } from "./materials/store.ts";
+import { parseLabel } from "./materials/ingest.ts";
 import { ProviderError } from "./providers/types.ts";
 import { SettingsPatch } from "./settings.ts";
 
-export type AppDeps = ChatDeps & { dataDir: string; allowedHosts: string[]; fonts: Fonts };
+export type AppDeps = ChatDeps & { dataDir: string; allowedHosts: string[]; fonts: Fonts; materials: Materials; jobs: Jobs };
 
 const NullableId = z.string().min(1).nullable();
 const ModelRefBody = z.object({ provider: z.string().min(1), id: z.string().min(1) });
@@ -22,7 +25,7 @@ async function body<T extends z.ZodType>(c: Context, schema: T): Promise<z.infer
 }
 
 export function createApp(deps: AppDeps) {
-  const { library, messages, providers, settings, usage } = deps;
+  const { library, messages, providers, settings, usage, materials, jobs } = deps;
   const app = new Hono().basePath("/api");
 
   // The API holds keys and spends tokens, so only this app may call it: the Host header must be ours
@@ -32,7 +35,10 @@ export function createApp(deps: AppDeps) {
     if (!deps.allowedHosts.includes(host)) throw new AppError(403, "forbidden_host", "Unknown host.");
     const origin = c.req.header("origin");
     if (origin && new URL(origin).host !== host) throw new AppError(403, "forbidden_origin", "Cross-origin requests are not allowed.");
-    if (c.req.method !== "GET" && c.req.method !== "DELETE" && !c.req.header("content-type")?.startsWith("application/json")) {
+    // File uploads are raw bytes; that content type can't be sent cross-site without a CORS preflight, which we never grant.
+    const type = c.req.header("content-type") ?? "";
+    const upload = c.req.method === "POST" && /^\/api\/folders\/[^/]+\/materials$/.test(c.req.path) && type === "application/octet-stream";
+    if (c.req.method !== "GET" && c.req.method !== "DELETE" && !upload && !type.startsWith("application/json")) {
       throw new AppError(415, "json_only", "Send JSON.");
     }
     await next();
@@ -58,7 +64,10 @@ export function createApp(deps: AppDeps) {
   });
   app.get("/folders/:id/contents", (c) => c.json(library.folderContents(c.req.param("id"))));
   app.delete("/folders/:id", (c) => {
+    const ids = materials.idsUnder(c.req.param("id"));
+    ids.forEach((id) => jobs.abortFor(id));
     library.deleteFolder(c.req.param("id"));
+    materials.removeFiles(ids);
     return c.body(null, 204);
   });
 
@@ -110,6 +119,33 @@ export function createApp(deps: AppDeps) {
     const s = settings.get();
     const provider = c.req.query("provider") ?? s.models.strong?.provider ?? "";
     return c.json({ ...usage.totals(), cap: usage.capStatus(s.caps, provider) });
+  });
+
+  /* ---------- Materials (F-201…F-210) ---------- */
+  app.get("/folders/:id/materials", (c) => c.json(materials.list(c.req.param("id"))));
+  app.post("/folders/:id/materials", async (c) => {
+    if (Number(c.req.header("content-length") ?? 0) > MAX_MATERIAL_BYTES) throw new AppError(413, "file_too_large", "Files can be up to 200 MB.");
+    const name = decodeURIComponent(c.req.header("x-file-name") ?? "");
+    const material = materials.add(c.req.param("id"), name, new Uint8Array(await c.req.arrayBuffer()));
+    jobs.enqueue("parse", parseLabel(material.name), { folderId: material.folderId, materialId: material.id });
+    return c.json(material, 201);
+  });
+  app.get("/materials/:id", (c) => c.json({ material: materials.get(c.req.param("id")), chunks: materials.chunks(c.req.param("id")) }));
+  app.get("/materials/:id/file", (c) => {
+    const { bytes, type } = materials.read(c.req.param("id"));
+    return c.body(new Uint8Array(bytes), 200, { "content-type": type, "content-disposition": "inline", "x-content-type-options": "nosniff" });
+  });
+  app.delete("/materials/:id", (c) => {
+    jobs.abortFor(c.req.param("id"));
+    materials.remove(c.req.param("id"));
+    return c.body(null, 204);
+  });
+
+  /* ---------- Background jobs (F-209, F-402) ---------- */
+  app.get("/jobs", (c) => c.json(jobs.list()));
+  app.post("/jobs/:id/abort", (c) => {
+    jobs.abort(c.req.param("id"));
+    return c.json(jobs.get(c.req.param("id")));
   });
 
   /* ---------- Text font (F-1309) ---------- */

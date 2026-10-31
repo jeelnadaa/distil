@@ -3,8 +3,11 @@ import { homedir } from "node:os";
 import { join } from "node:path";
 import { openDb } from "./db.ts";
 import { createFonts } from "./fonts.ts";
+import { createJobs } from "./jobs.ts";
 import { createApp } from "./http.ts";
 import { createLibrary } from "./library.ts";
+import { registerIngest } from "./materials/ingest.ts";
+import { createMaterials } from "./materials/store.ts";
 import { createMessages } from "./messages.ts";
 import { createProviders } from "./providers/service.ts";
 import { createSecrets } from "./secrets.ts";
@@ -20,6 +23,10 @@ export function createServer({ port, dataDir = defaultDataDir() }: { port: numbe
   const settings = createSettings(db);
   const messages = createMessages(db);
   messages.recoverInterrupted();
+  const log = (msg: string) => console.error(`[distil] ${msg}`);
+  const materials = createMaterials(db, join(dataDir, "materials"));
+  const jobs = createJobs(db, { log });
+  registerIngest(jobs, materials);
   const deps = {
     dataDir,
     allowedHosts: [`localhost:${port}`, `127.0.0.1:${port}`, `[::1]:${port}`],
@@ -28,8 +35,10 @@ export function createServer({ port, dataDir = defaultDataDir() }: { port: numbe
     settings,
     usage: createUsage(db),
     fonts: createFonts(join(dataDir, "fonts")),
+    materials,
+    jobs,
     providers: createProviders(settings, createSecrets(join(dataDir, "secrets.json"))),
-    log: (msg: string) => console.error(`[distil] ${msg}`),
+    log,
   };
-  return { app: createApp(deps), db };
+  return { app: createApp(deps), db, jobs };
 }

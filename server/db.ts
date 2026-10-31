@@ -56,6 +56,49 @@ const MIGRATIONS = [
     value TEXT NOT NULL
   );
   `,
+  `
+  -- Phase 2: materials (a copy of each file lives in <data>/materials/<id>/), their chunks, and background jobs.
+  CREATE TABLE materials (
+    id         TEXT PRIMARY KEY,
+    folder_id  TEXT NOT NULL REFERENCES folders(id) ON DELETE CASCADE,
+    kind       TEXT NOT NULL,
+    name       TEXT NOT NULL,
+    size       INTEGER NOT NULL,
+    sha256     TEXT NOT NULL,
+    status     TEXT NOT NULL CHECK (status IN ('queued', 'parsing', 'ready', 'error')),
+    error      TEXT,
+    unit       TEXT,
+    length     INTEGER,
+    created_at INTEGER NOT NULL
+  );
+  CREATE INDEX materials_folder ON materials(folder_id, created_at);
+  CREATE TABLE chunks (
+    id          TEXT PRIMARY KEY,
+    material_id TEXT NOT NULL REFERENCES materials(id) ON DELETE CASCADE,
+    ord         INTEGER NOT NULL,
+    loc_from    INTEGER NOT NULL,
+    loc_to      INTEGER NOT NULL,
+    headings    TEXT NOT NULL,
+    text        TEXT NOT NULL,
+    tokens      INTEGER NOT NULL
+  );
+  CREATE INDEX chunks_material ON chunks(material_id, ord);
+  -- No foreign keys: a job's record outlives what it worked on.
+  CREATE TABLE jobs (
+    id          TEXT PRIMARY KEY,
+    kind        TEXT NOT NULL,
+    folder_id   TEXT,
+    material_id TEXT,
+    label       TEXT NOT NULL,
+    status      TEXT NOT NULL CHECK (status IN ('queued', 'running', 'done', 'error', 'aborted')),
+    done        INTEGER NOT NULL DEFAULT 0,
+    total       INTEGER NOT NULL DEFAULT 0,
+    error       TEXT,
+    created_at  INTEGER NOT NULL,
+    updated_at  INTEGER NOT NULL
+  );
+  CREATE INDEX jobs_status ON jobs(status, created_at);
+  `,
 ];
 
 export function openDb(file: string): Db {

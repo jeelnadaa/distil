@@ -62,6 +62,10 @@ quality and completeness.
 | Gamification | **Off until the user turns it on.** Decided 2026-10-31. |
 | Sibling chats | **Shared by default, compactly** (our recommendation): a new chat in a folder gets a short digest from the folder's ledger and graph (what was taught, mastery, open misconceptions), never sibling transcripts. A per-chat "Independent" switch turns it off. |
 | Practice grading | **First attempt counts; hinted retries allowed** (our recommendation): the first answer sets mastery credit; after that, up to two progressive hints and retries, recorded as "with help" at reduced credit. Mock exams stay strictly one attempt, no hints. |
+| Material storage | **Distil keeps its own copy** of every added file in the data folder; if the original changes, Distil notices and offers a re-import with a diff (F-212). Decided 2026-10-31. |
+| Extraction strategy | **Cheap model extracts, strong model audits and merges** by default (about 3–5× cheaper than strong-everywhere); a per-subject switch uses the strong model for everything. Decided 2026-10-31. |
+| YouTube transcripts | **Public captions first, Gemini fallback, paste as last resort.** Captions are fetched directly (unofficial, may break); if that fails and a Google key exists, Gemini reads the video by URL; otherwise the user pastes the transcript. Decided 2026-10-31. |
+| Phase 2 test material | **An openly licensed textbook** for development and the exit test; the owner judges completeness on their own material later. Decided 2026-10-31. |
 | Model suggestions | **Suggested per role** during onboarding and in Settings › Models, picked from the models the user's key actually lists; always overridable. Decided 2026-10-31. |
 
 ---
@@ -135,10 +139,10 @@ Every new plan/teach request first goes through a compiler that turns whatever t
 | F-201 | Ingest PDF, PPTX, DOCX, MD, TXT | M |
 | F-202 | Ingest images (photos, scans, handwriting, whiteboards) via vision model / OCR | M |
 | F-203 | Ingest web articles by URL (readable-text extraction) | M |
-| F-204 | Ingest YouTube by URL (transcript with timestamps) | M |
+| F-204 | Ingest YouTube by URL (transcript with timestamps): public captions, then Gemini reading the URL, then a pasted transcript | M |
 | F-205 | Topic-only mode: no material → a **researcher agent** builds a reference syllabus from the web (with sources) which then becomes the "material" | M |
 | F-206 | **Structure-aware chunking:** split by headings / slides / pages / timestamps into small chunks with stable anchors (file, page, slide, timestamp) | M |
-| F-207 | **Per-chunk extraction** of atomic *learning items* (see 4.3), so a 300-page PDF is mined page-group by page-group, never summarised in one call | M |
+| F-207 | **Per-chunk extraction** of atomic *learning items* (see 4.3), so a 300-page PDF is mined page-group by page-group, never summarised in one call. Default: cheap model extracts, strong model audits (F-302) and merges (F-303); per-subject "strong for everything" switch | M |
 | F-208 | Pre-flight **cost estimate** before ingesting large material ("~180k tokens ≈ $0.40 on model X — continue?") | M |
 | F-209 | Ingestion runs as a background job with progress, pause/abort, resume after restart | M |
 | F-210 | Material viewer: open the original file at the anchored page/slide/timestamp from any item, lesson or answer | M |
@@ -171,7 +175,7 @@ Each item has: title, statement, type, source anchor(s), dependencies, exam weig
 | Agent | Job | Model slot |
 |---|---|---|
 | Brief Compiler | request → Study Brief | cheap |
-| Extractor | chunk → learning items | strong |
+| Extractor | chunk → learning items | cheap (strong when the subject asks for it) |
 | Recall Auditor | chunk + items → misses | strong |
 | Merger/Dedup Auditor | items → merged ledger | strong |
 | Planner | ledger + brief → dependency DAG → units/lessons/steps | strong |
