@@ -70,7 +70,9 @@
   {/if}
 </header>
 
-{#if material && view === "original"}
+{#if material?.kind === "image"}
+  <div class="scroll"><div class="vw vw--image"><img src="/api/materials/{id}/file" alt={material.name} /></div></div>
+{:else if material && view === "original"}
   <div class="scroll"><PdfPages url="/api/materials/{id}/file" page={loc ?? 1} /></div>
 {:else}
   <div class="scroll">
@@ -112,6 +114,8 @@
   .crumb:hover { color: var(--text); }
   .vw { display: grid; grid-template-columns: minmax(0, 1fr) 260px; gap: var(--s-8); width: min(1120px, 100% - 2 * var(--s-6)); margin-inline: auto; padding-block: var(--s-7) var(--s-9); }
   .vw__body { min-width: 0; max-width: 72ch; }
+  .vw--image { grid-template-columns: minmax(0, 1fr); justify-items: center; }
+  .vw--image img { max-width: 100%; height: auto; border-radius: var(--r-sm); box-shadow: 0 0 0 1px var(--border); }
   .vw__sec { position: relative; padding: var(--s-4) 0 var(--s-4) var(--s-4); border-left: 2px solid var(--border); scroll-margin-top: var(--s-6); content-visibility: auto; contain-intrinsic-size: auto 400px; }
   .vw__sec.is-target { border-left-color: var(--accent); }
   .vw__loc { display: block; margin-bottom: var(--s-2); font-size: 11px; letter-spacing: .06em; color: var(--text-faint); }

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { api, type FolderMaterial, type Item, type Job } from "../lib/api.ts";
+  import { api, type FolderMaterial, type Item, type Job, type Material } from "../lib/api.ts";
   import { attempt, folderPath, type FolderTab, go, library, nav } from "../lib/state.svelte.ts";
   import DistilDialog from "./DistilDialog.svelte";
   import Icon from "./Icon.svelte";
@@ -24,7 +24,7 @@
   let items = $state<Item[]>([]);
   let jobs = $state<Job[]>([]);
   let loaded = $state(false);
-  let distil = $state<"extract" | "reaudit" | null>(null);
+  let distil = $state<{ mode: "extract" | "reaudit"; material?: Material } | null>(null);
 
   const mine = $derived(jobs.filter((j) => j.folderId && subtree.has(j.folderId)));
   const active = $derived(mine.filter((j) => j.status === "queued" || j.status === "running"));
@@ -80,7 +80,7 @@
   </nav>
   <span class="topbar__spacer"></span>
   {#if undistilled.length && !active.some((j) => j.kind === "extract")}
-    <button type="button" class="btn btn--accent btn--sm" onclick={() => (distil = "extract")}><Icon name="wand" size="sm" />Distil</button>
+    <button type="button" class="btn btn--accent btn--sm" onclick={() => (distil = { mode: "extract" })}><Icon name="wand" size="sm" />Distil</button>
   {/if}
 </header>
 
@@ -105,7 +105,7 @@
             <section class="panel ws__panel" aria-label="Coverage">
               <div class="ws__panel-head">
                 <span class="eyebrow">Coverage · {counted.length} items</span>
-                <button type="button" class="btn btn--ghost btn--sm" disabled={!!active.length} onclick={() => (distil = "reaudit")}><Icon name="refresh" size="sm" />What did we miss?</button>
+                <button type="button" class="btn btn--ghost btn--sm" disabled={!!active.length} onclick={() => (distil = { mode: "reaudit" })}><Icon name="refresh" size="sm" />What did we miss?</button>
               </div>
               <div class="coverage">
                 {#each coverage as row (row.label)}
@@ -139,9 +139,9 @@
 
       {#if loaded}
         {#if tab === "materials"}
-          <MaterialsTab folderId={id} {materials} {jobs} onchange={refresh} />
+          <MaterialsTab folderId={id} {materials} {jobs} onchange={refresh} ondistil={(m) => (distil = { mode: "extract", material: m })} />
         {:else}
-          <LedgerTab folderId={id} {items} {materials} distilling={active.some((j) => j.kind === "extract")} onchange={refresh} ondistil={() => (distil = "extract")} canDistil={undistilled.length > 0} />
+          <LedgerTab folderId={id} {items} {materials} distilling={active.some((j) => j.kind === "extract")} onchange={refresh} ondistil={() => (distil = { mode: "extract" })} canDistil={undistilled.length > 0} />
         {/if}
       {/if}
     {/if}
@@ -149,7 +149,7 @@
 </div>
 
 {#if distil}
-  <DistilDialog folderId={id} mode={distil} onclose={() => (distil = null)} onstarted={refresh} />
+  <DistilDialog folderId={id} mode={distil.mode} material={distil.material} onclose={() => (distil = null)} onstarted={refresh} />
 {/if}
 
 <style>

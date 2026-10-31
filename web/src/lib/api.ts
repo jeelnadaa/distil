@@ -16,6 +16,8 @@ export type { CapStatus, Chat, FontInfo, Folder, Item, ItemMark, ItemType, Job, 
 export type FolderMaterial = Material & { inherited: boolean };
 export type { Material, StoredChunk };
 export type Estimate = ReturnType<typeof estimateExtraction> & { materials: number };
+// What a Distil run covers: a whole folder, or one material, optionally only a location range of it.
+export type DistilScope = { strategy: Strategy; materialId?: string; from?: number; to?: number };
 export type Provider = ProviderSpec & { configured: boolean; keyPreview: string | null };
 export type SettingsView = Settings & { dataDir: string };
 
@@ -89,9 +91,12 @@ export const api = {
     (await call("POST", `/folders/${folderId}/materials`, undefined, undefined, file)).json(),
   material: (id: string) => json<{ material: Material; chunks: StoredChunk[] }>("GET", `/materials/${id}`),
   deleteMaterial: (id: string) => done("DELETE", `/materials/${id}`),
-  estimate: (folderId: string, strategy: Strategy, reaudit = false) =>
-    json<Estimate>("GET", `/folders/${folderId}/estimate?strategy=${strategy}${reaudit ? "&reaudit=1" : ""}`),
-  extract: (folderId: string, strategy: Strategy) => json<Job[]>("POST", `/folders/${folderId}/extract`, { strategy }),
+  estimate: (folderId: string, scope: DistilScope, reaudit = false) => {
+    const query = new URLSearchParams(Object.entries(scope).filter(([, v]) => v !== undefined).map(([k, v]) => [k, String(v)]));
+    if (reaudit) query.set("reaudit", "1");
+    return json<Estimate>("GET", `/folders/${folderId}/estimate?${query}`);
+  },
+  extract: (folderId: string, scope: DistilScope) => json<Job[]>("POST", `/folders/${folderId}/extract`, scope),
   reaudit: (folderId: string, strategy: Strategy) => json<Job[]>("POST", `/folders/${folderId}/reaudit`, { strategy }),
   items: (folderId: string) => json<Item[]>("GET", `/folders/${folderId}/items`),
   addItem: (folderId: string, item: { type: ItemType; title: string; statement: string }) => json<Item>("POST", `/folders/${folderId}/items`, item),

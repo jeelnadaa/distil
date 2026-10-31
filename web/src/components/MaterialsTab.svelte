@@ -4,11 +4,11 @@
   import Dialog from "./Dialog.svelte";
   import Icon from "./Icon.svelte";
 
-  let { folderId, materials, jobs, onchange }: {
-    folderId: string; materials: FolderMaterial[]; jobs: Job[]; onchange: () => void;
+  let { folderId, materials, jobs, onchange, ondistil }: {
+    folderId: string; materials: FolderMaterial[]; jobs: Job[]; onchange: () => void; ondistil: (m: FolderMaterial) => void;
   } = $props();
 
-  const ACCEPT = ".pdf,.docx,.pptx,.md,.markdown,.txt";
+  const ACCEPT = ".pdf,.docx,.pptx,.md,.markdown,.txt,.png,.jpg,.jpeg,.webp,.gif";
   const KIND_ICON: Record<string, string> = { pdf: "file", docx: "file", pptx: "layers", markdown: "type", text: "type", image: "image" };
   const UNIT: Record<string, [string, string]> = { page: ["page", "pages"], slide: ["slide", "slides"], para: ["paragraph", "paragraphs"], line: ["line", "lines"] };
 
@@ -58,7 +58,7 @@
   <Icon name="upload" />
   <span class="body-sm">
     {#if uploading}<strong>Adding {uploading} {uploading === 1 ? "file" : "files"}…</strong>
-    {:else}<strong>Drop files</strong> or click to choose. PDF, Word, PowerPoint, Markdown and text, up to 200 MB each.{/if}
+    {:else}<strong>Drop files</strong> or click to choose. PDF, Word, PowerPoint, Markdown, text and images (photos of notes or whiteboards), up to 200 MB each.{/if}
   </span>
 </button>
 <input type="file" multiple accept={ACCEPT} hidden bind:this={input} onchange={(e) => { const t = e.currentTarget; if (t.files?.length) upload(t.files); t.value = ""; }} />
@@ -80,6 +80,9 @@
             <td class="body-sm muted">{length(m)}</td>
             <td><span class="status status--{s.tone}"><i></i>{s.label}</span></td>
             <td class="num">
+              {#if !m.inherited && m.status === "ready" && m.distilled < m.chunks && !extracting(m)}
+                <button type="button" class="btn btn--ghost btn--sm" onclick={() => ondistil(m)}>Distil…</button>
+              {/if}
               {#if !m.inherited}
                 <button type="button" class="btn btn--ghost btn--icon btn--sm" aria-label="Remove {m.name}" title="Remove" onclick={() => (removing = m)}><Icon name="trash" size="sm" /></button>
               {/if}
