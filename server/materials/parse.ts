@@ -1,5 +1,5 @@
 import { strFromU8, unzipSync } from "fflate";
-import { getDocument } from "pdfjs-dist/legacy/build/pdf.mjs";
+import { getDocument, OPS } from "pdfjs-dist/legacy/build/pdf.mjs";
 import { AppError } from "../errors.ts";
 
 // Turns an added file into an ordered list of blocks, each tied to where it came from (F-206).
@@ -9,7 +9,14 @@ export type MaterialKind = "pdf" | "docx" | "pptx" | "markdown" | "text" | "imag
 // page and slide are 1-based; para is the paragraph index in a document; line is a line in a text file.
 export type LocUnit = "page" | "slide" | "para" | "line";
 export type Block = { loc: number; heading?: number; text: string };
-export type Parsed = { unit: LocUnit; blocks: Block[]; length: number };
+// visual: locations whose content is partly drawn rather than written (formulas as vector paths,
+// diagrams, photos); extraction sends their page images to the model as well as their text.
+export type Parsed = { unit: LocUnit; blocks: Block[]; length: number; visual?: number[] };
+
+// Measured on an OpenStax textbook: plain pages draw under ~50 paths, pages with typeset
+// equations or charts 120+. Any embedded picture counts as visual too.
+const VISUAL_PATHS = 80;
+export const MAX_IMAGE_BYTES = 15 * 1024 * 1024;
 
 const IMAGE_MAGIC: [number[], string][] = [
   [[0x89, 0x50, 0x4e, 0x47], "png"], [[0xff, 0xd8, 0xff], "jpeg"], [[0x47, 0x49, 0x46, 0x38], "gif"], [[0x52, 0x49, 0x46, 0x46], "webp"],
@@ -44,7 +51,10 @@ export async function parseMaterial(kind: MaterialKind, bytes: Uint8Array): Prom
     case "pptx": return parsePptx(bytes);
     case "markdown": return parseMarkdown(new TextDecoder().decode(bytes));
     case "text": return parseText(new TextDecoder().decode(bytes));
-    case "image": return { unit: "page", blocks: [], length: 1 }; // read by a vision model during extraction
+    case "image":
+      if (bytes.length > MAX_IMAGE_BYTES) throw new AppError(413, "image_too_large", "Images can be up to 15 MB. Save it smaller and add it again.");
+      // Read entirely by a vision model during extraction; the block gives the chunk something to anchor to.
+      return { unit: "page", blocks: [{ loc: 1, text: "(Image: its content is read from the picture.)" }], length: 1, visual: [1] };
   }
 }
 
@@ -62,10 +72,18 @@ async function parsePdf(bytes: Uint8Array): Promise<Parsed> {
     throw new AppError(422, "unreadable_pdf", "This PDF couldn't be opened. It may be damaged or password-protected.");
   });
   const blocks: Block[] = [];
+  const visual: number[] = [];
   try {
     for (let n = 1; n <= doc.numPages; n++) {
       const page = await doc.getPage(n);
       const items = (await page.getTextContent()).items.flatMap((i) => ("str" in i ? [i as TextItem] : []));
+      let paths = 0;
+      let pictures = 0;
+      for (const fn of (await page.getOperatorList()).fnArray) {
+        if (fn === OPS.constructPath) paths++;
+        else if (fn === OPS.paintImageXObject || fn === OPS.paintInlineImageXObject) pictures++;
+      }
+      if (pictures > 0 || paths > VISUAL_PATHS) visual.push(n);
       page.cleanup();
       // Rebuild lines from positioned runs, keeping each line's largest font size.
       const lines: { text: string; size: number }[] = [];
@@ -86,15 +104,24 @@ async function parsePdf(bytes: Uint8Array): Promise<Parsed> {
         }
       }
       flush();
-      if (!lines.length) continue;
+      if (!lines.length) {
+        // A scanned page or a full-page figure: no text, so the page image is all there is.
+        if (visual.at(-1) === n) blocks.push({ loc: n, text: "(This page has no text layer; its content is read from the page image.)" });
+        continue;
+      }
       // A short line set clearly larger than the page's body text is treated as a heading.
       const body = median(lines.map((l) => l.size));
       let text = "";
       for (const line of lines) {
         const level = line.size >= body * 1.6 ? 1 : line.size >= body * 1.25 ? 2 : 0;
         if (level && line.text.length <= 120 && body > 0) {
-          if (text.trim()) blocks.push({ loc: n, text: tidy(dehyphenate(text)) });
-          blocks.push({ loc: n, heading: level, text: line.text });
+          const last = blocks.at(-1);
+          // A heading that wraps onto a second line arrives as two lines of the same size: join them.
+          if (!text.trim() && last?.heading === level && last.loc === n) last.text += ` ${line.text}`;
+          else {
+            if (text.trim()) blocks.push({ loc: n, text: tidy(dehyphenate(text)) });
+            blocks.push({ loc: n, heading: level, text: line.text });
+          }
           text = "";
         } else {
           text += `${line.text}\n`;
@@ -102,7 +129,7 @@ async function parsePdf(bytes: Uint8Array): Promise<Parsed> {
       }
       if (text.trim()) blocks.push({ loc: n, text: tidy(dehyphenate(text)) });
     }
-    return { unit: "page", blocks, length: doc.numPages };
+    return { unit: "page", blocks, length: doc.numPages, visual };
   } finally {
     await task.destroy();
   }

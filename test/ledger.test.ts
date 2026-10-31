@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 import { openDb } from "../server/db.ts";
 import { createJobs } from "../server/jobs.ts";
 import { estimateExtraction, registerExtraction } from "../server/ledger/extract.ts";
+import { makePdf } from "./fixtures.ts";
 import { createLedger, locate } from "../server/ledger/store.ts";
 import { createLibrary } from "../server/library.ts";
 import { parseJsonReply } from "../server/llm.ts";
@@ -15,7 +16,7 @@ import type { Providers } from "../server/providers/service.ts";
 import { createSettings } from "../server/settings.ts";
 import { createUsage } from "../server/usage.ts";
 
-type Request = { system: string; messages: { role: string; content: string }[] };
+type Request = { system: string; messages: { role: string; content: string; images?: { mime: string }[] }[] };
 type Reply = (req: Request, prompt: string) => string;
 
 // A fake model that answers by agent role, so parallel calls don't depend on ordering.
@@ -27,12 +28,12 @@ function setup(replies: { extract: Reply; audit?: Reply; merge?: Reply }) {
   const materials = createMaterials(db, mkdtempSync(join(tmpdir(), "distil-ledger-")));
   const ledger = createLedger(db);
   const jobs = createJobs(db, { concurrency: 1 });
-  const calls: { role: string; model: string; prompt: string }[] = [];
+  const calls: { role: string; model: string; prompt: string; images: string[] }[] = [];
   const providers = {
     async *stream(ref: { id: string }, req: Request) {
       const prompt = req.messages.at(-1)!.content;
       const role = req.system === EXTRACT_SYSTEM ? "extract" : req.system === AUDIT_SYSTEM ? "audit" : req.system === MERGE_SYSTEM ? "merge" : "other";
-      calls.push({ role, model: ref.id, prompt });
+      calls.push({ role, model: ref.id, prompt, images: (req.messages.at(-1)!.images ?? []).map((i) => i.mime) });
       const reply = role === "extract" ? replies.extract(req, prompt)
         : role === "audit" ? (replies.audit ?? (() => '{"missed":[]}'))(req, prompt)
         : (replies.merge ?? (() => '{"merges":[]}'))(req, prompt);
@@ -45,14 +46,14 @@ function setup(replies: { extract: Reply; audit?: Reply; merge?: Reply }) {
   registerExtraction(jobs, { providers, settings, usage, materials, ledger });
   const folder = library.createFolder("Signals", null);
 
-  const addMaterial = async (name: string, text: string) => {
-    const material = materials.add(folder.id, name, new TextEncoder().encode(text));
+  const addMaterial = async (name: string, content: string | Uint8Array) => {
+    const material = materials.add(folder.id, name, typeof content === "string" ? new TextEncoder().encode(content) : content);
     jobs.enqueue("parse", name, { folderId: folder.id, materialId: material.id });
     await jobs.idle();
     return material;
   };
-  const extract = async (materialId: string, strategy = "balanced") => {
-    const job = jobs.enqueue("extract", "x", { folderId: folder.id, materialId, params: { strategy } });
+  const extract = async (materialId: string, strategy = "balanced", range: { from?: number; to?: number } = {}) => {
+    const job = jobs.enqueue("extract", "x", { folderId: folder.id, materialId, params: { strategy, ...range } });
     await jobs.idle();
     return jobs.get(job.id);
   };
@@ -185,5 +186,33 @@ describe("extraction", () => {
     expect(estimateExtraction(chunks, "thorough").cheap.input).toBe(0);
     await t.extract(material.id);
     expect(t.materials.chunks(material.id).filter((c) => !c.extracted || !c.audited)).toHaveLength(0);
+  });
+
+  it("reads an image material by sending the picture itself", async () => {
+    const png = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1, 2, 3]);
+    const t = setup({ extract: () => json({ items: [item("Bayes' theorem", "$P(A|B) = P(B|A)P(A)/P(B)$", "", "formula")] }) });
+    const material = await t.addMaterial("whiteboard.png", png);
+    expect(t.materials.get(material.id)).toMatchObject({ kind: "image", visual: [1], chunks: 1 });
+    expect(t.materials.read(material.id).type).toBe("image/png");
+    await t.extract(material.id);
+    expect(t.calls.filter((c) => c.role !== "merge").map((c) => [c.role, c.images])).toEqual([["extract", ["image/png"]], ["audit", ["image/png"]]]);
+    expect(t.calls[0]!.prompt).toContain("Attached: images of page 1");
+    expect(t.ledger.list(t.folder.id)[0]).toMatchObject({ type: "formula", sources: [expect.objectContaining({ loc: 1 })] });
+  });
+
+  it("distils only the chunks in a page range, and the rest later", async () => {
+    const t = setup({ extract: (_req, prompt) => json({ items: [item(`Item from ${prompt.match(/Location: (.*)/)![1]}`, "x", "")] }) });
+    // About one chunk per page: 40 short lines of ~80 characters each.
+    const pages = Array.from({ length: 6 }, (_, i) => Array.from({ length: 40 }, (_, j) => `Page ${i + 1} line ${j + 1}: a sentence long enough to fill most of one printed line.`));
+    const material = await t.addMaterial("book.pdf", makePdf(pages));
+    const chunks = t.materials.chunks(material.id);
+    expect(chunks.length).toBeGreaterThan(3);
+    await t.extract(material.id, "balanced", { from: 1, to: 2 });
+    const touched = t.materials.chunks(material.id).filter((c) => c.extracted);
+    expect(touched.length).toBeGreaterThan(0);
+    expect(touched.every((c) => c.from <= 2)).toBe(true);
+    expect(t.materials.chunks(material.id).some((c) => !c.extracted)).toBe(true);
+    await t.extract(material.id);
+    expect(t.materials.chunks(material.id).every((c) => c.extracted && c.audited)).toBe(true);
   });
 });

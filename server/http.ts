@@ -5,9 +5,9 @@ import { type ChatDeps, meterFor, prepareTurn, streamTurn } from "./chat.ts";
 import { AppError, notFound } from "./errors.ts";
 import type { Fonts } from "./fonts.ts";
 import type { Jobs } from "./jobs.ts";
-import { estimateExtraction, extractLabel, type Strategy } from "./ledger/extract.ts";
+import { estimateExtraction, type ExtractParams, extractLabel, inRange, visualPages } from "./ledger/extract.ts";
 import type { Ledger } from "./ledger/store.ts";
-import { MAX_MATERIAL_BYTES, type Materials } from "./materials/store.ts";
+import { MAX_MATERIAL_BYTES, type Material, type Materials, type StoredChunk } from "./materials/store.ts";
 import { parseLabel } from "./materials/ingest.ts";
 import { ProviderError } from "./providers/types.ts";
 import { ITEM_TYPES } from "./prompts.ts";
@@ -18,6 +18,8 @@ export type AppDeps = ChatDeps & { dataDir: string; allowedHosts: string[]; font
 const NullableId = z.string().min(1).nullable();
 const ModelRefBody = z.object({ provider: z.string().min(1), id: z.string().min(1) });
 const StrategyBody = z.object({ strategy: z.enum(["balanced", "thorough"]).default("balanced") });
+const Location = z.coerce.number().int().positive().optional();
+const Scope = StrategyBody.extend({ materialId: z.string().min(1).optional(), from: Location, to: Location });
 const ItemType = z.enum(ITEM_TYPES);
 const ItemPatch = z.object({
   title: z.string().min(1).max(200).optional(), statement: z.string().max(2000).optional(), type: ItemType.optional(),
@@ -152,35 +154,40 @@ export function createApp(deps: AppDeps) {
   });
 
   /* ---------- Coverage Ledger (F-207, F-208, F-301…F-310) ---------- */
-  // Materials in a folder's subtree that are read and still have extraction or audit work left.
-  const pending = (folderId: string) => materials.idsUnder(folderId)
-    .map((id) => ({ material: materials.get(id), chunks: materials.chunks(id).filter((ch) => !ch.extracted || !ch.audited) }))
+  // What to distil: every read material in a folder's subtree, or one material, optionally only a
+  // location range of it ("pages 17–176"). Only chunks with extraction or audit work left count.
+  const pending = (folderId: string, scope: z.infer<typeof Scope>) => materials.idsUnder(folderId)
+    .filter((id) => !scope.materialId || id === scope.materialId)
+    .map((id) => ({ material: materials.get(id), chunks: materials.chunks(id).filter((ch) => (!ch.extracted || !ch.audited) && inRange(ch, scope)) }))
     .filter(({ material, chunks }) => material.status === "ready" && chunks.length > 0);
-  const extract = (material: { id: string; name: string; folderId: string }, strategy: Strategy) =>
+  const priced = (material: Material, chunks: StoredChunk[]) =>
+    chunks.map((ch) => ({ tokens: ch.tokens, images: material.kind === "image" ? 1 : visualPages(material, ch).length }));
+  const extract = (material: Material, params: ExtractParams) =>
     jobs.active("extract", material.id)
-    ?? jobs.enqueue("extract", extractLabel(material.name), { folderId: material.folderId, materialId: material.id, params: { strategy } });
+    ?? jobs.enqueue("extract", extractLabel(material.name), { folderId: material.folderId, materialId: material.id, params });
 
   app.get("/folders/:id/estimate", (c) => {
-    const parsed = StrategyBody.safeParse({ strategy: c.req.query("strategy") });
+    const parsed = Scope.safeParse(c.req.query());
     if (!parsed.success) throw new AppError(400, "invalid_request", z.prettifyError(parsed.error));
     const { strategy } = parsed.data;
     if (c.req.query("reaudit")) {
-      const ids = materials.idsUnder(c.req.param("id")).filter((id) => materials.get(id).status === "ready");
-      return c.json({ materials: ids.length, ...estimateExtraction(ids.flatMap((id) => materials.chunks(id)), strategy, true) });
+      const ready = materials.idsUnder(c.req.param("id")).map((id) => materials.get(id)).filter((m) => m.status === "ready");
+      return c.json({ materials: ready.length, ...estimateExtraction(ready.flatMap((m) => priced(m, materials.chunks(m.id))), strategy, true) });
     }
-    const work = pending(c.req.param("id"));
-    return c.json({ materials: work.length, ...estimateExtraction(work.flatMap((w) => w.chunks), strategy) });
+    const work = pending(c.req.param("id"), parsed.data);
+    return c.json({ materials: work.length, ...estimateExtraction(work.flatMap((w) => priced(w.material, w.chunks)), strategy) });
   });
   app.post("/folders/:id/extract", async (c) => {
-    const { strategy } = await body(c, StrategyBody);
-    return c.json(pending(c.req.param("id")).map(({ material }) => extract(material, strategy)), 202);
+    const scope = await body(c, Scope);
+    const { materialId: _, ...params } = scope;
+    return c.json(pending(c.req.param("id"), scope).map(({ material }) => extract(material, params)), 202);
   });
   // "What did we miss?" (F-309): audit every chunk in the folder again, then merge.
   app.post("/folders/:id/reaudit", async (c) => {
     const { strategy } = await body(c, StrategyBody);
     const ids = materials.idsUnder(c.req.param("id")).filter((id) => materials.get(id).status === "ready");
     ids.forEach((id) => materials.resetAudit(id));
-    return c.json(ids.map((id) => extract(materials.get(id), strategy)), 202);
+    return c.json(ids.map((id) => extract(materials.get(id), { strategy })), 202);
   });
   app.get("/folders/:id/items", (c) => c.json(ledger.list(c.req.param("id"))));
   app.post("/folders/:id/items", async (c) => {

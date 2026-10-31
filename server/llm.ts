@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { AppError } from "./errors.ts";
 import type { Providers } from "./providers/service.ts";
-import { ProviderError, type ChatMessage, type Usage } from "./providers/types.ts";
+import { ProviderError, type ChatMessage, type ImagePart, type Usage } from "./providers/types.ts";
 import type { ModelRef, SettingsStore } from "./settings.ts";
 import { estimateTokens, type UsageStore } from "./usage.ts";
 
@@ -35,7 +35,7 @@ export function retryDelay(message: string): number | null {
 export type Slot = "strong" | "cheap";
 export type CallOptions = {
   slot: Slot; role: string; folderId: string | null; system: string; prompt: string;
-  maxTokens?: number; signal?: AbortSignal;
+  maxTokens?: number; signal?: AbortSignal; images?: ImagePart[];
 };
 
 export function modelFor(settings: SettingsStore, slot: Slot): ModelRef {
@@ -65,7 +65,7 @@ async function completeOnce(deps: LlmDeps, o: CallOptions, history: ChatMessage[
   const ref = modelFor(deps.settings, o.slot);
   const cap = deps.usage.capStatus(deps.settings.get().caps, ref.provider);
   if (cap.state === "blocked") throw new AppError(429, "cap_reached", "A token cap was reached, so Distil paused here. Raise the cap or wait for it to reset, then resume.", cap);
-  const messages: ChatMessage[] = [...history, { role: "user", content: o.prompt }];
+  const messages: ChatMessage[] = [...history, { role: "user", content: o.prompt, images: o.images }];
   let text = "";
   let reported: Usage | null = null;
   try {
@@ -106,8 +106,9 @@ export async function completeJson<T extends z.ZodType>(deps: LlmDeps, schema: T
   };
   const result = check(first);
   if (result.ok) return result.data;
+  // The correction is about format only, so the images aren't sent again.
   const retry = check(await complete(deps, {
-    ...o, prompt: `Your reply could not be used:\n${result.error}\n\nReply again with only the corrected JSON.`,
+    ...o, images: undefined, prompt: `Your reply could not be used:\n${result.error}\n\nReply again with only the corrected JSON.`,
   }, [{ role: "user", content: o.prompt }, { role: "assistant", content: first }]));
   if (retry.ok) return retry.data;
   throw new AppError(502, "invalid_model_output", `The model's reply didn't match the expected format twice (${retry.error.split("\n")[0]}).`);

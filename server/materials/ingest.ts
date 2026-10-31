@@ -15,7 +15,7 @@ export function registerIngest(jobs: Jobs, materials: Materials, ledger: Ledger)
     try {
       const parsed = await parseMaterial(material.kind, materials.read(id).bytes);
       if (signal.aborted) return materials.setStatus(id, "error", "Stopped before it finished reading.");
-      materials.saveChunks(id, parsed.unit, parsed.length, chunkBlocks(parsed.unit, parsed.blocks));
+      materials.saveChunks(id, parsed.unit, parsed.length, chunkBlocks(parsed.unit, parsed.blocks), parsed.visual);
       // Re-reading a material replaces its chunks; items that were only found in the old ones go too.
       ledger.removeOrphans();
       progress(1, 1);

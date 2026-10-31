@@ -1,6 +1,8 @@
 export type Usage = { input: number; output: number; cached: number; reasoning: number };
 
-export type ChatMessage = { role: "user" | "assistant"; content: string };
+// images: base64 page renders or photos sent with a user turn (vision extraction); each adapter encodes them its own way.
+export type ImagePart = { mime: string; data: string };
+export type ChatMessage = { role: "user" | "assistant"; content: string; images?: ImagePart[] };
 
 export type ChatRequest = {
   model: string;

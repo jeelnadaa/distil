@@ -5,6 +5,7 @@ import { type Db, transaction } from "../db.ts";
 import { AppError, notFound } from "../errors.ts";
 import type { Chunk } from "./chunk.ts";
 import { detectKind, type LocUnit, type MaterialKind } from "./parse.ts";
+import { imageMime } from "./render.ts";
 
 // Materials (F-201…F-206): Distil keeps its own copy of each file (owner decision), so moving or
 // deleting the original never breaks a subject. A folder sees its own materials and its ancestors' (F-003).
@@ -15,7 +16,7 @@ export type MaterialStatus = "queued" | "parsing" | "ready" | "error";
 export type Material = {
   id: string; folderId: string; kind: MaterialKind; name: string; size: number; sha256: string;
   status: MaterialStatus; error: string | null; unit: LocUnit | null; length: number | null;
-  chunks: number; tokens: number; distilled: number; createdAt: number;
+  chunks: number; tokens: number; distilled: number; visual: number[]; createdAt: number;
 };
 export type StoredChunk = {
   id: string; ord: number; from: number; to: number; headings: string[]; text: string; tokens: number;
@@ -24,11 +25,11 @@ export type StoredChunk = {
 
 type Row = {
   id: string; folder_id: string; kind: MaterialKind; name: string; size: number; sha256: string; status: MaterialStatus;
-  error: string | null; unit: LocUnit | null; length: number | null; created_at: number; chunks: number; tokens: number; distilled: number;
+  error: string | null; unit: LocUnit | null; length: number | null; created_at: number; chunks: number; tokens: number; distilled: number; visual: string;
 };
 const toMaterial = (r: Row): Material => ({
   id: r.id, folderId: r.folder_id, kind: r.kind, name: r.name, size: r.size, sha256: r.sha256, status: r.status,
-  error: r.error, unit: r.unit, length: r.length, chunks: r.chunks, tokens: r.tokens, distilled: r.distilled, createdAt: r.created_at,
+  error: r.error, unit: r.unit, length: r.length, chunks: r.chunks, tokens: r.tokens, distilled: r.distilled, visual: JSON.parse(r.visual) as number[], createdAt: r.created_at,
 });
 
 const SELECT = `SELECT m.*, COUNT(c.id) AS chunks, COALESCE(SUM(c.tokens), 0) AS tokens,
@@ -94,7 +95,8 @@ export function createMaterials(db: Db, dir: string, now = () => Date.now()) {
 
     read(id: string): { bytes: Buffer; type: string } {
       const material = get(id);
-      return { bytes: readFileSync(fileOf(id)), type: MIME[material.kind] };
+      const bytes = readFileSync(fileOf(id));
+      return { bytes, type: material.kind === "image" ? imageMime(bytes) : MIME[material.kind] };
     },
 
     setStatus(id: string, status: MaterialStatus, error: string | null = null) {
@@ -102,12 +104,12 @@ export function createMaterials(db: Db, dir: string, now = () => Date.now()) {
     },
 
     // Replaces the material's chunks in one transaction, so a re-parse never leaves a half-written set.
-    saveChunks(id: string, unit: LocUnit, length: number, chunks: Chunk[]) {
+    saveChunks(id: string, unit: LocUnit, length: number, chunks: Chunk[], visual: number[] = []) {
       transaction(db, () => {
         db.prepare("DELETE FROM chunks WHERE material_id = ?").run(id);
         const insert = db.prepare("INSERT INTO chunks (id, material_id, ord, loc_from, loc_to, headings, text, tokens, marks) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
         chunks.forEach((c, i) => insert.run(randomUUID(), id, i, c.anchor.from, c.anchor.to, JSON.stringify(c.headings), c.text, c.tokens, JSON.stringify(c.marks)));
-        db.prepare("UPDATE materials SET status = 'ready', error = NULL, unit = ?, length = ? WHERE id = ?").run(unit, length, id);
+        db.prepare("UPDATE materials SET status = 'ready', error = NULL, unit = ?, length = ?, visual = ? WHERE id = ?").run(unit, length, JSON.stringify(visual), id);
       });
     },
 

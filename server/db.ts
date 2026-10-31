@@ -131,6 +131,10 @@ const MIGRATIONS = [
   );
   CREATE INDEX item_sources_material ON item_sources(material_id);
   `,
+  `
+  -- Phase 2: pages whose content is partly drawn (formulas, figures, scans), sent to the model as images.
+  ALTER TABLE materials ADD COLUMN visual TEXT NOT NULL DEFAULT '[]';
+  `,
 ];
 
 export function openDb(file: string): Db {

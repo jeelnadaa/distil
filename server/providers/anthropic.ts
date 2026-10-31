@@ -20,7 +20,12 @@ export const anthropic: Adapter = {
         max_tokens: req.maxTokens ?? DEFAULT_MAX_TOKENS,
         stream: true,
         ...(req.system && { system: req.system }),
-        messages: req.messages,
+        messages: req.messages.map((m) => ({
+          role: m.role,
+          content: m.images?.length
+            ? [...m.images.map((i) => ({ type: "image", source: { type: "base64", media_type: i.mime, data: i.data } })), { type: "text", text: m.content }]
+            : m.content,
+        })),
       }),
     });
     // Input tokens arrive in message_start, output tokens in message_delta.

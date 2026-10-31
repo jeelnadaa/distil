@@ -15,7 +15,10 @@ export const gemini: Adapter = {
       headers: headers(endpoint),
       signal: req.signal,
       body: JSON.stringify({
-        contents: req.messages.map((m) => ({ role: m.role === "assistant" ? "model" : "user", parts: [{ text: m.content }] })),
+        contents: req.messages.map((m) => ({
+          role: m.role === "assistant" ? "model" : "user",
+          parts: [...(m.images ?? []).map((i) => ({ inline_data: { mime_type: i.mime, data: i.data } })), { text: m.content }],
+        })),
         ...(req.system && { systemInstruction: { parts: [{ text: req.system }] } }),
         ...(req.maxTokens && { generationConfig: { maxOutputTokens: req.maxTokens } }),
       }),

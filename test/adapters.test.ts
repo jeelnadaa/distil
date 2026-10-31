@@ -78,3 +78,30 @@ describe("Gemini adapter", () => {
     ]);
   });
 });
+
+describe("images in a request", () => {
+  const withImage = { model: "m", messages: [{ role: "user" as const, content: "What is on page 3?", images: [{ mime: "image/png", data: "QUJD" }] }] };
+  const bodyOf = async (adapter: typeof openai, events: unknown[]) => {
+    const { fetch, calls } = fakeFetch(() => sseResponse(events));
+    await collect(adapter.stream({ baseUrl: "https://x.test", apiKey: "k", fetch }, withImage));
+    return JSON.parse(calls[0]!.init.body as string).messages ?? JSON.parse(calls[0]!.init.body as string).contents;
+  };
+
+  it("is encoded the way each provider expects, image before text", async () => {
+    expect((await bodyOf(openai, ["[DONE]"]))[0].content).toEqual([
+      { type: "image_url", image_url: { url: "data:image/png;base64,QUJD" } }, { type: "text", text: "What is on page 3?" },
+    ]);
+    expect((await bodyOf(anthropic, [{ type: "message_stop" }]))[0].content).toEqual([
+      { type: "image", source: { type: "base64", media_type: "image/png", data: "QUJD" } }, { type: "text", text: "What is on page 3?" },
+    ]);
+    expect((await bodyOf(gemini, []))[0].parts).toEqual([
+      { inline_data: { mime_type: "image/png", data: "QUJD" } }, { text: "What is on page 3?" },
+    ]);
+  });
+
+  it("leaves text-only messages unchanged", async () => {
+    const { fetch, calls } = fakeFetch(() => sseResponse([{ type: "message_stop" }]));
+    await collect(anthropic.stream({ baseUrl: "https://x.test", apiKey: "k", fetch }, request));
+    expect(JSON.parse(calls[0]!.init.body as string).messages).toEqual([{ role: "user", content: "Hi" }]);
+  });
+});

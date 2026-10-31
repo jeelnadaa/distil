@@ -9,7 +9,15 @@ const headers = (endpoint: Endpoint) => ({
 
 export const openai: Adapter = {
   async *stream(endpoint, req) {
-    const messages = [...(req.system ? [{ role: "system", content: req.system }] : []), ...req.messages];
+    const messages = [
+      ...(req.system ? [{ role: "system", content: req.system }] : []),
+      ...req.messages.map((m) => ({
+        role: m.role,
+        content: m.images?.length
+          ? [...m.images.map((i) => ({ type: "image_url", image_url: { url: `data:${i.mime};base64,${i.data}` } })), { type: "text", text: m.content }]
+          : m.content,
+      })),
+    ];
     const res = await send(endpoint, "/chat/completions", {
       method: "POST",
       headers: headers(endpoint),
