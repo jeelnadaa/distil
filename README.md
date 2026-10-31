@@ -33,6 +33,8 @@ you have it installed, or any font of your own).
 - **Subject workspaces** — nested folders (up to 5 levels) sharing materials, plan, ledger and deck.
 - **Retention** — flashcards with spaced repetition, mastery view, knowledge graph, opt-out streaks.
 - **Your keys, your data** — bring your own provider keys or (experimental) sign in with Google for Gemini; everything stays on your machine. Token usage graphs and spending caps built in.
+- **Never stuck on a rate limit** — each model slot has an ordered fallback list across keys and providers; Distil moves to the next model when one is busy or out of quota, and tells you which one answered.
+- **Answers from your sources** — a local keyword index is built at import, and embeddings (from your provider or a local model, small to large) add meaning-based search; every answer cites the page it came from.
 
 ## Documentation
 

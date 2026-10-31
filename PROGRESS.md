@@ -98,6 +98,19 @@ Living status log. Update in the same commit as every change.
 - Owner decision: exercise sets and worked-example arithmetic stay in the ledger (recorded in `plan.md` §2).
 - Owner decision: YouTube transcripts come from Gemini or a paste only; captions are not fetched (`plan.md` §2, F-204).
 
+### 2026-10-31 · Owner feedback batch
+- Ledger: a merged item found twice on one page crashed the workspace ("0 files · 0 items"); sources are now de-duplicated. The ledger can be opened while a material is distilling (polling no longer replaces the list when nothing changed) and renders 200 items at a time with "Show more", so 1 000-item ledgers stay fast.
+- Activity panel (F-1310): a clock button in every top bar lists running jobs and the last 24 hours, with stop and resume, so closing a dialog no longer loses a job's status.
+- Distil progress shows both numbers, labelled: "Distilling pages 17–176 · 98%" for the run, "17% of the file distilled" otherwise.
+- Materials table: row actions aligned in fixed slots in the text font; long titles end in an ellipsis.
+- Fonts (F-1309): every added font is saved under an optional name as its own pill; Anthropic Sans now matches the installed family names ("Anthropic Sans Text", "Anthropic Sans Display").
+- Chats: the logo, "New chat" and "New chat in folder" open one start screen (it names the folder); a chat is created with its first message, and empty chats are removed at startup.
+- Themed dropdown in place of the browser's `<select>`, and one app-wide tooltip (`data-tip`, or the label of an icon-only control).
+- Fallback lists (F-1211, F-1212): several labelled keys per provider; each slot has an ordered list of (provider, key, model) tried on rate limits, outages, exhausted quota and caps. Chat says which model answered; the activity panel says when a fallback is distilling.
+- Local keyword index (F-214): FTS5 over every chunk, kept in step by triggers; `GET /api/folders/:id/search?q=` returns hits anchored to their page. On the textbook a query takes ~10 ms.
+- Planned, not built: configurable embeddings and hybrid retrieval for Ask/Teach (F-1004, F-1005, Phase 4); the built-in tutorial chat (F-1312, Phase 9).
+- 108 tests.
+
 ## Open questions
 
 See `plan.md` §18.
@@ -113,4 +126,6 @@ See `plan.md` §18.
 - Caps are in tokens only. Cost caps need per-model prices; planned with the usage dashboard (Phase 8).
 - A cap is checked before each request, so one reply already in flight can finish past 100 %.
 - Keys are in a user-only file, not yet the OS credential store; the desktop build (Phase 9) moves them.
+- Keyword search has an API but no screen yet; Ask with sources (Phase 4) is its first user.
+- A fallback model answering a chat is shown under the reply only while its model differs from the chat's own model.
 - `npm audit`: two low-severity advisories in a build-time dependency of the Svelte Vite plugin (deepmerge); nothing ships to users.

@@ -57,14 +57,15 @@ Read this file fully before doing anything in this repo.
 | `design/scripts/fetch-fonts.sh` | Downloads Satoshi (licence forbids committing it) |
 | `server/` | Local API (Node 24 runs the TypeScript directly): SQLite store, library, chat turns, providers, usage and caps |
 | `server/providers/` | Streaming adapters (OpenAI-compatible, Anthropic, Gemini), catalog and key-checked service |
-| `server/fonts.ts` | Uploaded text font (F-1309) in `<data>/fonts/`, validated by file signature |
-| `server/materials/` | Phase 2 ingest: `store` (copies in `<data>/materials/`, re-import keeps unchanged chunks), `parse` (PDF, DOCX, PPTX, Markdown, text, images; flags visual pages), `chunk`, `ingest` (parse job), `render` (PDF pages to JPEG for vision), `web` (links → article Markdown or file), `youtube` (transcripts: Gemini or pasted) |
+| `server/fonts.ts` | Saved text fonts (F-1309) in `<data>/fonts/`: installed families by name and uploaded files (validated by signature), each under a name |
+| `server/secrets.ts` | API keys in `<data>/secrets.json`: several labelled keys per provider, first is the default |
+| `server/materials/` | Phase 2 ingest: `store` (copies in `<data>/materials/`, re-import keeps unchanged chunks), `parse` (PDF, DOCX, PPTX, Markdown, text, images; flags visual pages), `chunk`, `ingest` (parse job), `render` (PDF pages to JPEG for vision), `web` (links → article Markdown or file), `youtube` (transcripts: Gemini or pasted), `search` (FTS5 keyword index, anchored hits) |
 | `server/ledger/` | Coverage Ledger: `store` (items, sources, merge candidates) and `extract` (extract → audit → merge job, estimate) |
 | `server/jobs.ts` | Background job runner backed by SQLite (resumes after restart) |
-| `server/llm.ts` | One-shot model calls for agents: cap check, retry with backoff (429/5xx), usage by role, images and videos, validated JSON with one retry |
+| `server/llm.ts` | One-shot model calls for agents: walks the slot's fallback list (rate limit, outage, quota, cap → next entry; waits only when all are busy), usage by role, images and videos, validated JSON with one retry |
 | `server/constants.ts` | Limits shared with the browser (no Node imports) |
-| `web/src/components/` | Svelte screens and parts: `App`, `Sidebar`/`Tree`, `ChatView`, `SettingsView`, `Home`, dialogs |
-| `web/src/lib/` | `api.ts` (typed client, SSE), `state.svelte.ts` (app state, routes `#/chat/:id`, `#/folder/:id/:tab`, `#/material/:id/:loc/:item`, `#/settings/:section`), `markdown.ts`, `prefs.ts`, `icons.ts`, `viewer.ts` (sections, quote ranges, location labels) |
+| `web/src/components/` | Svelte screens and parts: `App`, `Sidebar`/`Tree`, `ChatView`, `SettingsView`, `Home` (the one new-chat screen), `ActivityDock`, `Select` (themed dropdown; use it, never `<select>`), `Tooltip` (reads `data-tip`), dialogs |
+| `web/src/lib/` | `api.ts` (typed client, SSE), `state.svelte.ts` (app state, routes `#/new/:folderId`, `#/chat/:id`, `#/folder/:id/:tab`, `#/material/:id/:loc/:item`, `#/settings/:section`), `markdown.ts`, `prefs.ts`, `icons.ts`, `viewer.ts` (sections, quote ranges, location labels), `activity.svelte.ts` (jobs for the activity panel) |
 | `web/src/styles/` | Design tokens, palettes, base and shell CSS ported from `design/` |
 | `test/` | Vitest suites; fake fetch and scripted models, never real LLMs or the network |
 | `.claude/launch.json` | Preview servers: `app` (Vite dev, 5173) and `design` (mock-ups, 4173) |

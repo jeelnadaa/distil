@@ -56,7 +56,7 @@ quality and completeness.
 | Token caps | **Warn at threshold, hard stop at cap.** Daily/monthly, global and per provider. |
 | Relation to LearnHarness | **Ideas only, our own code.** Credit in README. |
 | Licence | **MIT** (owner deferred to our recommendation, 2026-10-31): a local-first tool that should be easy to reuse. LearnHarness is AGPL, but no code is taken, so nothing obliges a copyleft licence. |
-| Text font | **Satoshi by default**; Settings › Appearance offers **Anthropic Sans** (used when installed on the machine, never shipped) and **Custom** (an installed font by name, or an uploaded font file). The choice replaces Satoshi everywhere; the display serif and mono stay. Decided 2026-10-31. |
+| Text font | **Satoshi by default**; Settings › Appearance offers **Anthropic Sans** (used when installed on the machine, never shipped) and **added fonts** (an installed font by name, or an uploaded font file). Each added font is saved under an optional name and becomes a pill next to Satoshi and Anthropic Sans, so it is never added twice. The choice replaces Satoshi everywhere; the display serif and mono stay. Decided 2026-10-31. |
 | Generated visuals | **Always in Distil's design language** (owner, 2026-10-31). Models describe *what* to show in compact grammars or data; Distil's renderer decides *how it looks* with its own tokens. See §7.5. |
 | Mastery display | **Both, configurable:** named level + percentage by default; Settings can show levels only, percentages only, or both. Decided 2026-10-31. |
 | Gamification | **Off until the user turns it on.** Decided 2026-10-31. |
@@ -68,6 +68,13 @@ quality and completeness.
 | Phase 2 test material | **An openly licensed textbook** for development and the exit test; the owner judges completeness on their own material later. Decided 2026-10-31. |
 | Exercises and worked examples | **Keep everything in the ledger**: exercise set-ups, worked-example arithmetic and calculator steps are extracted like any other content, not filtered out or set aside for practice. Decided 2026-10-31. |
 | Model suggestions | **Suggested per role** during onboarding and in Settings › Models, picked from the models the user's key actually lists; always overridable. Decided 2026-10-31. |
+| Rate limits and fallback | **An ordered fallback list per model slot**, each entry a (provider, key, model). A provider can hold several labelled keys. A call that hits a rate limit, an outage, an exhausted quota or a cap moves to the next entry without waiting; it waits only when every entry is busy. Chat falls back only before any text has streamed. The chat and the activity panel say which model answered. Extra keys are for separate accounts and only as each provider's terms allow (Google's don't allow extra keys or projects to get around rate limits). Decided 2026-10-31 (F-1211, F-1212). |
+| Background status | **An app-wide activity panel** (clock button in every top bar): running jobs with progress, stop and resume, and what finished or failed in the last 24 hours. Closing a dialog never hides a job's status. Decided 2026-10-31 (F-1310). |
+| Distil progress | **Both numbers, labelled:** the running job shows "Distilling pages 17–176 · 98%" (progress of this run); otherwise the file shows "N% of the file distilled". Decided 2026-10-31. |
+| New chats | **One start screen** for the logo, "New chat" and "New chat in folder"; it names the folder when there is one. A chat is created when its first message is sent, so empty chats never reach the library. Decided 2026-10-31. |
+| Finding things in the sources | **Ledger + keyword index + embeddings, all configurable.** The ledger is the map of what must be learned. A local keyword index (SQLite FTS5, BM25, stemming) is built at import with no model and finds exact terms, symbols and names (done, F-214). Embeddings add meaning-based search, from the provider (e.g. Gemini or OpenAI embedding models) or a local model in three sizes (small, medium, high); off is allowed. Answers retrieve with both and merge the rankings, every hit anchored to its page, slide or line. A local model is downloaded only after the user agrees, with its size shown. Decided 2026-10-31 (F-1004, F-1005). |
+| Controls | **Themed everywhere:** dropdowns are Distil's own (the open list follows the palette and theme), and every control has a tooltip (icon buttons from their label, the rest where the meaning isn't obvious). Decided 2026-10-31 (F-1311). |
+| Built-in tutorial | **One "How to use Distil" chat**, shipped with the app, that walks through the whole app in the chat window and answers questions about it. Built last, when the app is done (Phase 9, F-1312). Decided 2026-10-31. |
 
 ---
 
@@ -150,6 +157,7 @@ Every new plan/teach request first goes through a compiler that turns whatever t
 | F-211 | Syllabus / past-paper detection: if a file looks like a syllabus or exam paper, it is used to set scope and exam weighting | S |
 | F-212 | Re-ingest on file change; diff shows new/removed items | S |
 | F-213 | Math-aware extraction (LaTeX for formulae, tables kept as tables) | M |
+| F-214 | **Local keyword index** of every chunk (SQLite FTS5, BM25 ranking, stemming), built at import and kept in step on re-import and delete, no model involved. Search returns hits anchored to the exact page/slide/line of the first match | M |
 
 ### 4.3 Coverage Ledger (fixes P3 — "don't miss a single thing")
 
@@ -401,6 +409,8 @@ Four layers, cheapest first:
 | F-1001 | Plain ask-anything chat with folder materials + brief as context, with citations to material anchors | M |
 | F-1002 | "Turn this into a lesson" / "make cards from this" buttons on answers | S |
 | F-1003 | Mode can be switched inside a chat (Q&A → Teach) without losing history | S |
+| F-1004 | **Retrieval for answers and lessons:** the ledger picks what matters; the keyword index (F-214) and embeddings (F-1005) each rank chunks, merged by reciprocal rank fusion; the top chunks go to the model with their anchors, and answers cite them. Used by Q&A (F-1001), Teach and Practice | M |
+| F-1005 | **Embeddings, configurable** in Settings › Models: Off · Provider (an embedding model the user's key lists, e.g. Gemini or OpenAI; counted in usage and caps) · Local (Small, Medium, High; runs on this computer, free after download). Local models download only after consent with the file size shown, and can be removed. Vectors stored per chunk in the data folder and rebuilt when the embedding model changes; a pre-flight shows the cost for provider embeddings | M |
 
 ---
 
@@ -432,6 +442,8 @@ Four layers, cheapest first:
 | F-1207 | Graceful capability fallback (e.g. no vision model → images ingested via OCR or flagged) | M |
 | F-1208 | Other subscription logins (ChatGPT, Copilot) — same opt-in/warning pattern | C |
 | F-1209 | Web search provider for researcher agent (key-based; optional) | S |
+| F-1211 | Several labelled keys per provider (e.g. personal and work); the first is the default; removing one moves choices that used it to the default | M |
+| F-1212 | **Fallback list per model slot** of (provider, key, model): rate limits, outages, exhausted quota and caps move the call to the next entry; waits only when all are busy; chat falls back before any text streams; the answering model is shown | M |
 
 ## 13. App, settings & quality of life
 
@@ -445,7 +457,10 @@ Four layers, cheapest first:
 | F-1306 | Crash-safe: background jobs resume or report "interrupted" honestly after restart | M |
 | F-1307 | Accessibility: screen-reader labels, focus order, contrast, reduced motion | S |
 | F-1308 | Multilingual: learn in any language the model supports (UI English first) | S |
-| F-1309 | Text font: Satoshi (default), Anthropic Sans (only if installed locally; never bundled), or Custom (installed font name or uploaded .woff2/.woff/.ttf/.otf). Replaces Satoshi everywhere; display and mono unchanged | M |
+| F-1309 | Text font: Satoshi (default), Anthropic Sans (only if installed locally; never bundled), or added fonts (installed font name or uploaded .woff2/.woff/.ttf/.otf), each saved under an optional name as its own pill. Replaces Satoshi everywhere; display and mono unchanged | M |
+| F-1310 | Activity panel in every top bar: running jobs (progress, which fallback model is answering, stop) and the last 24 hours (done, stopped, failed, resume) | M |
+| F-1311 | Themed controls: Distil's own dropdown in place of the browser's, and a tooltip on every control | M |
+| F-1312 | Built-in tutorial: one "How to use Distil" chat that explains the whole app in the chat window and answers questions about it; kept in step with the shipped features | M |
 
 ---
 
@@ -501,12 +516,12 @@ Each phase ends with: features working end-to-end, tests green, docs updated (`P
 | 1 | Foundation | App shell, local data store, settings, BYOK providers + model picker, streaming chat, folders (5 levels) + chats, auto-naming, markdown/math/code rendering, token recording + chat meter + caps (F-1101, F-1102, F-1104, F-1105) | Create folder → chat → talk to a model; usage recorded; cap blocks |
 | 2 | Materials & Ledger | Ingestion (PDF/slides/docs/images/web/YouTube), chunking, extraction, recall audit, dedup, ledger UI, cost pre-flight, material viewer | A 4-unit syllabus PDF yields a ledger the owner judges complete |
 | 3 | Study Plan | Brief Compiler, planner with code-enforced coverage, plan map/outline (data-only rendering, §7.5), deadline schedule, today view | Plan covers 100 % of ledger; schedule re-balances |
-| 4 | Teach | Probe, session plan panel, checks + confidence + thinking, repair loop, item status updates, recap, quick actions | Full lesson from plan click to recap; ledger statuses move |
+| 4 | Teach | Retrieval with keyword index + configurable embeddings (F-1004, F-1005), probe, session plan panel, checks + confidence + thinking, repair loop, item status updates, recap, quick actions | Full lesson from plan click to recap; ledger statuses move |
 | 5 | Interactives | Widget grammars + renderer in the design language (§7.5), SVG sanitiser, Distil kit for sandboxed mini-apps with test-before-show and design lint, visual maker, interactivity dial | Dial demonstrably changes behaviour; mini-app errors self-heal; every visual follows the active theme, palette and font with no hard-coded styling |
 | 6 | Practice & Exams | Practice sets, mock exams, timer, grading incl. handwritten, results → mastery/cards | Mock exam generated, taken, graded |
 | 7 | Retention | Flashcards + FSRS, mastery view (levels/percent setting), recommender, streaks/XP (off by default), knowledge graph as data rendered by Distil (§7.5), sibling-chat digest | Daily loop: today view → lesson → reviews |
 | 8 | Providers+ & usage | Google sign-in (experimental), usage dashboard + graphs, custom endpoints, researcher/topic-only, web search | Gemini via Google login works behind the warning |
-| 9 | Ship | Windows installer, auto-update, export/import, keyboard pass, accessibility pass, README/credits | Installable build |
+| 9 | Ship | Windows installer, auto-update, export/import, keyboard pass, accessibility pass, README/credits, built-in tutorial chat (F-1312) | Installable build; the tutorial chat walks a new user through every mode |
 
 Phases 5–8 can be re-ordered on request.
 
