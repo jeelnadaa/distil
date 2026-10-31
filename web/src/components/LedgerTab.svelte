@@ -3,6 +3,7 @@
   import { api, type FolderMaterial, type Item, type ItemMark, type ItemType } from "../lib/api.ts";
   import { renderInline } from "../lib/markdown.ts";
   import { attempt } from "../lib/state.svelte.ts";
+  import { locLabel } from "../lib/viewer.ts";
   import Dialog from "./Dialog.svelte";
   import Icon from "./Icon.svelte";
   import Menu, { type MenuItem } from "./Menu.svelte";
@@ -16,7 +17,6 @@
   type View = "all" | "scope" | "marked";
   const MARKS: Record<ItemMark, string> = { known: "Known", skip: "Skipped", out_of_scope: "Out of scope" };
   const STATUS: Record<string, string> = { pending: "Pending", planned: "Planned", taught: "Taught", checked: "Checked", mastered: "Mastered" };
-  const UNIT: Record<string, string> = { page: "p.", slide: "slide ", para: "¶", line: "line " };
   const MANUAL = "Added by you";
 
   let query = $state("");
@@ -44,8 +44,7 @@
     return [...map.values()].sort((a, b) => a.rank - b.rank);
   });
 
-  const where = (s: Item["sources"][number]) => `${s.materialName} · ${UNIT[s.unit ?? ""] ?? "#"}${s.loc}`;
-  const href = (s: Item["sources"][number]) => `/api/materials/${s.materialId}/file${s.unit === "page" ? `#page=${s.loc}` : ""}`;
+  const where = (s: Item["sources"][number]) => `${s.materialName} · ${locLabel(s.unit, s.loc)}`;
 
   async function patch(item: Item, change: Parameters<typeof api.updateItem>[1]) {
     await attempt(() => api.updateItem(item.id, change));
@@ -116,7 +115,7 @@
                   {#if item.statement}<div class="ledger__statement">{@html renderInline(item.statement)}</div>{/if}
                 </td>
                 <td class="sources">
-                  {#each item.sources as s (s.materialId + s.loc)}<a class="anchor" href={href(s)} target="_blank" rel="noopener" title={s.quote}>{where(s)}</a>{/each}
+                  {#each item.sources as s (s.materialId + s.loc)}<a class="anchor" href="#/material/{s.materialId}/{s.loc}/{item.id}" title={s.quote}>{where(s)}</a>{/each}
                 </td>
                 <td><span class="status status--{item.status}"><i></i>{item.mark ? MARKS[item.mark] : STATUS[item.status]}</span></td>
                 <td class="num"><Menu label="Actions for {item.title}" items={actions(item)} /></td>

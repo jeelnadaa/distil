@@ -134,6 +134,7 @@
   .sb-open .sb { transform: none; }
   .topbar { padding: 0 var(--s-3); }
   .topbar__menu { display: inline-flex; }
+  .topbar .hide-sm, .topbar .hide-sm + .icon { display: none; }
   .page, .page--wide { width: calc(100% - 2 * var(--s-4)); padding-top: var(--s-5); }
   .composer-wrap { padding: 0 var(--s-3) var(--s-3); }
   .settings { grid-template-columns: 1fr; gap: var(--s-5); }

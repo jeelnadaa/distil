@@ -2,11 +2,13 @@
 import { api, ApiError, type Chat, type Folder, type ModelInfo, type Provider, type SettingsView } from "./api.ts";
 
 export type FolderTab = "materials" | "ledger";
-export type Route = { name: "home" } | { name: "chat"; id: string } | { name: "folder"; id: string; tab: FolderTab } | { name: "settings"; section?: string };
+export type Route = { name: "home" } | { name: "chat"; id: string } | { name: "folder"; id: string; tab: FolderTab }
+  | { name: "material"; id: string; loc: number | null; item: string | null } | { name: "settings"; section?: string };
 
 const parseHash = (): Route => {
-  const [, name, id, sub] = location.hash.split("/");
+  const [, name, id, sub, extra] = location.hash.split("/");
   if (name === "chat" && id) return { name: "chat", id };
+  if (name === "material" && id) return { name: "material", id, loc: Number(sub) || null, item: extra || null };
   if (name === "folder" && id) return { name: "folder", id, tab: sub === "ledger" ? "ledger" : "materials" };
   if (name === "settings") return { name: "settings", section: id };
   return { name: "home" };

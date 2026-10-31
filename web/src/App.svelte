@@ -1,6 +1,7 @@
 <script lang="ts">
   import ChatView from "./components/ChatView.svelte";
   import Home from "./components/Home.svelte";
+  import MaterialView from "./components/MaterialView.svelte";
   import SettingsView from "./components/SettingsView.svelte";
   import Sidebar from "./components/Sidebar.svelte";
   import Toasts from "./components/Toasts.svelte";
@@ -24,6 +25,8 @@
     {#if ready}
       {#if nav.route.name === "chat"}
         {#key nav.route.id}<ChatView id={nav.route.id} />{/key}
+      {:else if nav.route.name === "material"}
+        {#key nav.route.id}<MaterialView id={nav.route.id} loc={nav.route.loc} item={nav.route.item} />{/key}
       {:else if nav.route.name === "folder"}
         {#key nav.route.id}<WorkspaceView id={nav.route.id} tab={nav.route.tab} />{/key}
       {:else if nav.route.name === "settings"}

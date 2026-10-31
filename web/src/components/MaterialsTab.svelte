@@ -72,7 +72,7 @@
           {@const s = statusOf(m)}
           <tr>
             <td>
-              <a class="pf-src" href="/api/materials/{m.id}/file" target="_blank" rel="noopener"><Icon name={KIND_ICON[m.kind] ?? "file"} size="sm" /><span>{m.name}</span></a>
+              <a class="pf-src" href="#/material/{m.id}"><Icon name={KIND_ICON[m.kind] ?? "file"} size="sm" /><span>{m.name}</span></a>
               {#if m.inherited}<span class="caption faint"> · from a parent folder</span>{/if}
               {#if m.error}<div class="caption error">{m.error}</div>{/if}
             </td>

@@ -64,7 +64,7 @@ Read this file fully before doing anything in this repo.
 | `server/llm.ts` | One-shot model calls for agents: cap check, usage by role, validated JSON with one retry |
 | `server/constants.ts` | Limits shared with the browser (no Node imports) |
 | `web/src/components/` | Svelte screens and parts: `App`, `Sidebar`/`Tree`, `ChatView`, `SettingsView`, `Home`, dialogs |
-| `web/src/lib/` | `api.ts` (typed client, SSE), `state.svelte.ts` (app state, routes `#/chat/:id`, `#/settings/:section`), `markdown.ts`, `prefs.ts`, `icons.ts` |
+| `web/src/lib/` | `api.ts` (typed client, SSE), `state.svelte.ts` (app state, routes `#/chat/:id`, `#/folder/:id/:tab`, `#/material/:id/:loc/:item`, `#/settings/:section`), `markdown.ts`, `prefs.ts`, `icons.ts`, `viewer.ts` (sections, quote ranges, location labels) |
 | `web/src/styles/` | Design tokens, palettes, base and shell CSS ported from `design/` |
 | `test/` | Vitest suites; fake fetch and scripted models, never real LLMs or the network |
 | `.claude/launch.json` | Preview servers: `app` (Vite dev, 5173) and `design` (mock-ups, 4173) |

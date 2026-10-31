@@ -4,13 +4,12 @@ Living status log. Update in the same commit as every change.
 
 ## Current phase
 
-**Phase 2 — Materials & Coverage Ledger** in progress: ingest, extraction, ledger API and the folder workspace are done and browser-verified; the material viewer and the remaining input types are next.
+**Phase 2 — Materials & Coverage Ledger** in progress: ingest, extraction, ledger API and the folder workspace are done and browser-verified; the remaining input types and the textbook exit test are next.
 
 ## Next up
 
-1. Phase 2 material viewer (open a source at the cited page inside the app).
-2. Phase 2 later inputs: images (vision), web articles, YouTube (captions, then Gemini fallback, then paste), re-import diff.
-3. Phase 2 exit test on an open textbook (owner chose this; ask before downloading one).
+1. Phase 2 later inputs: images (vision), web articles, YouTube (captions, then Gemini fallback, then paste), re-import diff.
+2. Phase 2 exit test on an open textbook (owner chose this; ask before downloading one).
 
 ## Phase checklist
 
@@ -74,6 +73,11 @@ Living status log. Update in the same commit as every change.
 - Chat on `gemini-3.5-flash`: streams, LaTeX renders, auto-named by `gemini-flash-lite-latest`, real usage recorded. Distil on the sample notes: 5 correctly typed items with correct line anchors, prose maths turned into LaTeX, audit clean in one round.
 - Found: on the free tier `gemini-pro-latest` (3.1 Pro) has a quota of 0 (429), and `gemini-flash-latest` returned 503 "high demand"; both errors reached the learner as clear messages. Recorded under F-1210 (suggest Flash/Flash-Lite on the free tier, prefer pinned versions).
 - Fixed: the extraction estimate ignored thinking tokens (said ~1.2k, used ~1.6k); it now adds an allowance per call and comes out at ~2.1k, on the high side as intended.
+
+### 2026-10-31 · Material viewer (F-210)
+- `#/material/:id/:loc/:item`: every ledger anchor and file name opens it. Text view for every format, one section per page/slide/line, scrolled to the cited location with the quote highlighted (CSS Custom Highlight API, no DOM changes); a rail lists the file's ledger items in reading order. PDFs also have an Original view drawn with pdf.js, loaded only on demand, pages drawn as they scroll into view, opened at the cited page.
+- Why pdf.js and not the browser's PDF viewer: the built-in pane (and so potentially the desktop build) has none; it downloaded the file instead.
+- Verified in the browser: Markdown and PDF, desktop and phone width. Fixed: the `hide-sm` top-bar rule had never been ported, so long crumbs pushed the title out on phones. 73 tests.
 
 ## Open questions
 

@@ -5,7 +5,7 @@ import type { FontInfo } from "../../../server/fonts.ts";
 import type { Job } from "../../../server/jobs.ts";
 import type { estimateExtraction, Strategy } from "../../../server/ledger/extract.ts";
 import type { Item, ItemMark, ItemType } from "../../../server/ledger/store.ts";
-import type { Material } from "../../../server/materials/store.ts";
+import type { Material, StoredChunk } from "../../../server/materials/store.ts";
 import type { Message } from "../../../server/messages.ts";
 import type { ProviderSpec } from "../../../server/providers/catalog.ts";
 import type { ModelInfo } from "../../../server/providers/types.ts";
@@ -14,6 +14,7 @@ import type { CapStatus } from "../../../server/usage.ts";
 
 export type { CapStatus, Chat, FontInfo, Folder, Item, ItemMark, ItemType, Job, Message, Meter, ModelInfo, ModelRef, Settings, Strategy, TurnEvent };
 export type FolderMaterial = Material & { inherited: boolean };
+export type { Material, StoredChunk };
 export type Estimate = ReturnType<typeof estimateExtraction> & { materials: number };
 export type Provider = ProviderSpec & { configured: boolean; keyPreview: string | null };
 export type SettingsView = Settings & { dataDir: string };
@@ -86,6 +87,7 @@ export const api = {
   materials: (folderId: string) => json<FolderMaterial[]>("GET", `/folders/${folderId}/materials`),
   uploadMaterial: async (folderId: string, file: File): Promise<FolderMaterial> =>
     (await call("POST", `/folders/${folderId}/materials`, undefined, undefined, file)).json(),
+  material: (id: string) => json<{ material: Material; chunks: StoredChunk[] }>("GET", `/materials/${id}`),
   deleteMaterial: (id: string) => done("DELETE", `/materials/${id}`),
   estimate: (folderId: string, strategy: Strategy, reaudit = false) =>
     json<Estimate>("GET", `/folders/${folderId}/estimate?strategy=${strategy}${reaudit ? "&reaudit=1" : ""}`),
