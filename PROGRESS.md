@@ -33,6 +33,8 @@ Living status log. Update in the same commit as every change.
 - Owner Q&A recorded in `plan.md` §2: local-first open source; exhaustive coverage ledger; interactivity dial; Google login opt-in with warning; all four modes; optional deadline mode; knowledge graph + flashcards/SRS + mastery + streaks; all input types; folders as subject workspaces, 5 levels; caps warn then hard-stop; ideas only from LearnHarness (own code).
 - Created `plan.md`, `AGENTS.md`, `CLAUDE.md`, `PROGRESS.md`, `README.md`; initialised git.
 
+- Product named **Distil** (owner decision); `plan.md` §2 and §18 updated, README retitled.
+
 ## Open questions
 
 See `plan.md` §18.

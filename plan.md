@@ -1,4 +1,4 @@
-# Learning Harness — Product Plan & Scope
+# Distil — Product Plan & Scope
 
 > Status: **DRAFT v1 — awaiting owner review.** Nothing here is built yet.
 > Next step after approval: `DESIGN.md` (UX + visual design), then implementation in phases.
@@ -38,6 +38,7 @@ quality and completeness.
 
 | Topic | Decision |
 |---|---|
+| Product name | **Distil** (British spelling, one "l") — boiling material down to its essence. Decided 2026-10-31. |
 | Deployment & data | **Local-first, open source.** Runs on the user's machine; chats, materials, keys stay on disk. No accounts, no server of ours. |
 | Platform | Web app served locally **and** packaged as a Windows desktop app (macOS/Linux later). |
 | Coverage strictness | **Exhaustive + visible ledger.** Every item in the material is extracted, mapped to a lesson, shown with a coverage %; gaps are flagged before studying starts. |
@@ -465,7 +466,7 @@ Phases 5–8 can be re-ordered on request.
 
 ## 18. Open questions for the owner
 
-1. **Product name.** Working name "learning-harness" is very close to "LearnHarness". Keep, or pick a distinct name?
+1. ~~**Product name.**~~ **Resolved 2026-10-31:** the app is called **Distil** (see §2).
 2. **License.** Proposed **MIT** (permissive). OK, or prefer AGPL/GPL to keep forks open?
 3. **Mastery display:** numbers (72 %), named levels (new / shaky / solid / mastered), or colour only?
 4. **Gamification default:** on-subtle (proposed) or off until enabled?

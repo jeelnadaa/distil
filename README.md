@@ -1,6 +1,6 @@
-# learning-harness
+# Distil
 
-> Working name. Status: **planning** — no app code yet. See [plan.md](plan.md).
+> Status: **planning** — no app code yet. See [plan.md](plan.md).
 
 A local-first, open-source study app. Bring your material (PDFs, slides, notes, photos, links,
 YouTube) or just a goal, and get a study plan that provably covers everything in it. Then learn it
