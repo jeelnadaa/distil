@@ -426,7 +426,7 @@ Four layers, cheapest first:
 | F-1203 | **Sign in with Google (experimental)** — use Gemini models via Google account OAuth, no API key. Off by default; enabling shows a plain warning that this reuses Google's CLI login and Google may restrict or suspend accounts for third-party use | M |
 | F-1204 | Guided 30-second setup for a free Google AI Studio API key (the safe default path) | M |
 | F-1205 | Model picker with capabilities (vision, context size, reasoning, price) | M |
-| F-1210 | Suggested model per role (strong, cheap, vision), matched against the user's own model list and labelled "suggested"; never selected without the user seeing it | M |
+| F-1210 | Suggested model per role (strong, cheap, vision), matched against the user's own model list and labelled "suggested"; never selected without the user seeing it. Google free tier (measured 2026-10-31): Pro models have a quota of 0, so suggest a Flash model for strong and Flash-Lite for cheap there; prefer pinned versions over `-latest` aliases, which can hit 503 "high demand" | M |
 | F-1206 | Keys stored locally, encrypted with the OS credential store where available; never sent anywhere but the provider | M |
 | F-1207 | Graceful capability fallback (e.g. no vision model → images ingested via OCR or flagged) | M |
 | F-1208 | Other subscription logins (ChatGPT, Copilot) — same opt-in/warning pattern | C |

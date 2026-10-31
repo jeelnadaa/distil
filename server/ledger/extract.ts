@@ -14,6 +14,8 @@ export type Strategy = "balanced" | "thorough";
 export const MAX_AUDIT_ROUNDS = 2;
 const PARALLEL_CALLS = 3;
 const MERGE_GROUPS_PER_CALL = 12;
+// Thinking models (Gemini, o-series, Claude with thinking) bill hidden reasoning as output; measured ~300 per call on Gemini Flash.
+const THINKING_PER_CALL = 400;
 
 const Draft = z.object({
   type: z.string().transform((t) => (ITEM_TYPES as readonly string[]).includes(t.toLowerCase()) ? t.toLowerCase() : "concept"),
@@ -54,11 +56,11 @@ export function estimateExtraction(chunks: Pick<StoredChunk, "tokens">[], strate
   for (const { tokens } of chunks) {
     if (!auditOnly) {
       totals[s.extract].input += extractSys + tokens + 40;
-      totals[s.extract].output += Math.ceil(tokens * 0.6);
+      totals[s.extract].output += Math.ceil(tokens * 0.6) + THINKING_PER_CALL;
     }
     // About 1.3 audit rounds per chunk on average; each re-reads the chunk plus a summary of its items.
     totals[s.audit].input += Math.ceil(1.3 * (auditSys + tokens * 1.5 + 40));
-    totals[s.audit].output += Math.ceil(tokens * 0.15);
+    totals[s.audit].output += Math.ceil(1.3 * (tokens * 0.15 + THINKING_PER_CALL));
   }
   const extractedOut = chunks.reduce((sum, c) => sum + Math.ceil(c.tokens * (auditOnly ? 0.15 : 0.6)), 0);
   totals[s.merge].input += Math.ceil(extractedOut * 0.2) + estimateTokens(MERGE_SYSTEM);

@@ -11,7 +11,6 @@ Living status log. Update in the same commit as every change.
 1. Phase 2 material viewer (open a source at the cited page inside the app).
 2. Phase 2 later inputs: images (vision), web articles, YouTube (captions, then Gemini fallback, then paste), re-import diff.
 3. Phase 2 exit test on an open textbook (owner chose this; ask before downloading one).
-4. Owner smoke test with a real key (Settings › Providers); only a local fake endpoint has been used so far.
 
 ## Phase checklist
 
@@ -70,6 +69,12 @@ Living status log. Update in the same commit as every change.
 - Verified in the browser against the local fake model: upload, estimate, distil, live progress, ledger, marking; 1440 px and phone width with no horizontal scroll.
 - Fixed: Markdown blocks covered a whole section, so every item cited the section's first line; blocks are now per paragraph. The ledger reloads after a failed action so a stale list catches up. 71 tests.
 
+### 2026-10-31 · Real-provider smoke test (Google AI Studio, owner's key)
+- Key saved and checked by the owner in Settings; model list loads.
+- Chat on `gemini-3.5-flash`: streams, LaTeX renders, auto-named by `gemini-flash-lite-latest`, real usage recorded. Distil on the sample notes: 5 correctly typed items with correct line anchors, prose maths turned into LaTeX, audit clean in one round.
+- Found: on the free tier `gemini-pro-latest` (3.1 Pro) has a quota of 0 (429), and `gemini-flash-latest` returned 503 "high demand"; both errors reached the learner as clear messages. Recorded under F-1210 (suggest Flash/Flash-Lite on the free tier, prefer pinned versions).
+- Fixed: the extraction estimate ignored thinking tokens (said ~1.2k, used ~1.6k); it now adds an allowance per call and comes out at ~2.1k, on the high side as intended.
+
 ## Open questions
 
 See `plan.md` §18.
@@ -77,7 +82,7 @@ See `plan.md` §18.
 ## Known issues
 
 - Custom installed fonts are found by family name. Chromium (the desktop build) sees user-installed fonts; Safari only exposes system fonts.
-- Only tested against a local fake model; a real-provider smoke test is still owed (needs the owner's key).
+- Only Google AI Studio has been tested for real; Anthropic, OpenAI and the other providers are still checked only against fakes.
 - The web bundle is one 614 kB chunk (KaTeX and highlight.js). Fine when served locally; split it if load time ever matters.
 
 - Caps are in tokens only. Cost caps need per-model prices; planned with the usage dashboard (Phase 8).
