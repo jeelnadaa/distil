@@ -4,12 +4,14 @@ Living status log. Update in the same commit as every change.
 
 ## Current phase
 
-**Phase 2 — Materials & Coverage Ledger** in progress: ingest, extraction, ledger API and the folder workspace are done and browser-verified; the remaining input types and the textbook exit test are next.
+**Phase 2 — Materials & Coverage Ledger** in progress: every input type (files, images, web pages, YouTube), extraction with vision, the ledger, the workspace, the viewer and re-import are done and browser-verified. The textbook exit test is half run: chapter 1 is extracted, its audit stopped on the free-tier quota.
 
 ## Next up
 
-1. Phase 2 later inputs: images (vision), web articles, YouTube (captions, then Gemini fallback, then paste), re-import diff.
-2. Phase 2 exit test on an open textbook (owner chose this; ask before downloading one).
+1. Owner decision: how audits should run when the strong model's free-tier daily quota is tiny (it allowed 17 audit calls; chapter 1 needs ~60).
+2. Owner decision: YouTube captions (see Known issues), keep Gemini + paste only, or something else.
+3. Finish the textbook exit test: resume chapter 1's audit, then chapter 2 (pages 77–176, the formula-heavy one), and judge completeness.
+4. Tighten extraction on exercise sets (they produce trivial "Let X be…" facts).
 
 ## Phase checklist
 
@@ -79,6 +81,16 @@ Living status log. Update in the same commit as every change.
 - Why pdf.js and not the browser's PDF viewer: the built-in pane (and so potentially the desktop build) has none; it downloaded the file instead.
 - Verified in the browser: Markdown and PDF, desktop and phone width. Fixed: the `hide-sm` top-bar rule had never been ported, so long crumbs pushed the title out on phones. 73 tests.
 
+### 2026-10-31 · Phase 2 inputs and textbook test
+- Retry with backoff for 429/5xx (honours "retry in Xs"; a wait over 2 minutes stops the job with `quota_exhausted`, resumable).
+- Vision extraction (F-202, F-213): PDF pages whose content is drawn (operator list: any picture, or 80+ vector paths) are rendered server-side (pdf.js + @napi-rs/canvas, 1000 px JPEG) and sent with their text, up to 4 per call; photos and scans are image materials read entirely by the model. Gemini, OpenAI and Anthropic encodings tested.
+- Distil one material or a page range ("chapters 1–2") from the Materials tab; the estimate counts page images.
+- Web pages (F-203): a pasted link is fetched once and kept. HTML becomes Markdown of the main article (Readability + linkedom), with MathML/KaTeX/MathJax kept as LaTeX and citation markers and edit links dropped; links to PDFs, images and text are stored as those files. Verified on Wikipedia "Standard deviation": 53 display formulas render.
+- YouTube (F-204): a dialog offers "Transcribe with Gemini" (Google's API takes the YouTube link; low media resolution, measured 96 tokens per second of video; on-screen formulas noted in LaTeX) or "Paste transcript" (YouTube's own transcript, grouped into timed paragraphs). Title from the public oEmbed endpoint. Verified with a real 19 s video.
+- Re-import (F-212): "Replace with a new version" for files, "Fetch again" for pages (not videos). Unchanged sections keep their extraction progress and items, anchors move with them; the row shows new/changed sections and lists items removed with the old text.
+- Textbook exit test: OpenStax *Introductory Statistics 2e* (CC BY 4.0, 847 pages, 555 chunks, 412 visual pages). Chapter 1 (pages 17–76): all 47 chunks extracted, 489 items (110 definitions, 90 examples, 164 facts, 29 procedures, …), maths in LaTeX where present. Usage so far ~113k cheap + ~55k strong tokens, in line with the 287k estimate. The audit stopped after 17 strong-model calls: `gemini-3.5-flash` free-tier daily quota.
+- 91 tests.
+
 ## Open questions
 
 See `plan.md` §18.
@@ -86,6 +98,10 @@ See `plan.md` §18.
 ## Known issues
 
 - Custom installed fonts are found by family name. Chromium (the desktop build) sees user-installed fonts; Safari only exposes system fonts.
+- YouTube captions are not fetched: YouTube has no public caption download for other people's videos, and reading its internal player API was refused as bot-check circumvention. So the owner's "captions first" step is replaced by the Gemini and paste paths until the owner decides otherwise.
+- On Google's free tier the strong model's daily request quota is very small; a textbook-sized audit needs several days or a paid key.
+- Exercise and homework sections add many trivial "fact" items.
+- Adding a link (and transcribing a video) runs inside the request; a long video keeps the dialog waiting for minutes. Move to a background job if that becomes a problem.
 - Only Google AI Studio has been tested for real; Anthropic, OpenAI and the other providers are still checked only against fakes.
 - The web bundle is one 614 kB chunk (KaTeX and highlight.js). Fine when served locally; split it if load time ever matters.
 

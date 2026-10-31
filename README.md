@@ -1,6 +1,6 @@
 # Distil
 
-> Status: **early development** — Phase 1 (folders, chats, streaming Ask mode, your own keys, token caps) works. Study plans, teaching and the coverage ledger come next. See [PROGRESS.md](PROGRESS.md).
+> Status: **early development** — folders, chats, streaming Ask mode, your own keys and token caps work, and so does the coverage ledger: add PDFs, slides, docs, photos, web pages or YouTube videos and Distil lists every learnable item with a link back to where it is. Study plans and teaching come next. See [PROGRESS.md](PROGRESS.md).
 
 A local-first, open-source study app. Bring your material (PDFs, slides, notes, photos, links,
 YouTube) or just a goal, and get a study plan that provably covers everything in it. Then learn it
