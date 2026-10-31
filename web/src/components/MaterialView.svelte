@@ -1,4 +1,5 @@
 <script lang="ts">
+  import ActivityDock from "./ActivityDock.svelte";
   import { tick } from "svelte";
   import { api, type Item, type Material, type StoredChunk } from "../lib/api.ts";
   import { renderMarkdown } from "../lib/markdown.ts";
@@ -68,6 +69,7 @@
   {#if material}
     <a class="btn btn--ghost btn--icon btn--sm" href="/api/materials/{id}/file" download={material.name} aria-label="Download the original" title="Download the original"><Icon name="download" size="sm" /></a>
   {/if}
+  <ActivityDock />
 </header>
 
 {#if material?.kind === "image"}

@@ -29,13 +29,17 @@
     const [one, many] = UNIT[m.unit] ?? ["part", "parts"];
     return `${m.length} ${m.length === 1 ? one : many}`;
   };
-  const extracting = (m: FolderMaterial) => jobs.some((j) => j.materialId === m.id && j.kind === "extract" && (j.status === "queued" || j.status === "running"));
+  const extractJob = (m: FolderMaterial) => jobs.find((j) => j.materialId === m.id && j.kind === "extract" && (j.status === "queued" || j.status === "running"));
+  const extracting = (m: FolderMaterial) => !!extractJob(m);
+  // A running job reports progress on its own range; when idle, the row shows how much of the whole file is done.
+  const scopeOf = (job: Job) => job.label.split(" · ")[1];
   const statusOf = (m: FolderMaterial): { label: string; tone: string } => {
     if (m.status === "error") return { label: "Couldn't read", tone: "error" };
     if (m.status !== "ready") return { label: m.status === "parsing" ? "Reading" : "Queued", tone: "active" };
-    if (extracting(m)) return { label: `Distilling ${Math.round((m.distilled / Math.max(1, m.chunks)) * 100)}%`, tone: "active" };
+    const job = extractJob(m);
+    if (job) return { label: `Distilling${scopeOf(job) ? ` ${scopeOf(job)}` : ""} · ${job.total ? Math.round((job.done / job.total) * 100) : 0}%`, tone: "active" };
     if (m.distilled >= m.chunks) return { label: "Distilled", tone: "done" };
-    return { label: m.distilled ? "Partly distilled" : "Ready to distil", tone: "" };
+    return { label: m.distilled ? `${Math.max(1, Math.floor((m.distilled / m.chunks) * 100))}% of the file distilled` : "Ready to distil", tone: "" };
   };
 
   // Files go up one at a time: each is copied into the data folder, then read in the background.

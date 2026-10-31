@@ -23,7 +23,7 @@ const toJob = (r: Row): Job => ({
   done: r.done, total: r.total, error: r.error, params: JSON.parse(r.params) as Record<string, unknown>, createdAt: r.created_at, updatedAt: r.updated_at,
 });
 
-const RECENT_MS = 10 * 60 * 1000;
+const RECENT_MS = 24 * 60 * 60 * 1000; // the activity dock shows what finished or failed in the last day
 
 export function createJobs(db: Db, opts: { concurrency?: number; now?: () => number; log?: (msg: string) => void } = {}) {
   const now = opts.now ?? (() => Date.now());
@@ -93,7 +93,7 @@ export function createJobs(db: Db, opts: { concurrency?: number; now?: () => num
 
     get,
 
-    // Active jobs plus those that finished in the last few minutes, so the dock can show the outcome.
+    // Active jobs plus those that finished in the last day, so the activity dock can show the outcome.
     list(): Job[] {
       return (db.prepare("SELECT * FROM jobs WHERE status IN ('queued', 'running') OR updated_at > ? ORDER BY created_at DESC, rowid DESC LIMIT 50")
         .all(now() - RECENT_MS) as Row[]).map(toJob);

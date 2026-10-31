@@ -186,4 +186,10 @@ export function registerExtraction(jobs: Jobs, deps: LlmDeps & { materials: Mate
   });
 }
 
-export const extractLabel = (name: string) => `Extracting ${name}`;
+// "Distilling notes.pdf · pages 17–176": the range is in the label so every place showing the job says what it covers.
+export function extractLabel(name: string, unit: string | null, { from, to }: ExtractParams = {}) {
+  if (from === undefined && to === undefined) return `Distilling ${name}`;
+  const [one, many] = UNIT_LABEL[unit ?? ""] ?? ["part", "parts"];
+  if (from !== undefined && from === to) return `Distilling ${name} · ${one} ${from}`;
+  return `Distilling ${name} · ${many} ${from ?? 1}–${to ?? "end"}`;
+}

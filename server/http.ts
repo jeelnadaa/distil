@@ -210,7 +210,7 @@ export function createApp(deps: AppDeps) {
     chunks.map((ch) => ({ tokens: ch.tokens, images: material.kind === "image" ? 1 : visualPages(material, ch).length }));
   const extract = (material: Material, params: ExtractParams) =>
     jobs.active("extract", material.id)
-    ?? jobs.enqueue("extract", extractLabel(material.name), { folderId: material.folderId, materialId: material.id, params });
+    ?? jobs.enqueue("extract", extractLabel(material.name, material.unit, params), { folderId: material.folderId, materialId: material.id, params });
 
   app.get("/folders/:id/estimate", (c) => {
     const parsed = Scope.safeParse(c.req.query());

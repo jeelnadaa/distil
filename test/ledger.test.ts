@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { openDb } from "../server/db.ts";
 import { createJobs } from "../server/jobs.ts";
-import { estimateExtraction, registerExtraction } from "../server/ledger/extract.ts";
+import { estimateExtraction, extractLabel, registerExtraction } from "../server/ledger/extract.ts";
 import { makePdf } from "./fixtures.ts";
 import { createLedger, locate } from "../server/ledger/store.ts";
 import { createLibrary } from "../server/library.ts";
@@ -275,5 +275,14 @@ describe("re-import", () => {
     expect(t.calls.filter((c) => c.role === "extract")).toHaveLength(1);
     expect(t.ledger.list(t.folder.id).map((i) => i.title).sort()).toEqual(["Alpha", "Gamma", "Intro"]);
     expect(() => t.materials.replace(material.id, "same.md", new TextEncoder().encode(doc("Intro", "Alpha", "Gamma")))).toThrow(/same file/);
+  });
+});
+
+describe("extractLabel", () => {
+  it("says which range a job covers", () => {
+    expect(extractLabel("book.pdf", "page")).toBe("Distilling book.pdf");
+    expect(extractLabel("book.pdf", "page", { from: 17, to: 176 })).toBe("Distilling book.pdf · pages 17–176");
+    expect(extractLabel("deck.pptx", "slide", { from: 4, to: 4 })).toBe("Distilling deck.pptx · slide 4");
+    expect(extractLabel("notes.md", "line", { from: 30 })).toBe("Distilling notes.md · lines 30–end");
   });
 });

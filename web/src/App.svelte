@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { refreshActivity } from "./lib/activity.svelte.ts";
   import ChatView from "./components/ChatView.svelte";
   import Home from "./components/Home.svelte";
   import MaterialView from "./components/MaterialView.svelte";
@@ -11,6 +12,7 @@
   let ready = $state(false);
 
   $effect(() => {
+    void refreshActivity();
     attempt(() => Promise.all([refreshLibrary(), refreshSettings(), refreshProviders()])).then((ok) => {
       ready = true;
       if (ok) loadModels();

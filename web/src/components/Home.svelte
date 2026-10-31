@@ -1,4 +1,5 @@
 <script lang="ts">
+  import ActivityDock from "./ActivityDock.svelte";
   import { api } from "../lib/api.ts";
   import { app, attempt, go, nav, pending, refreshLibrary } from "../lib/state.svelte.ts";
   import Composer from "./Composer.svelte";
@@ -21,6 +22,7 @@
 
 <header class="topbar">
   <button type="button" class="btn btn--ghost btn--icon btn--sm topbar__menu" aria-label="Open menu" onclick={() => (nav.sidebarOpen = true)}><Icon name="sidebar" size="sm" /></button>
+  <ActivityDock />
 </header>
 
 <div class="scroll">

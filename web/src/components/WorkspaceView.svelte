@@ -1,4 +1,5 @@
 <script lang="ts">
+  import ActivityDock from "./ActivityDock.svelte";
   import { api, type FolderMaterial, type Item, type Job, type Material } from "../lib/api.ts";
   import { attempt, folderPath, type FolderTab, go, library, nav } from "../lib/state.svelte.ts";
   import DistilDialog from "./DistilDialog.svelte";
@@ -99,6 +100,7 @@
   {#if undistilled.length && !active.some((j) => j.kind === "extract")}
     <button type="button" class="btn btn--accent btn--sm" onclick={() => (distil = { mode: "extract" })}><Icon name="wand" size="sm" />Distil</button>
   {/if}
+  <ActivityDock />
 </header>
 
 <div class="scroll">
