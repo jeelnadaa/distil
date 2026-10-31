@@ -83,6 +83,8 @@ export function createLibrary(db: Db, now = () => Date.now()) {
   };
 
   return {
+    requireFolder,
+
     list() {
       const folders = (db.prepare("SELECT * FROM folders ORDER BY name COLLATE NOCASE").all() as FolderRow[]).map(toFolder);
       const chats = (db.prepare("SELECT * FROM chats ORDER BY updated_at DESC").all() as ChatRow[]).map(toChat);

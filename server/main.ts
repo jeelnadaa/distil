@@ -6,6 +6,8 @@ import { createFonts } from "./fonts.ts";
 import { createJobs } from "./jobs.ts";
 import { createApp } from "./http.ts";
 import { createLibrary } from "./library.ts";
+import { registerExtraction } from "./ledger/extract.ts";
+import { createLedger } from "./ledger/store.ts";
 import { registerIngest } from "./materials/ingest.ts";
 import { createMaterials } from "./materials/store.ts";
 import { createMessages } from "./messages.ts";
@@ -26,18 +28,23 @@ export function createServer({ port, dataDir = defaultDataDir() }: { port: numbe
   const log = (msg: string) => console.error(`[distil] ${msg}`);
   const materials = createMaterials(db, join(dataDir, "materials"));
   const jobs = createJobs(db, { log });
-  registerIngest(jobs, materials);
+  const ledger = createLedger(db);
+  const usage = createUsage(db);
+  const providers = createProviders(settings, createSecrets(join(dataDir, "secrets.json")));
+  registerIngest(jobs, materials, ledger);
+  registerExtraction(jobs, { providers, settings, usage, materials, ledger });
   const deps = {
     dataDir,
     allowedHosts: [`localhost:${port}`, `127.0.0.1:${port}`, `[::1]:${port}`],
     library: createLibrary(db),
     messages,
     settings,
-    usage: createUsage(db),
+    usage,
     fonts: createFonts(join(dataDir, "fonts")),
     materials,
+    ledger,
     jobs,
-    providers: createProviders(settings, createSecrets(join(dataDir, "secrets.json"))),
+    providers,
     log,
   };
   return { app: createApp(deps), db, jobs };

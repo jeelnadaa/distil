@@ -8,18 +8,19 @@ import { AppError, notFound } from "./errors.ts";
 export type JobStatus = "queued" | "running" | "done" | "error" | "aborted";
 export type Job = {
   id: string; kind: string; folderId: string | null; materialId: string | null; label: string;
-  status: JobStatus; done: number; total: number; error: string | null; createdAt: number; updatedAt: number;
+  status: JobStatus; done: number; total: number; error: string | null; params: Record<string, unknown>;
+  createdAt: number; updatedAt: number;
 };
 export type JobContext = { signal: AbortSignal; progress: (done: number, total: number) => void };
 export type JobHandler = (job: Job, ctx: JobContext) => Promise<void>;
 
 type Row = {
   id: string; kind: string; folder_id: string | null; material_id: string | null; label: string;
-  status: JobStatus; done: number; total: number; error: string | null; created_at: number; updated_at: number;
+  status: JobStatus; done: number; total: number; error: string | null; params: string; created_at: number; updated_at: number;
 };
 const toJob = (r: Row): Job => ({
   id: r.id, kind: r.kind, folderId: r.folder_id, materialId: r.material_id, label: r.label, status: r.status,
-  done: r.done, total: r.total, error: r.error, createdAt: r.created_at, updatedAt: r.updated_at,
+  done: r.done, total: r.total, error: r.error, params: JSON.parse(r.params) as Record<string, unknown>, createdAt: r.created_at, updatedAt: r.updated_at,
 });
 
 const RECENT_MS = 10 * 60 * 1000;
@@ -81,11 +82,11 @@ export function createJobs(db: Db, opts: { concurrency?: number; now?: () => num
       queueMicrotask(pump);
     },
 
-    enqueue(kind: string, label: string, refs: { folderId?: string | null; materialId?: string | null } = {}): Job {
+    enqueue(kind: string, label: string, refs: { folderId?: string | null; materialId?: string | null; params?: Record<string, unknown> } = {}): Job {
       const id = randomUUID();
       const at = now();
-      db.prepare("INSERT INTO jobs (id, kind, folder_id, material_id, label, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, 'queued', ?, ?)")
-        .run(id, kind, refs.folderId ?? null, refs.materialId ?? null, label, at, at);
+      db.prepare("INSERT INTO jobs (id, kind, folder_id, material_id, label, status, params, created_at, updated_at) VALUES (?, ?, ?, ?, ?, 'queued', ?, ?, ?)")
+        .run(id, kind, refs.folderId ?? null, refs.materialId ?? null, label, JSON.stringify(refs.params ?? {}), at, at);
       queueMicrotask(pump);
       return get(id);
     },
@@ -102,6 +103,13 @@ export function createJobs(db: Db, opts: { concurrency?: number; now?: () => num
       const job = get(id);
       if (job.status === "queued") set(id, { status: "aborted" });
       running.get(id)?.abort();
+    },
+
+    // The unfinished job of a kind for a material, so the same work is never queued twice.
+    active(kind: string, materialId: string): Job | null {
+      const row = db.prepare("SELECT * FROM jobs WHERE kind = ? AND material_id = ? AND status IN ('queued', 'running') ORDER BY created_at LIMIT 1")
+        .get(kind, materialId) as Row | undefined;
+      return row ? toJob(row) : null;
     },
 
     // Aborts every unfinished job for a material (used before deleting it).

@@ -110,4 +110,27 @@ describe("materials API", () => {
     const folder = (await call("POST", "/folders", { name: "X", parentId: null })).json;
     expect((await call("PATCH", `/folders/${folder.id}`, new Uint8Array([1]))).status).toBe(415);
   });
+
+  it("estimates extraction, and manages ledger items by hand", async () => {
+    const { call, jobs } = setup();
+    const folder = (await call("POST", "/folders", { name: "Signals", parentId: null })).json;
+    await call("POST", `/folders/${folder.id}/materials`, new TextEncoder().encode("# Sampling\n\nAliasing folds frequencies."), { "x-file-name": "notes.md" });
+    await jobs.idle();
+    const balanced = (await call("GET", `/folders/${folder.id}/estimate`)).json;
+    expect(balanced).toMatchObject({ materials: 1, chunks: 1 });
+    expect(balanced.cheap.input).toBeGreaterThan(0);
+    expect((await call("GET", `/folders/${folder.id}/estimate?strategy=thorough`)).json.cheap.input).toBe(0);
+    expect((await call("GET", `/folders/${folder.id}/estimate?strategy=wild`)).status).toBe(400);
+
+    const added = await call("POST", `/folders/${folder.id}/items`, { type: "fact", title: " Exam is open book " });
+    expect(added.status).toBe(201);
+    expect(added.json).toMatchObject({ title: "Exam is open book", origin: "manual", status: "pending", mark: null, sources: [] });
+    const marked = await call("PATCH", `/items/${added.json.id}`, { mark: "known" });
+    expect(marked.json.mark).toBe("known");
+    expect((await call("PATCH", `/items/${added.json.id}`, { type: "nonsense" })).status).toBe(400);
+    expect((await call("POST", "/folders/missing/items", { type: "fact", title: "x" })).status).toBe(404);
+    expect((await call("GET", `/folders/${folder.id}/items`)).json).toHaveLength(1);
+    expect((await call("DELETE", `/items/${added.json.id}`)).status).toBe(204);
+    expect((await call("GET", `/folders/${folder.id}/items`)).json).toEqual([]);
+  });
 });

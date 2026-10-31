@@ -99,6 +99,38 @@ const MIGRATIONS = [
   );
   CREATE INDEX jobs_status ON jobs(status, created_at);
   `,
+  `
+  -- Phase 2: the Coverage Ledger. Items belong to the folder of the material they came from.
+  ALTER TABLE chunks ADD COLUMN marks TEXT NOT NULL DEFAULT '[]';
+  ALTER TABLE chunks ADD COLUMN extracted_at INTEGER;
+  ALTER TABLE chunks ADD COLUMN audit_rounds INTEGER NOT NULL DEFAULT 0;
+  ALTER TABLE chunks ADD COLUMN audit_done INTEGER NOT NULL DEFAULT 0;
+  ALTER TABLE jobs ADD COLUMN params TEXT NOT NULL DEFAULT '{}';
+  CREATE TABLE items (
+    id            TEXT PRIMARY KEY,
+    folder_id     TEXT NOT NULL REFERENCES folders(id) ON DELETE CASCADE,
+    type          TEXT NOT NULL,
+    title         TEXT NOT NULL,
+    statement     TEXT NOT NULL,
+    origin        TEXT NOT NULL CHECK (origin IN ('extracted', 'audit', 'manual')),
+    status        TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'planned', 'taught', 'checked', 'mastered')),
+    mark          TEXT CHECK (mark IN ('skip', 'known', 'out_of_scope')),
+    merge_checked INTEGER NOT NULL DEFAULT 0,
+    created_at    INTEGER NOT NULL,
+    updated_at    INTEGER NOT NULL
+  );
+  CREATE INDEX items_folder ON items(folder_id, created_at);
+  -- Where an item appears. Deleting a material removes its anchors; items left with none are removed in code.
+  CREATE TABLE item_sources (
+    item_id     TEXT NOT NULL REFERENCES items(id) ON DELETE CASCADE,
+    chunk_id    TEXT NOT NULL REFERENCES chunks(id) ON DELETE CASCADE,
+    material_id TEXT NOT NULL,
+    loc         INTEGER NOT NULL,
+    quote       TEXT NOT NULL,
+    PRIMARY KEY (item_id, chunk_id)
+  );
+  CREATE INDEX item_sources_material ON item_sources(material_id);
+  `,
 ];
 
 export function openDb(file: string): Db {

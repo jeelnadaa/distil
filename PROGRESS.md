@@ -4,12 +4,14 @@ Living status log. Update in the same commit as every change.
 
 ## Current phase
 
-**Phase 1 — Foundation** complete (2026-10-31). Phase 2 — Materials & Coverage Ledger is next.
+**Phase 2 — Materials & Coverage Ledger** in progress: server side (ingest, extraction, ledger API) done; the workspace UI is next.
 
 ## Next up
 
-1. Phase 2 (`plan.md` §15): material upload and parsing, the Coverage Ledger, and the workspace view.
-2. Owner smoke test with a real key (Settings › Providers); only a local fake endpoint has been used so far.
+1. Phase 2 workspace UI: folder view with Materials and Ledger tabs, upload drop zone, cost estimate before extraction, activity dock, ledger table with filters and coverage, material viewer.
+2. Phase 2 later inputs: images (vision), web articles, YouTube (captions, then Gemini fallback, then paste), re-import diff.
+3. Phase 2 exit test on an open textbook (owner chose this; ask before downloading one).
+4. Owner smoke test with a real key (Settings › Providers); only a local fake endpoint has been used so far.
 
 ## Phase checklist
 
@@ -56,6 +58,12 @@ Living status log. Update in the same commit as every change.
 - Owner answers recorded in plan.md §2: MIT licence (LICENSE added), mastery shown as level + percent and configurable (F-914), gamification off by default (F-934), sibling chats share a compact ledger/graph digest with an "Independent" switch (F-925), practice grading counts the first attempt then allows hinted retries while exams stay one attempt (F-804), suggested model per role (F-1210).
 - Text font setting (F-1309, DESIGN.md §3): Satoshi, Anthropic Sans (used only if installed; never bundled) or Custom (installed family name, or an uploaded .woff2/.woff/.ttf/.otf kept in the data folder and checked by file signature, 8 MB max). It swaps `--font-text` everywhere; display and mono stay. Verified in the browser with an installed font and an uploaded one.
 - Fixed: delete calls resolved to `undefined`, which `attempt()` read as failure, so removing a key or font skipped its follow-up. Deep links into Settings now jump to the section instead of starting a smooth scroll. 44 tests.
+
+### 2026-10-31 · Phase 2 server
+- Materials (F-201…F-206): uploads are copied into `<data>/materials/<id>/` (owner choice: copy, offer re-import), deduplicated by SHA-256, up to 200 MB. Local parsers for PDF (pdf.js, headings from font size, dehyphenation), DOCX (incl. tables and equations), PPTX (slides and speaker notes), Markdown and text. Structure-aware chunks of about 1200 tokens keep their page/slide range, heading path and per-location marks so a quote maps to its exact page.
+- Background jobs (F-209, F-402, F-1306): rows in SQLite with params and progress, a concurrency limit, abort, and resume after restart.
+- Extraction (F-207, F-302, F-303, F-405): owner choice "cheap pass + strong audit": the cheap model extracts each chunk, the strong model re-reads it against what was found (up to 2 rounds), then judges duplicate groups that code pre-clusters by title overlap (only unjudged items are sent; short ids keep prompts small). "Thorough" uses the strong model throughout. Replies are validated and retried once with the error. Each chunk's progress is saved, so a stopped or crashed job resumes where it was. Usage is recorded per role (extractor, auditor, merger) and caps are checked before every call.
+- Ledger API (F-208, F-301, F-306, F-309): token estimate of the remaining work per strategy, extract-all for a folder subtree, "What did we miss?" re-audit, list (with subfolders), manual add, edit and mark (skip / known / out of scope), delete. Deleting or re-reading a material removes items that only it supported; manual items stay. 71 tests.
 
 ## Open questions
 

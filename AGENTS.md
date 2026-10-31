@@ -58,6 +58,10 @@ Read this file fully before doing anything in this repo.
 | `server/` | Local API (Node 24 runs the TypeScript directly): SQLite store, library, chat turns, providers, usage and caps |
 | `server/providers/` | Streaming adapters (OpenAI-compatible, Anthropic, Gemini), catalog and key-checked service |
 | `server/fonts.ts` | Uploaded text font (F-1309) in `<data>/fonts/`, validated by file signature |
+| `server/materials/` | Phase 2 ingest: `store` (copies in `<data>/materials/`), `parse` (PDF, DOCX, PPTX, Markdown, text), `chunk`, `ingest` (parse job) |
+| `server/ledger/` | Coverage Ledger: `store` (items, sources, merge candidates) and `extract` (extract → audit → merge job, estimate) |
+| `server/jobs.ts` | Background job runner backed by SQLite (resumes after restart) |
+| `server/llm.ts` | One-shot model calls for agents: cap check, usage by role, validated JSON with one retry |
 | `server/constants.ts` | Limits shared with the browser (no Node imports) |
 | `web/src/components/` | Svelte screens and parts: `App`, `Sidebar`/`Tree`, `ChatView`, `SettingsView`, `Home`, dialogs |
 | `web/src/lib/` | `api.ts` (typed client, SSE), `state.svelte.ts` (app state, routes `#/chat/:id`, `#/settings/:section`), `markdown.ts`, `prefs.ts`, `icons.ts` |

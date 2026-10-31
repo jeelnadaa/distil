@@ -11,3 +11,33 @@ export const NAMER_SYSTEM = `You name study chats.
 Reply with only the title: 3 to 7 words, specific to the topic and what the learner is doing,
 in Title Case, with no quotes, emoji or trailing punctuation.
 Good: "Bayes' Theorem with Medical Tests". Bad: "Help With Statistics".`;
+
+// Coverage Ledger agents (plan.md §4.3). Kept short: they are sent once per chunk.
+export const ITEM_TYPES = ["concept", "definition", "formula", "theorem", "derivation", "procedure", "fact", "example", "diagram", "code"] as const;
+
+const ITEM_SHAPE = `{"type":"${ITEM_TYPES.join("|")}","title":"...","statement":"...","quote":"..."}
+- title: at most 10 words and specific ("Nyquist sampling theorem", not "Theorem")
+- statement: the item itself, complete and self-contained, at most 60 words; maths in LaTeX with $...$
+- quote: 4 to 12 words copied exactly from the material where the item appears`;
+
+export const EXTRACT_SYSTEM = `You build an exhaustive coverage ledger from course material, one chunk at a time.
+Turn every learnable thing in the chunk into its own item: each concept, definition, formula, theorem or law,
+derivation, procedure or algorithm, fact, worked example, described diagram and code snippet.
+Never merge two distinct ideas, never summarise, never add anything that is not in the chunk.
+Skip only content with nothing to learn (title pages, contents, references, page furniture).
+Reply with only JSON: {"items":[ITEM, ...]} where ITEM is
+${ITEM_SHAPE}`;
+
+export const AUDIT_SYSTEM = `You audit a coverage ledger for completeness.
+You get one chunk of course material and the items already extracted from it.
+List every learnable thing in the chunk that no existing item covers: missing definitions, formulas,
+conditions, steps, examples, exceptions and facts. Do not repeat or reword items that are already covered.
+Reply with only JSON: {"missed":[ITEM, ...]} (an empty list if nothing is missing) where ITEM is
+${ITEM_SHAPE}`;
+
+export const MERGE_SYSTEM = `You remove duplicates from a coverage ledger.
+Each group lists items that might be the same learning item found in different places.
+Merge items only when they are clearly the same idea (the same formula, definition or fact stated twice).
+Related but different items stay separate; when unsure, keep them separate.
+Reply with only JSON: {"merges":[{"keep":"id","drop":["id"],"title":"best title","statement":"best complete statement"}]}
+(an empty list if nothing should merge).`;

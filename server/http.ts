@@ -5,15 +5,24 @@ import { type ChatDeps, meterFor, prepareTurn, streamTurn } from "./chat.ts";
 import { AppError, notFound } from "./errors.ts";
 import type { Fonts } from "./fonts.ts";
 import type { Jobs } from "./jobs.ts";
+import { estimateExtraction, extractLabel, type Strategy } from "./ledger/extract.ts";
+import type { Ledger } from "./ledger/store.ts";
 import { MAX_MATERIAL_BYTES, type Materials } from "./materials/store.ts";
 import { parseLabel } from "./materials/ingest.ts";
 import { ProviderError } from "./providers/types.ts";
+import { ITEM_TYPES } from "./prompts.ts";
 import { SettingsPatch } from "./settings.ts";
 
-export type AppDeps = ChatDeps & { dataDir: string; allowedHosts: string[]; fonts: Fonts; materials: Materials; jobs: Jobs };
+export type AppDeps = ChatDeps & { dataDir: string; allowedHosts: string[]; fonts: Fonts; materials: Materials; ledger: Ledger; jobs: Jobs };
 
 const NullableId = z.string().min(1).nullable();
 const ModelRefBody = z.object({ provider: z.string().min(1), id: z.string().min(1) });
+const StrategyBody = z.object({ strategy: z.enum(["balanced", "thorough"]).default("balanced") });
+const ItemType = z.enum(ITEM_TYPES);
+const ItemPatch = z.object({
+  title: z.string().min(1).max(200).optional(), statement: z.string().max(2000).optional(), type: ItemType.optional(),
+  mark: z.enum(["skip", "known", "out_of_scope"]).nullable().optional(),
+});
 
 async function body<T extends z.ZodType>(c: Context, schema: T): Promise<z.infer<T>> {
   const json = await c.req.json().catch(() => {
@@ -25,7 +34,7 @@ async function body<T extends z.ZodType>(c: Context, schema: T): Promise<z.infer
 }
 
 export function createApp(deps: AppDeps) {
-  const { library, messages, providers, settings, usage, materials, jobs } = deps;
+  const { library, messages, providers, settings, usage, materials, ledger, jobs } = deps;
   const app = new Hono().basePath("/api");
 
   // The API holds keys and spends tokens, so only this app may call it: the Host header must be ours
@@ -138,6 +147,46 @@ export function createApp(deps: AppDeps) {
   app.delete("/materials/:id", (c) => {
     jobs.abortFor(c.req.param("id"));
     materials.remove(c.req.param("id"));
+    ledger.removeOrphans();
+    return c.body(null, 204);
+  });
+
+  /* ---------- Coverage Ledger (F-207, F-208, F-301…F-310) ---------- */
+  // Materials in a folder's subtree that are read and still have extraction or audit work left.
+  const pending = (folderId: string) => materials.idsUnder(folderId)
+    .map((id) => ({ material: materials.get(id), chunks: materials.chunks(id).filter((ch) => !ch.extracted || !ch.audited) }))
+    .filter(({ material, chunks }) => material.status === "ready" && chunks.length > 0);
+  const extract = (material: { id: string; name: string; folderId: string }, strategy: Strategy) =>
+    jobs.active("extract", material.id)
+    ?? jobs.enqueue("extract", extractLabel(material.name), { folderId: material.folderId, materialId: material.id, params: { strategy } });
+
+  app.get("/folders/:id/estimate", (c) => {
+    const parsed = StrategyBody.safeParse({ strategy: c.req.query("strategy") });
+    if (!parsed.success) throw new AppError(400, "invalid_request", z.prettifyError(parsed.error));
+    const { strategy } = parsed.data;
+    const work = pending(c.req.param("id"));
+    return c.json({ materials: work.length, ...estimateExtraction(work.flatMap((w) => w.chunks), strategy) });
+  });
+  app.post("/folders/:id/extract", async (c) => {
+    const { strategy } = await body(c, StrategyBody);
+    return c.json(pending(c.req.param("id")).map(({ material }) => extract(material, strategy)), 202);
+  });
+  // "What did we miss?" (F-309): audit every chunk in the folder again, then merge.
+  app.post("/folders/:id/reaudit", async (c) => {
+    const { strategy } = await body(c, StrategyBody);
+    const ids = materials.idsUnder(c.req.param("id")).filter((id) => materials.get(id).status === "ready");
+    ids.forEach((id) => materials.resetAudit(id));
+    return c.json(ids.map((id) => extract(materials.get(id), strategy)), 202);
+  });
+  app.get("/folders/:id/items", (c) => c.json(ledger.list(c.req.param("id"))));
+  app.post("/folders/:id/items", async (c) => {
+    const draft = await body(c, z.object({ type: ItemType, title: z.string().max(200), statement: z.string().max(2000).default("") }));
+    library.requireFolder(c.req.param("id"));
+    return c.json(ledger.addManual(c.req.param("id"), draft), 201);
+  });
+  app.patch("/items/:id", async (c) => c.json(ledger.update(c.req.param("id"), await body(c, ItemPatch))));
+  app.delete("/items/:id", (c) => {
+    ledger.remove(c.req.param("id"));
     return c.body(null, 204);
   });
 

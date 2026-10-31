@@ -7,9 +7,14 @@ import type { Block, LocUnit } from "./parse.ts";
 
 export type Anchor = { unit: LocUnit; from: number; to: number };
 // headings: the heading path in force where the chunk starts, including a heading it opens with.
-export type Chunk = { anchor: Anchor; headings: string[]; text: string; tokens: number };
+// marks: [character offset, location] wherever the location changes, so a quote maps to its exact page.
+export type Chunk = { anchor: Anchor; headings: string[]; text: string; tokens: number; marks: [number, number][] };
 
 export const CHUNK_TOKENS = 1200;
+
+// The location of a character offset inside a chunk.
+export const locAt = (marks: [number, number][], offset: number, fallback: number) =>
+  marks.reduce((loc, [at, l]) => (at <= offset ? l : loc), marks[0]?.[1] ?? fallback);
 
 export function chunkBlocks(unit: LocUnit, blocks: Block[], maxTokens = CHUNK_TOKENS): Chunk[] {
   const chunks: Chunk[] = [];
@@ -19,12 +24,16 @@ export function chunkBlocks(unit: LocUnit, blocks: Block[], maxTokens = CHUNK_TO
   let from = 0;
   let to = 0;
   let headings: string[] = [];
+  let marks: [number, number][] = [];
+  let length = 0;
 
   const flush = () => {
-    const text = parts.join("\n\n").trim();
-    if (text) chunks.push({ anchor: { unit, from, to }, headings, text, tokens: estimateTokens(text) });
+    const text = parts.join("\n\n");
+    if (text.trim()) chunks.push({ anchor: { unit, from, to }, headings, text, tokens: estimateTokens(text), marks });
     parts = [];
     tokens = 0;
+    marks = [];
+    length = 0;
   };
   const add = (text: string, loc: number) => {
     const size = estimateTokens(text);
@@ -33,7 +42,10 @@ export function chunkBlocks(unit: LocUnit, blocks: Block[], maxTokens = CHUNK_TO
       from = loc;
       headings = [...path];
     }
+    if (parts.length) length += 2; // the "\n\n" between parts
+    if (marks.at(-1)?.[1] !== loc) marks.push([length, loc]);
     parts.push(text);
+    length += text.length;
     tokens += size;
     to = loc;
   };

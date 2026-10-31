@@ -17,7 +17,10 @@ export type Material = {
   status: MaterialStatus; error: string | null; unit: LocUnit | null; length: number | null;
   chunks: number; tokens: number; createdAt: number;
 };
-export type StoredChunk = { id: string; ord: number; from: number; to: number; headings: string[]; text: string; tokens: number };
+export type StoredChunk = {
+  id: string; ord: number; from: number; to: number; headings: string[]; text: string; tokens: number;
+  marks: [number, number][]; extracted: boolean; auditRounds: number; audited: boolean;
+};
 
 type Row = {
   id: string; folder_id: string; kind: MaterialKind; name: string; size: number; sha256: string; status: MaterialStatus;
@@ -101,8 +104,8 @@ export function createMaterials(db: Db, dir: string, now = () => Date.now()) {
     saveChunks(id: string, unit: LocUnit, length: number, chunks: Chunk[]) {
       transaction(db, () => {
         db.prepare("DELETE FROM chunks WHERE material_id = ?").run(id);
-        const insert = db.prepare("INSERT INTO chunks (id, material_id, ord, loc_from, loc_to, headings, text, tokens) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-        chunks.forEach((c, i) => insert.run(randomUUID(), id, i, c.anchor.from, c.anchor.to, JSON.stringify(c.headings), c.text, c.tokens));
+        const insert = db.prepare("INSERT INTO chunks (id, material_id, ord, loc_from, loc_to, headings, text, tokens, marks) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        chunks.forEach((c, i) => insert.run(randomUUID(), id, i, c.anchor.from, c.anchor.to, JSON.stringify(c.headings), c.text, c.tokens, JSON.stringify(c.marks)));
         db.prepare("UPDATE materials SET status = 'ready', error = NULL, unit = ?, length = ? WHERE id = ?").run(unit, length, id);
       });
     },
@@ -110,7 +113,23 @@ export function createMaterials(db: Db, dir: string, now = () => Date.now()) {
     chunks(id: string): StoredChunk[] {
       return (db.prepare("SELECT * FROM chunks WHERE material_id = ? ORDER BY ord").all(id) as {
         id: string; ord: number; loc_from: number; loc_to: number; headings: string; text: string; tokens: number;
-      }[]).map((r) => ({ id: r.id, ord: r.ord, from: r.loc_from, to: r.loc_to, headings: JSON.parse(r.headings), text: r.text, tokens: r.tokens }));
+        marks: string; extracted_at: number | null; audit_rounds: number; audit_done: number;
+      }[]).map((r) => ({
+        id: r.id, ord: r.ord, from: r.loc_from, to: r.loc_to, headings: JSON.parse(r.headings), text: r.text, tokens: r.tokens,
+        marks: JSON.parse(r.marks), extracted: r.extracted_at !== null, auditRounds: r.audit_rounds, audited: r.audit_done === 1,
+      }));
+    },
+
+    // Extraction progress lives on each chunk, so a stopped or restarted job carries on where it left off.
+    markExtracted(chunkId: string) {
+      db.prepare("UPDATE chunks SET extracted_at = ? WHERE id = ?").run(now(), chunkId);
+    },
+    markAudited(chunkId: string, done: boolean) {
+      db.prepare("UPDATE chunks SET audit_rounds = audit_rounds + 1, audit_done = ? WHERE id = ?").run(done ? 1 : 0, chunkId);
+    },
+    // "What did we miss?" (F-309): audit every chunk again.
+    resetAudit(materialId: string) {
+      db.prepare("UPDATE chunks SET audit_rounds = 0, audit_done = 0 WHERE material_id = ?").run(materialId);
     },
 
     remove(id: string) {
