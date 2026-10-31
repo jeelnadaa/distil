@@ -74,6 +74,10 @@ quality and completeness.
 | New chats | **One start screen** for the logo, "New chat" and "New chat in folder"; it names the folder when there is one. A chat is created when its first message is sent, so empty chats never reach the library. Decided 2026-10-31. |
 | Finding things in the sources | **Ledger + keyword index + embeddings, all configurable.** The ledger is the map of what must be learned. A local keyword index (SQLite FTS5, BM25, stemming) is built at import with no model and finds exact terms, symbols and names (done, F-214). Embeddings add meaning-based search, from the provider (e.g. Gemini or OpenAI embedding models) or a local model in three sizes (small, medium, high); off is allowed. Answers retrieve with both and merge the rankings, every hit anchored to its page, slide or line. A local model is downloaded only after the user agrees, with its size shown. Decided 2026-10-31 (F-1004, F-1005). |
 | Controls | **Themed everywhere:** dropdowns are Distil's own (the open list follows the palette and theme), and every control has a tooltip (icon buttons from their label, the rest where the meaning isn't obvious). Decided 2026-10-31 (F-1311). |
+| Grounding | **Material first, labelled, never silently mixed** (§4.5). Answers say whether they come from the material (cited, quotes checked in code), partly from it, or from general knowledge. A question the material doesn't cover is **answered at once from general knowledge, labelled "Not in your material"**; where the model and the material disagree, the material wins and the difference is pointed out. Decided 2026-10-31 (F-1006). |
+| Topics outside the material | **Offered, not added:** a labelled out-of-material answer has an "Add to this subject" button that adds it to the ledger as an *extra* item, so the plan, practice and cards include it. Decided 2026-10-31 (F-314). |
+| Topic-only subjects | **Web search when set up, else the model's knowledge.** The researcher cites web sources when a search key is added; otherwise the syllabus is built from the model and every item is marked *generated*. Decided 2026-10-31 (F-205). |
+| Memory | **Learner state in the database, not chat history** (§4.5): recent turns verbatim, a rolling summary per chat, per-item learner state (taught, mastery, mistakes, misconceptions) and the folder digest. Decided 2026-10-31 (F-1007). |
 | Built-in tutorial | **One "How to use Distil" chat**, shipped with the app, that walks through the whole app in the chat window and answers questions about it. Built last, when the app is done (Phase 9, F-1312). Decided 2026-10-31. |
 
 ---
@@ -148,7 +152,7 @@ Every new plan/teach request first goes through a compiler that turns whatever t
 | F-202 | Ingest images (photos, scans, handwriting, whiteboards) via vision model / OCR | M |
 | F-203 | Ingest web articles by URL (readable-text extraction) | M |
 | F-204 | Ingest YouTube by URL (transcript with timestamps): Gemini reading the URL, or a pasted transcript | M |
-| F-205 | Topic-only mode: no material → a **researcher agent** builds a reference syllabus from the web (with sources) which then becomes the "material" | M |
+| F-205 | Topic-only mode: no material → a **researcher agent** builds a reference syllabus, from the web with cited sources when a search key is set up (F-1209), otherwise from the model's own knowledge with every item marked *generated*; it then becomes the "material" | M |
 | F-206 | **Structure-aware chunking:** split by headings / slides / pages / timestamps into small chunks with stable anchors (file, page, slide, timestamp) | M |
 | F-207 | **Per-chunk extraction** of atomic *learning items* (see 4.3), so a 300-page PDF is mined page-group by page-group, never summarised in one call. Default: cheap model extracts, strong model audits (F-302) and merges (F-303); per-subject "strong for everything" switch | M |
 | F-208 | Pre-flight **cost estimate** before ingesting large material ("~180k tokens ≈ $0.40 on model X — continue?") | M |
@@ -178,6 +182,7 @@ Each item has: title, statement, type, source anchor(s), dependencies, exam weig
 | F-309 | "What did we miss?" button — runs the recall audit again on demand | S |
 | F-310 | User can add items manually ("my professor said this is important") | S |
 | F-311 | Every taught item links back to the chat message(s) where it was taught | M |
+| F-314 | *Extra* items: a topic learned outside the material (from a labelled general-knowledge answer) can be added to the ledger with one click; extras are marked, have no source anchor, and are planned, taught, practised and carded like any item | S |
 
 ### 4.4 Agent architecture (summary; details go in DESIGN/architecture docs)
 
@@ -211,6 +216,29 @@ Each item has: title, statement, type, source anchor(s), dependencies, exam weig
 | F-408 | Context compaction with an education-aware summary (keeps plan position, open misconceptions, items left) | M |
 
 ---
+
+### 4.5 Grounding and memory — how every mode avoids hallucinating and forgetting
+
+Two stores do different jobs. The **ledger** is the checklist of what must be learned (it stops
+*forgetting*: plans are checked in code to cover all of it). **Retrieval** over the material's chunks is
+the source text (it stops *hallucinating*: the model explains from real passages). Ledger items carry
+anchors, so when a lesson teaches an item its exact passage (and neighbours) is fetched directly, with
+no search; search (keyword F-214 + embeddings F-1005, merged F-1004) is for free-form questions.
+
+| Mode | Where the content comes from | How it stays grounded |
+|---|---|---|
+| Quick Q&A | Search the folder → top passages → answer | Grounding label + citations (F-1006); uncovered questions answered from general knowledge, labelled, with "Add to this subject" (F-314) |
+| Study Plan | The **whole ledger**, never retrieval | Coverage of 100 % enforced in code (F-304) |
+| Teach | Plan's next items → their anchored passages → explain, check, repair | Item statuses and misconceptions written to learner state as the lesson runs |
+| Practice / Mock exam | Questions from an item and its passage; past papers set style and weighting | Answer key derived from the source; grading checked against it by a second pass |
+| Flashcards | One card per item; back taken from the source | Card links to its page |
+| Knowledge graph | Ledger items and their relations | Every node links to its source |
+| Topic only | Researcher's syllabus becomes the material (F-205) | Web sources cited, or items marked *generated* |
+
+Rules for every mode:
+- Formulas are shown as stored in the ledger (LaTeX from the source), never regenerated by the model.
+- Prompts carry a few anchored passages, not whole chapters: cheaper, faster, less drift.
+- Memory is layered (F-1007): what the learner knows lives in the database, so a new chat or a lesson next week starts with it.
 
 ## 5. Mode 1 — Study Plan
 
@@ -410,6 +438,8 @@ Four layers, cheapest first:
 | F-1002 | "Turn this into a lesson" / "make cards from this" buttons on answers | S |
 | F-1003 | Mode can be switched inside a chat (Q&A → Teach) without losing history | S |
 | F-1004 | **Retrieval for answers and lessons:** the ledger picks what matters; the keyword index (F-214) and embeddings (F-1005) each rank chunks, merged by reciprocal rank fusion; the top chunks go to the model with their anchors, and answers cite them. Used by Q&A (F-1001), Teach and Practice | M |
+| F-1006 | **Grounding labels** on every answer: *From your material* (citations; each quote verified in code against its chunk), *Partly* (cited parts marked), or *Not in your material* (general knowledge). Before "not in your material", the ledger, keyword index and embeddings are all checked. Conflicts with the material are flagged and the material wins | M |
+| F-1007 | **Chat memory in layers:** recent turns verbatim; a rolling summary of older turns stored per chat (refreshed by the cheap model when the context fills); learner state per ledger item in the database; the folder digest (F-925). Every chat and lesson reads learner state, so nothing depends on the model remembering a transcript | M |
 | F-1005 | **Embeddings, configurable** in Settings › Models: Off · Provider (an embedding model the user's key lists, e.g. Gemini or OpenAI; counted in usage and caps) · Local (Small, Medium, High; runs on this computer, free after download). Local models download only after consent with the file size shown, and can be removed. Vectors stored per chunk in the data folder and rebuilt when the embedding model changes; a pre-flight shows the cost for provider embeddings | M |
 
 ---

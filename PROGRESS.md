@@ -109,6 +109,7 @@ Living status log. Update in the same commit as every change.
 - Fallback lists (F-1211, F-1212): several labelled keys per provider; each slot has an ordered list of (provider, key, model) tried on rate limits, outages, exhausted quota and caps. Chat says which model answered; the activity panel says when a fallback is distilling.
 - Local keyword index (F-214): FTS5 over every chunk, kept in step by triggers; `GET /api/folders/:id/search?q=` returns hits anchored to their page. On the textbook a query takes ~10 ms.
 - Planned, not built: configurable embeddings and hybrid retrieval for Ask/Teach (F-1004, F-1005, Phase 4); the built-in tutorial chat (F-1312, Phase 9).
+- Grounding and memory design recorded (`plan.md` §4.5): ledger for coverage, anchored retrieval for content, grounding labels on every answer (F-1006), layered chat memory with learner state in the database (F-1007). Owner decisions: uncovered questions are answered at once and labelled; out-of-material topics are offered as *extra* ledger items (F-314); topic-only subjects use web search when set up, else the model, marked *generated* (F-205).
 - 108 tests.
 
 ## Open questions
