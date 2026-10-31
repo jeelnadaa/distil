@@ -23,6 +23,7 @@ practice exams, flashcards, a knowledge graph and progress tracking.
 | File | What |
 |---|---|
 | [plan.md](plan.md) | Full scope, decisions, feature IDs, phases |
+| [DESIGN.md](DESIGN.md) | UX flows, screens, visual system |
 | [PROGRESS.md](PROGRESS.md) | Current status |
 | [AGENTS.md](AGENTS.md) | Rules for coding agents working on this repo |
 

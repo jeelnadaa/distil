@@ -36,7 +36,7 @@ Read this file fully before doing anything in this repo.
 | Path | Purpose |
 |---|---|
 | `plan.md` | Product scope, decisions, phases, feature IDs |
-| `DESIGN.md` | UX flows and visual design (Phase 0, pending) |
+| `DESIGN.md` | UX flows, screens, visual system, motion tokens (draft, awaiting approval) |
 | `PROGRESS.md` | Living status log — the hand-off between sessions |
 | `README.md` | User-facing overview, setup, credits |
 | `AGENTS.md` | This file |

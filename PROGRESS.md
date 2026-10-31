@@ -8,14 +8,17 @@ Living status log. Update in the same commit as every change.
 
 ## Next up
 
-1. Owner reviews `plan.md` (add/remove features, answer §18 open questions).
-2. Write `DESIGN.md` (UX flows, screens, visual system) — only after the owner asks for it.
+1. Owner reviews `DESIGN.md` (answer §13 open design questions).
+2. Logo: 3 SVG directions, recommendation, icon-only, monochrome and animated versions.
+3. Landing page (responsive, interactive hero, scroll-driven animation).
 
 ## Phase checklist
 
 - [x] Phase 0a — Study the LearnHarness reference and draft `plan.md`
 - [ ] Phase 0b — Owner approves `plan.md`
-- [ ] Phase 0c — `DESIGN.md` written and approved
+- [ ] Phase 0c — `DESIGN.md` written (done) and approved (pending)
+- [ ] Phase 0d — Logo directions
+- [ ] Phase 0e — Landing page
 - [ ] Phase 1 — Foundation
 - [ ] Phase 2 — Materials & Coverage Ledger
 - [ ] Phase 3 — Study Plan
@@ -34,6 +37,7 @@ Living status log. Update in the same commit as every change.
 - Created `plan.md`, `AGENTS.md`, `CLAUDE.md`, `PROGRESS.md`, `README.md`; initialised git.
 
 - Product named **Distil** (owner decision); `plan.md` §2 and §18 updated, README retitled.
+- Drafted `DESIGN.md`: Satoshi + Instrument Serif + JetBrains Mono, warm paper/ink palette with one copper accent (all text pairs AA, measured), spring and duration motion tokens, signature moments, UX flows F1–F9, key screens S1–S9.
 
 ## Open questions
 
