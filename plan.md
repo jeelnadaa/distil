@@ -64,7 +64,7 @@ quality and completeness.
 | Practice grading | **First attempt counts; hinted retries allowed** (our recommendation): the first answer sets mastery credit; after that, up to two progressive hints and retries, recorded as "with help" at reduced credit. Mock exams stay strictly one attempt, no hints. |
 | Material storage | **Distil keeps its own copy** of every added file in the data folder; if the original changes, Distil notices and offers a re-import with a diff (F-212). Decided 2026-10-31. |
 | Extraction strategy | **Cheap model extracts, strong model audits and merges** by default (about 3–5× cheaper than strong-everywhere); a per-subject switch uses the strong model for everything. Decided 2026-10-31. |
-| YouTube transcripts | **Public captions first, Gemini fallback, paste as last resort.** Captions are fetched directly (unofficial, may break); if that fails and a Google key exists, Gemini reads the video by URL; otherwise the user pastes the transcript. Decided 2026-10-31. *Built so far: Gemini and paste only. Fetching captions needs YouTube's internal player API, which was refused as bot-check circumvention; awaiting the owner's call.* |
+| YouTube transcripts | **A Gemini model watches the video, or the learner pastes YouTube's transcript.** The learner picks per video (Gemini costs about 6k tokens a minute; paste is free but misses what is only on screen). Captions are not fetched: YouTube has no public caption download for other people's videos, and its internal player API counts as bot-check circumvention. Decided 2026-10-31, replacing the earlier "captions first" order. |
 | Phase 2 test material | **An openly licensed textbook** for development and the exit test; the owner judges completeness on their own material later. Decided 2026-10-31. |
 | Exercises and worked examples | **Keep everything in the ledger**: exercise set-ups, worked-example arithmetic and calculator steps are extracted like any other content, not filtered out or set aside for practice. Decided 2026-10-31. |
 | Model suggestions | **Suggested per role** during onboarding and in Settings › Models, picked from the models the user's key actually lists; always overridable. Decided 2026-10-31. |
@@ -140,7 +140,7 @@ Every new plan/teach request first goes through a compiler that turns whatever t
 | F-201 | Ingest PDF, PPTX, DOCX, MD, TXT | M |
 | F-202 | Ingest images (photos, scans, handwriting, whiteboards) via vision model / OCR | M |
 | F-203 | Ingest web articles by URL (readable-text extraction) | M |
-| F-204 | Ingest YouTube by URL (transcript with timestamps): public captions, then Gemini reading the URL, then a pasted transcript | M |
+| F-204 | Ingest YouTube by URL (transcript with timestamps): Gemini reading the URL, or a pasted transcript | M |
 | F-205 | Topic-only mode: no material → a **researcher agent** builds a reference syllabus from the web (with sources) which then becomes the "material" | M |
 | F-206 | **Structure-aware chunking:** split by headings / slides / pages / timestamps into small chunks with stable anchors (file, page, slide, timestamp) | M |
 | F-207 | **Per-chunk extraction** of atomic *learning items* (see 4.3), so a 300-page PDF is mined page-group by page-group, never summarised in one call. Default: cheap model extracts, strong model audits (F-302) and merges (F-303); per-subject "strong for everything" switch | M |

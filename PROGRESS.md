@@ -8,9 +8,8 @@ Living status log. Update in the same commit as every change.
 
 ## Next up
 
-1. Owner decision: YouTube captions (see Known issues), keep Gemini + paste only, or something else.
-2. Owner judges chapters 1–2 of the textbook ledger for completeness.
-3. Merge on the cheap model misses obvious duplicates (the "value = mean + (#ofSTDEVs)(standard deviation)" formula appears on pages 120 and 122).
+1. Owner judges chapters 1–2 of the textbook ledger for completeness.
+2. Merge on the cheap model misses obvious duplicates (the "value = mean + (#ofSTDEVs)(standard deviation)" formula appears on pages 120 and 122).
 
 ## Phase checklist
 
@@ -97,6 +96,7 @@ Living status log. Update in the same commit as every change.
 - Audit strength: Flash-Lite's 160 audit calls wrote ~8k output tokens in total, so it rarely finds misses; the strong model's 17 calls wrote 23k. Economy is a quota workaround, not a substitute; "What did we miss?" on Balanced once quota allows is the stronger check.
 - 93 tests.
 - Owner decision: exercise sets and worked-example arithmetic stay in the ledger (recorded in `plan.md` §2).
+- Owner decision: YouTube transcripts come from Gemini or a paste only; captions are not fetched (`plan.md` §2, F-204).
 
 ## Open questions
 
@@ -105,7 +105,6 @@ See `plan.md` §18.
 ## Known issues
 
 - Custom installed fonts are found by family name. Chromium (the desktop build) sees user-installed fonts; Safari only exposes system fonts.
-- YouTube captions are not fetched: YouTube has no public caption download for other people's videos, and reading its internal player API was refused as bot-check circumvention. So the owner's "captions first" step is replaced by the Gemini and paste paths until the owner decides otherwise.
 - On Google's free tier the strong model's daily request quota is very small; a textbook-sized audit needs several days or a paid key.
 - Adding a link (and transcribing a video) runs inside the request; a long video keeps the dialog waiting for minutes. Move to a background job if that becomes a problem.
 - Only Google AI Studio has been tested for real; Anthropic, OpenAI and the other providers are still checked only against fakes.
