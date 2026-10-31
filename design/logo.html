@@ -12,11 +12,9 @@
   <style>
     .logos { width: min(1180px, 100% - 32px); margin: 0 auto; padding: var(--s-8) 0 var(--s-9); display: grid; gap: var(--s-8); }
     .logos__top { display: flex; justify-content: space-between; align-items: center; }
-    .rec { display: grid; grid-template-columns: auto 1fr; gap: var(--s-5); align-items: center; padding: var(--s-5); border: 1px solid var(--accent); border-radius: var(--r-md); background: var(--accent-wash); }
     .dir { display: grid; gap: var(--s-4); padding-top: var(--s-5); border-top: 1px solid var(--text); }
-    .dir__head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: end; gap: var(--s-4); }
-    .dir__head h2 { font-family: var(--font-display); font-weight: 400; font-size: 44px; line-height: 1; display: flex; align-items: baseline; gap: var(--s-3); }
-    .dir__head h2 .num { font-family: var(--font-mono); font-size: 13px; color: var(--text-faint); }
+
+
     .dir__idea { max-width: 60ch; }
     .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--s-3); }
     .cell { border: 1px solid var(--border); border-radius: var(--r-md); padding: var(--s-5); display: grid; gap: var(--s-4); align-content: space-between; min-height: 240px; }
@@ -31,87 +29,49 @@
     .files { font-family: var(--font-mono); font-size: 12px; color: var(--text-faint); display: flex; flex-wrap: wrap; gap: var(--s-2) var(--s-4); }
     .files a { color: inherit; }
     .files a:hover { color: var(--accent); }
-    @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } .rec { grid-template-columns: 1fr; } }
+    @media (max-width: 900px) { .grid { grid-template-columns: 1fr; }
   </style>
 </head>
 <body>
   <main class="logos">
     <div class="logos__top"><a href="index.html" data-slot="lockup" style="text-decoration:none"></a><button class="btn btn--ghost btn--icon btn--sm" data-theme-toggle aria-label="Toggle theme"></button></div>
     <header style="display:grid;gap:var(--s-3)">
-      <p class="eyebrow">Design review · logo</p>
-      <h1 class="display-xl" data-condense>Three marks, <em>one drop.</em></h1>
-      <p class="body-lg muted" style="max-width:var(--measure)">Every direction shares the serif wordmark and ends in the same accent drop, so the brand stays recognisable whichever you pick. Each comes as a colour mark, app icon, monochrome and animated SVG. <b>Preview in app</b> swaps the mark across every mock-up.</p>
+      <p class="eyebrow">Brand · logo</p>
+      <h1 class="display-xl" data-condense>Condense, <em>approved.</em></h1>
+      <p class="body-lg muted" style="max-width:var(--measure)">Three strokes narrowing to a single drop: a syllabus condensing to its essence. The serif wordmark carries the same accent drops on its i's. Files live in <span class="mono">assets/logo/</span>.</p>
     </header>
-    <section class="rec" data-rec></section>
-    <div data-dirs style="display:grid;gap:var(--s-8)"></div>
+    <section class="dir" data-sheet></section>
   </main>
   <script type="module">
     import { initTheme, toggleTheme, currentTheme, observeReveals } from "./js/motion.js";
     import { injectIcons, icon } from "./js/icons.js";
     import { initPalette } from "./js/palette.js";
-    import { MARKS, MARK_KEY, currentMark, markSVG, iconTileSVG, lockupHTML } from "./js/brand.js";
+    import { markSVG, iconTileSVG, lockupHTML } from "./js/brand.js";
     initTheme();
     initPalette();
     injectIcons();
+    document.querySelector('[data-slot="lockup"]').innerHTML = lockupHTML({ size: 26 });
     const btn = document.querySelector("[data-theme-toggle]");
     const paint = () => { btn.innerHTML = icon(currentTheme() === "dark" ? "sun" : "moon", "icon icon--sm"); };
     paint();
     btn.addEventListener("click", () => { toggleTheme(); paint(); });
 
-    const RECOMMENDED = "dropd";
-    const WHY = {
-      condense: "Clear story, but three stacked bars read as the standard UI filter icon, so it is hard to own and easy to mistake for a button.",
-      dropd: "A letterform, so it is unmistakably Distil. The drop is the bowl and the essence sits in the counter. Solid shapes stay crisp at 16px, and it works in one colour.",
-      converge: "The most expressive idea, but five fine strokes merge into a smudge below 24px. Better as a hero illustration than an icon.",
-    };
-
-    document.querySelector("[data-rec]").innerHTML = `
-      ${iconTileSVG({ size: 88, mark: RECOMMENDED })}
-      <div style="display:grid;gap:var(--s-2)"><p class="eyebrow">Recommendation</p>
-        <h2 class="heading-lg">${MARKS[RECOMMENDED].name}</h2>
-        <p class="body-sm muted" style="max-width:68ch">${WHY[RECOMMENDED]}</p></div>`;
-
-    const files = (id) => ["", "-icon", "-mono", "-animated"].map((s) =>
-      `<a href="assets/logo/distil-${id}${s}.svg" target="_blank">distil-${id}${s}.svg</a>`).join("");
-
-    const list = document.querySelector("[data-dirs]");
-    const render = () => {
-      const active = currentMark();
-      list.innerHTML = Object.entries(MARKS).map(([id, m], i) => `
-        <section class="dir">
-          <div class="dir__head">
-            <div style="display:grid;gap:var(--s-2)">
-              <h2><span class="num">0${i + 1}</span>${m.name}${id === RECOMMENDED ? ` <span class="chip chip--accent">Recommended</span>` : ""}</h2>
-              <p class="body muted dir__idea">${m.idea} ${WHY[id]}</p>
-            </div>
-            <button class="btn ${id === active ? "btn--primary" : "btn--secondary"} btn--sm" data-use="${id}">${id === active ? "Shown in app" : "Preview in app"}</button>
-          </div>
-          <div class="grid">
-            <div class="cell pal-scope" data-palette="copper" data-theme="light"><p class="eyebrow">Mark · light</p><div class="cell__art">${markSVG({ size: 128, mark: id, label: m.name })}</div></div>
-            <div class="cell pal-scope" data-palette="copper" data-theme="dark"><p class="eyebrow">Mark · dark</p><div class="cell__art">${markSVG({ size: 128, mark: id, label: m.name })}</div></div>
-            <div class="cell"><p class="eyebrow">Animated · loading &amp; hero</p><div class="cell__art">${markSVG({ size: 128, mark: id, animated: true, label: `${m.name}, animated` })}</div></div>
-            <div class="cell pal-scope" data-palette="copper" data-theme="light" style="grid-column: span 2"><p class="eyebrow">Lockup</p><div class="cell__art"><span class="lockup--big">${lockupHTML({ size: 60, mark: id })}</span></div></div>
-            <div class="cell"><p class="eyebrow">App icon · favicon</p><div class="cell__art sizes">
-              <figure>${iconTileSVG({ size: 96, mark: id })}<figcaption>96</figcaption></figure>
-              <figure>${iconTileSVG({ size: 32, mark: id })}<figcaption>32</figcaption></figure>
-              <figure>${iconTileSVG({ size: 16, mark: id })}<figcaption>16</figcaption></figure></div></div>
-            <div class="cell"><p class="eyebrow">Small sizes</p><div class="cell__art sizes">
-              ${[48, 32, 24, 16].map((s) => `<figure>${markSVG({ size: s, mark: id, label: "" })}<figcaption>${s}</figcaption></figure>`).join("")}</div></div>
-            <div class="cell"><p class="eyebrow">Monochrome</p><div class="cell__art">${markSVG({ size: 88, mark: id, mono: true, label: "" })}</div></div>
-            <div class="cell cell--accent"><p class="eyebrow">Mono on accent</p><div class="cell__art">${markSVG({ size: 88, mark: id, mono: true, label: "" })}</div></div>
-          </div>
-          <p class="files">${files(id)}</p>
-        </section>`).join("");
-    };
-    render();
-    list.addEventListener("click", (e) => {
-      const b = e.target.closest("[data-use]");
-      if (!b) return;
-      try { localStorage.setItem(MARK_KEY, b.dataset.use); } catch { /* preview lasts for this page only */ }
-      document.querySelector('[data-slot="lockup"]').innerHTML = lockupHTML({ size: 26 });
-      render();
-    });
-    document.querySelector('[data-slot="lockup"]').innerHTML = lockupHTML({ size: 26 });
+    const files = ["distil.svg", "distil-icon.svg", "distil-mono.svg", "distil-animated.svg"]
+      .map((f) => `<a href="assets/logo/${f}" target="_blank">${f}</a>`).join("");
+    document.querySelector("[data-sheet]").innerHTML = `
+      <div class="grid">
+        <div class="cell pal-scope" data-palette="copper" data-theme="light"><p class="eyebrow">Mark · light</p><div class="cell__art">${markSVG({ size: 128 })}</div></div>
+        <div class="cell pal-scope" data-palette="copper" data-theme="dark"><p class="eyebrow">Mark · dark</p><div class="cell__art">${markSVG({ size: 128 })}</div></div>
+        <div class="cell"><p class="eyebrow">Animated · loading &amp; hero</p><div class="cell__art">${markSVG({ size: 128, animated: true, label: "Distil, animated" })}</div></div>
+        <div class="cell pal-scope" data-palette="copper" data-theme="light" style="grid-column: span 2"><p class="eyebrow">Lockup</p><div class="cell__art"><span class="lockup--big">${lockupHTML({ size: 60 })}</span></div></div>
+        <div class="cell"><p class="eyebrow">App icon · favicon</p><div class="cell__art sizes">
+          ${[96, 32, 16].map((s) => `<figure>${iconTileSVG({ size: s })}<figcaption>${s}</figcaption></figure>`).join("")}</div></div>
+        <div class="cell"><p class="eyebrow">Small sizes</p><div class="cell__art sizes">
+          ${[48, 32, 24, 16].map((s) => `<figure>${markSVG({ size: s, label: "" })}<figcaption>${s}</figcaption></figure>`).join("")}</div></div>
+        <div class="cell"><p class="eyebrow">Monochrome</p><div class="cell__art">${markSVG({ size: 88, mono: true, label: "" })}</div></div>
+        <div class="cell cell--accent"><p class="eyebrow">Mono on accent</p><div class="cell__art">${markSVG({ size: 88, mono: true, label: "" })}</div></div>
+      </div>
+      <p class="files">${files}</p>`;
     observeReveals();
   </script>
 </body>

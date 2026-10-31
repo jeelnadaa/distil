@@ -75,9 +75,21 @@ function writePref(key, value) {
   try { localStorage.setItem(key, value); } catch { /* storage unavailable: preference lasts for this page only */ }
 }
 
-export function initTheme() {
+// Theme preference: "dark" (first-run default, owner decision), "light" or "system".
+export function themePref() {
   const saved = readPref("distil-theme");
-  if (saved === "light" || saved === "dark") document.documentElement.dataset.theme = saved;
+  return saved === "light" || saved === "system" ? saved : "dark";
+}
+
+export function setThemePref(value) {
+  if (value === "system") delete document.documentElement.dataset.theme;
+  else document.documentElement.dataset.theme = value;
+  writePref("distil-theme", value);
+}
+
+export function initTheme() {
+  const pref = themePref();
+  if (pref !== "system") document.documentElement.dataset.theme = pref;
   const savedMotion = readPref("distil-motion");
   if (savedMotion === "reduce" || savedMotion === "full") document.documentElement.dataset.motion = savedMotion;
 }
@@ -117,8 +129,8 @@ export function initSegmented(root = document) {
         seg.dispatchEvent(new CustomEvent("change", { detail: btn.dataset.value ?? btn.textContent.trim() }));
       }),
     );
-    const pressed = buttons.find((b) => b.getAttribute("aria-pressed") === "true") ?? buttons[0];
-    requestAnimationFrame(() => place(pressed));
+    // Read the pressed state on the next frame so page scripts can set it after init.
+    requestAnimationFrame(() => place(buttons.find((b) => b.getAttribute("aria-pressed") === "true") ?? buttons[0]));
   });
 }
 

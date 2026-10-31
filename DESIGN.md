@@ -41,20 +41,13 @@ The motif shows up as **behaviour and geometry**, never as pictures of flasks or
 | **Concentration gradient** | Raw on one side, refined on the other | The ingestion screen (raw chunks on the left, ledger items on the right), the landing-page hero |
 | **Fewer, denser** | Many items reduce to a few | Collapsing lists into counts, three coverage bars merging into one drop at 100 % |
 
-### 2.1 Logo (under review)
+### 2.1 Logo (approved 2026-10-31)
 
-The wordmark is "distil" in Instrument Serif with accent drops for the two i-dots. Three marks share
-it, all on a 32-unit grid and all ending in the accent drop. Compare them in `design/logo.html`.
-
-| Direction | Idea | Verdict |
-|---|---|---|
-| Condense (current placeholder) | Three bars narrowing to a drop | Clear, but reads as the standard UI filter icon |
-| **Drop-d** (recommended) | A lowercase d whose bowl is a drop; the essence sits in the counter | Ownable letterform, crisp at 16px, works in one colour |
-| Converge | Five lines converging into a drop | Expressive, but blurs below 24px; better as illustration |
-
-Each ships as `design/assets/logo/distil-<id>.svg` plus `-icon` (app tile), `-mono` (single colour;
-Drop-d knocks the counter out) and `-animated` (2.8 s loop, still under reduced motion). The wordmark
-must be outlined to paths before it ships as a standalone file.
+**Condense:** three strokes narrowing to a single accent drop, on a 32-unit grid. The wordmark is
+"distil" in Instrument Serif with accent drops for the two i-dots. Reference sheet: `design/logo.html`.
+Files in `design/assets/logo/`: `distil.svg` (colour), `distil-icon.svg` (app tile and favicon),
+`distil-mono.svg` (single colour) and `distil-animated.svg` (2.8 s loop, still under reduced motion).
+The wordmark must be outlined to paths before it ships as a standalone file.
 
 ---
 
@@ -187,7 +180,7 @@ sits near `success`.
 
 ### 4.5 Theme switching
 
-The theme follows `prefers-color-scheme`, with a System / Light / Dark override in Settings. Themes
+**Dark on first run** (owner decision). Settings offers Dark / Light / System. Themes
 are set on `:root[data-theme]`. Switching crossfades `background-color` and `color` over
 `--dur-base`, with no flash.
 
@@ -374,6 +367,12 @@ Open the app to **Today**:
 ### F9 — Quick Q&A (F-1001)
 Ask in a chat with mode Ask. The answer uses folder materials, with inline source anchors as mono chips that open the material viewer. Footer actions: `Turn into lesson · Make cards`.
 
+**Ask is lighter than Teach.** Teach is a document; Ask is a conversation. The learner's message sits
+right-aligned in a compact `--surface-sunken` block (max 70 % width, `--r-md`); the answer is plain
+full-width prose with no bubble, no avatar and no phase dividers. A hairline filter line separates
+turns. Same type scale and rendering (Markdown, maths, code) as lessons, so switching modes never
+changes how content reads.
+
 ---
 
 ## 10. Key screens
@@ -460,5 +459,5 @@ Limits · Appearance · Keyboard · Prompts · Data.
 
 1. **Satoshi licence:** checked. The licence forbids distributing the files from a repo or public server, so (b) is out. Current approach is (a): the build downloads Satoshi from Fontshare. The alternative is (c), switching to a SIL OFL face such as *Outfit* or *Manrope*, which could ship in the repo.
 2. ~~**Palette.**~~ **Resolved:** all five ship as a user setting, Copper by default (§4.4).
-3. **Learner cards vs bubbles:** the design follows LearnHarness's "document, not chat" idea for Teach mode. Should Ask mode use the same treatment, or a lighter conversational one?
-4. **Default theme on first run:** System (proposed), or always dark/light?
+3. ~~**Ask mode treatment.**~~ **Resolved (owner deferred to design):** Ask uses a lighter conversational treatment (§9 F9).
+4. ~~**Default theme.**~~ **Resolved:** dark on first run (§4.5).

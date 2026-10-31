@@ -4,21 +4,19 @@ Living status log. Update in the same commit as every change.
 
 ## Current phase
 
-**Phase 0 — Plan & design.**
+**Phase 1 — Foundation** (started 2026-10-31).
 
 ## Next up
 
-1. Owner reviews the clickable mock-ups in `design/` (run `bash design/scripts/fetch-fonts.sh`, then serve `design/` and open `index.html`), approves or requests changes.
-2. Owner answers the remaining `DESIGN.md` §13 questions (Ask-mode treatment, default theme).
-3. Owner picks a logo in `design/logo.html` (Drop-d recommended); then make it the default mark and favicon.
+1. Phase 1: app shell, local data store, settings, BYOK providers + model picker, streaming chat, folders + chats, auto-naming, rendering, token recording + meter + caps.
 
 ## Phase checklist
 
 - [x] Phase 0a — Study the LearnHarness reference and draft `plan.md`
-- [ ] Phase 0b — Owner approves `plan.md`
-- [ ] Phase 0c — `DESIGN.md` written (done) and approved (pending)
-- [ ] Phase 0d — Logo directions drawn (done), chosen (pending)
-- [ ] Phase 0e — Landing page and app mock-ups built (done), approved (pending)
+- [x] Phase 0b — Owner approves `plan.md`
+- [x] Phase 0c — `DESIGN.md` written and approved
+- [x] Phase 0d — Logo chosen: Condense
+- [x] Phase 0e — Landing page and app mock-ups built and approved
 - [ ] Phase 1 — Foundation
 - [ ] Phase 2 — Materials & Coverage Ledger
 - [ ] Phase 3 — Study Plan
@@ -44,6 +42,7 @@ Living status log. Update in the same commit as every change.
 - Mock-ups approved in principle; copper liked. Added four alternative palettes (Verdigris, Oxblood, Cobalt, Citron), AA-checked, with a comparison page and a live switcher on every mock-up.
 - Palettes decided: all five ship, Copper default, picked in Settings › Appearance (mock-up updated; review switcher removed).
 - Logo: three directions (Condense, Drop-d, Converge) with colour, app-icon, mono and animated SVGs, a review page, and an in-app preview switch. Recommended Drop-d.
+- Owner approved the design. Decisions: Condense logo (alternatives removed), dark theme on first run, Ask mode gets the lighter conversational treatment (owner left it to design). Phase 0 complete.
 
 ## Open questions
 

@@ -1,5 +1,5 @@
 // Interactions for the app screen mock-ups, keyed by <body data-page>.
-import { countUp, prefersReducedMotion, setMotionPref } from "./motion.js";
+import { countUp, prefersReducedMotion, setMotionPref, themePref, setThemePref } from "./motion.js";
 import { PALETTES, setPalette } from "./palette.js";
 
 const $ = (sel, root = document) => root.querySelector(sel);
@@ -205,11 +205,9 @@ const screens = {
     const confirmInput = $("[data-confirm-input]");
     confirmInput.addEventListener("input", () => { $("[data-confirm-go]").disabled = confirmInput.value.trim() !== "delete"; });
 
-    $("[data-theme-seg]").addEventListener("change", (e) => {
-      const v = e.detail;
-      if (v === "system") { delete document.documentElement.dataset.theme; try { localStorage.removeItem("distil-theme"); } catch { /* ignore */ } }
-      else { document.documentElement.dataset.theme = v; try { localStorage.setItem("distil-theme", v); } catch { /* ignore */ } }
-    });
+    const themeSeg = $("[data-theme-seg]");
+    $$("button", themeSeg).forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.value === themePref())));
+    themeSeg.addEventListener("change", (e) => setThemePref(e.detail));
     $("[data-motion-seg]").addEventListener("change", (e) => setMotionPref(e.detail));
 
     const pick = $("[data-palette-pick]");

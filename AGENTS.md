@@ -36,13 +36,13 @@ Read this file fully before doing anything in this repo.
 | Path | Purpose |
 |---|---|
 | `plan.md` | Product scope, decisions, phases, feature IDs |
-| `DESIGN.md` | UX flows, screens, visual system, motion tokens (draft, awaiting approval) |
+| `DESIGN.md` | UX flows, screens, visual system, motion tokens (approved) |
 | `PROGRESS.md` | Living status log — the hand-off between sessions |
 | `README.md` | User-facing overview, setup, credits |
 | `AGENTS.md` | This file |
 | `CLAUDE.md` | Pointer to this file |
 | `design/` | Clickable design mock-ups (landing, app screens, dialogs) on the real tokens; open `design/index.html` |
-| `design/assets/logo/` | Logo SVGs per direction: colour, `-icon`, `-mono`, `-animated` (geometry mirrors `design/js/brand.js`) |
+| `design/assets/logo/` | Approved logo SVGs: colour, `-icon` (favicon/app tile), `-mono`, `-animated` (geometry mirrors `design/js/brand.js`) |
 | `design/scripts/fetch-fonts.sh` | Downloads Satoshi (licence forbids committing it) |
 | `.claude/launch.json` | Preview server `design` on port 4173 |
 

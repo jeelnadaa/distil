@@ -22,16 +22,12 @@
 .lockup { display: inline-flex; align-items: center; gap: 10px; color: var(--text); text-decoration: none; }
 .lockup .mark { color: var(--text); }
 
-/* Animated marks (loading, hero). One 2.8s loop each: the material gathers, then the drop forms and settles. */
+/* Animated mark (loading, hero). A 2.8s loop: the strokes condense, then the drop forms and settles. */
 .mark--animate * { transform-box: fill-box; }
 .mark--animate .mk-bar { transform-origin: center; animation: mk-condense 2.8s var(--ease-condense) infinite; }
 .mark--animate .mk-bar--2 { animation-delay: .12s; }
 .mark--animate .mk-bar--3 { animation-delay: .24s; }
 .mark--animate .mk-drop { transform-origin: center bottom; animation: mk-drop 2.8s infinite; }
-.mark--animate .mk-stem { transform-origin: center top; animation: mk-stem 2.8s var(--ease-condense) infinite; }
-.mark--animate .mk-bowl { transform-origin: center bottom; animation: mk-bowl 2.8s infinite; }
-.mark--animate .mk-core { transform-origin: center; animation: mk-core 2.8s infinite; }
-.mark--animate .mk-line { stroke-dasharray: 1; animation: mk-line 2.8s var(--ease-condense) infinite; animation-delay: calc(var(--n) * 60ms); }
 
 @keyframes mk-condense {
   0%   { transform: scaleX(1.5); opacity: .25; }
@@ -46,36 +42,11 @@
   64%, 82% { transform: none; opacity: 1; }
   100%    { transform: none; opacity: 0; }
 }
-@keyframes mk-stem {
-  0%       { transform: scaleY(0); opacity: 0; }
-  24%      { transform: scaleY(1); opacity: 1; }
-  86%      { transform: scaleY(1); opacity: 1; }
-  100%     { transform: scaleY(1); opacity: 0; }
-}
-@keyframes mk-bowl {
-  0%, 16% { transform: translateY(-10px) scale(.5); opacity: 0; animation-timing-function: cubic-bezier(.5, 0, .9, .5); }
-  38%     { transform: translateY(0) scale(1.04, .94); opacity: 1; animation-timing-function: var(--ease-out); }
-  48%     { transform: scale(.99, 1.02); }
-  56%, 86% { transform: none; opacity: 1; }
-  100%    { transform: none; opacity: 0; }
-}
-@keyframes mk-core {
-  0%, 44% { transform: scale(0); opacity: 0; }
-  56%     { transform: scale(1.18); opacity: 1; animation-timing-function: var(--ease-out); }
-  66%, 86% { transform: none; opacity: 1; }
-  100%    { transform: none; opacity: 0; }
-}
-@keyframes mk-line {
-  0%       { stroke-dashoffset: 1; opacity: .3; }
-  34%      { stroke-dashoffset: 0; opacity: 1; }
-  86%      { stroke-dashoffset: 0; opacity: 1; }
-  100%     { stroke-dashoffset: 0; opacity: 0; }
-}
 
 @media (prefers-reduced-motion: reduce) {
   .mark--animate * { animation: none !important; }
-  .mark--animate :is(.mk-drop, .mk-core) { animation: mk-breathe 2s ease-in-out infinite !important; }
+  .mark--animate .mk-drop { animation: mk-breathe 2s ease-in-out infinite !important; }
 }
 :root[data-motion="reduce"] .mark--animate * { animation: none !important; }
-:root[data-motion="reduce"] .mark--animate :is(.mk-drop, .mk-core) { animation: mk-breathe 2s ease-in-out infinite !important; }
+:root[data-motion="reduce"] .mark--animate .mk-drop { animation: mk-breathe 2s ease-in-out infinite !important; }
 @keyframes mk-breathe { 50% { opacity: .4; } }

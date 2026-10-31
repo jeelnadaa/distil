@@ -39,6 +39,8 @@ quality and completeness.
 | Topic | Decision |
 |---|---|
 | Product name | **Distil** (British spelling, one "l") — boiling material down to its essence. Decided 2026-10-31. |
+| Logo | **Condense** mark (three strokes narrowing to a drop). Decided 2026-10-31. |
+| Default theme | **Dark on first run**; Settings offers Dark / Light / System. Decided 2026-10-31. |
 | Colour palettes | Five user-selectable palettes (Copper, Verdigris, Oxblood, Cobalt, Citron), each with light and dark; **Copper is the default**. Chosen in Settings › Appearance. Decided 2026-10-31. |
 | Deployment & data | **Local-first, open source.** Runs on the user's machine; chats, materials, keys stay on disk. No accounts, no server of ours. |
 | Platform | Web app served locally **and** packaged as a Windows desktop app (macOS/Linux later). |
