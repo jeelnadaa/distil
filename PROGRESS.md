@@ -4,11 +4,11 @@ Living status log. Update in the same commit as every change.
 
 ## Current phase
 
-**Phase 2 — Materials & Coverage Ledger** in progress: server side (ingest, extraction, ledger API) done; the workspace UI is next.
+**Phase 2 — Materials & Coverage Ledger** in progress: ingest, extraction, ledger API and the folder workspace are done and browser-verified; the material viewer and the remaining input types are next.
 
 ## Next up
 
-1. Phase 2 workspace UI: built (folder route `#/folder/:id/:tab`, Materials tab with drop zone, Distil cost pre-flight dialog, activity panel with the mini still, Ledger table with filters, marks, add/edit) and type-checked, but NOT yet verified in the browser. Verify next, then the material viewer.
+1. Phase 2 material viewer (open a source at the cited page inside the app).
 2. Phase 2 later inputs: images (vision), web articles, YouTube (captions, then Gemini fallback, then paste), re-import diff.
 3. Phase 2 exit test on an open textbook (owner chose this; ask before downloading one).
 4. Owner smoke test with a real key (Settings › Providers); only a local fake endpoint has been used so far.
@@ -64,6 +64,11 @@ Living status log. Update in the same commit as every change.
 - Background jobs (F-209, F-402, F-1306): rows in SQLite with params and progress, a concurrency limit, abort, and resume after restart.
 - Extraction (F-207, F-302, F-303, F-405): owner choice "cheap pass + strong audit": the cheap model extracts each chunk, the strong model re-reads it against what was found (up to 2 rounds), then judges duplicate groups that code pre-clusters by title overlap (only unjudged items are sent; short ids keep prompts small). "Thorough" uses the strong model throughout. Replies are validated and retried once with the error. Each chunk's progress is saved, so a stopped or crashed job resumes where it was. Usage is recorded per role (extractor, auditor, merger) and caps are checked before every call.
 - Ledger API (F-208, F-301, F-306, F-309): token estimate of the remaining work per strategy, extract-all for a folder subtree, "What did we miss?" re-audit, list (with subfolders), manual add, edit and mark (skip / known / out of scope), delete. Deleting or re-reading a material removes items that only it supported; manual items stay. 71 tests.
+
+### 2026-10-31 · Phase 2 workspace
+- Folder workspace (`#/folder/:id/materials|ledger`, opened by clicking a folder in the sidebar): drop zone and file picker, per-file status (reading, ready, distilling %, distilled), remove with confirmation; Distil pre-flight dialog with Balanced/Thorough and a token estimate (F-208); activity panel with the mini still and Stop; coverage panel with "What did we miss?" (audit-only estimate); ledger table grouped by source file with filters, marks (known / skip / out of scope), add and edit, source links to the cited page. Rows become cards on phones.
+- Verified in the browser against the local fake model: upload, estimate, distil, live progress, ledger, marking; 1440 px and phone width with no horizontal scroll.
+- Fixed: Markdown blocks covered a whole section, so every item cited the section's first line; blocks are now per paragraph. The ledger reloads after a failed action so a stale list catches up. 71 tests.
 
 ## Open questions
 

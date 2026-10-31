@@ -48,7 +48,8 @@
   const href = (s: Item["sources"][number]) => `/api/materials/${s.materialId}/file${s.unit === "page" ? `#page=${s.loc}` : ""}`;
 
   async function patch(item: Item, change: Parameters<typeof api.updateItem>[1]) {
-    if (await attempt(() => api.updateItem(item.id, change))) onchange();
+    await attempt(() => api.updateItem(item.id, change));
+    onchange(); // also after a failure, so a stale list catches up
   }
   async function save() {
     const draft = editing!;
@@ -68,7 +69,7 @@
         { label: "Skip", icon: "x", run: () => patch(item, { mark: "skip" }) },
         { label: "Out of scope", icon: "x", run: () => patch(item, { mark: "out_of_scope" }) },
       ]),
-    { label: "Delete", icon: "trash", danger: true, run: () => attempt(() => api.deleteItem(item.id)).then((ok) => ok && onchange()) },
+    { label: "Delete", icon: "trash", danger: true, run: () => attempt(() => api.deleteItem(item.id)).then(onchange) },
   ];
 </script>
 

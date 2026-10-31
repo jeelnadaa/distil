@@ -207,10 +207,10 @@ function parseMarkdown(source: string): Parsed {
     if (heading) {
       flush(i + 2);
       blocks.push({ loc: i + 1, heading: heading[1]!.length, text: heading[2]! });
-    } else if (!fence && !line.trim() && buffer.join("").length > 1500) {
-      flush(i + 2); // break long sections at blank lines so blocks stay a manageable size
+    } else if (!fence && !line.trim()) {
+      flush(i + 2); // one block per paragraph, so every item points at its own line
     } else {
-      if (!buffer.length) start = i + 1;
+      if (!buffer.join("").trim()) start = i + 1;
       buffer.push(line);
     }
   });

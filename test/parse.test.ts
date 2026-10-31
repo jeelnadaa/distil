@@ -59,11 +59,12 @@ describe("parseMaterial", () => {
     ]);
   });
 
-  it("splits Markdown at headings but not inside code fences", async () => {
-    const parsed = await parseMaterial("markdown", utf8("# Rust\nOwnership rules.\n\n```sh\n# not a heading\n```\n## Borrowing\nOne mutable reference."));
+  it("splits Markdown at headings and paragraphs but not inside code fences", async () => {
+    const parsed = await parseMaterial("markdown", utf8("# Rust\nOwnership rules.\n\n```sh\n# not a heading\n\nstill code\n```\n## Borrowing\n\nOne mutable reference."));
     expect(parsed.blocks.map((b) => [b.loc, b.heading ?? 0, b.text.split("\n")[0]])).toEqual([
-      [1, 1, "Rust"], [2, 0, "Ownership rules."], [7, 2, "Borrowing"], [8, 0, "One mutable reference."],
+      [1, 1, "Rust"], [2, 0, "Ownership rules."], [4, 0, "```sh"], [9, 2, "Borrowing"], [11, 0, "One mutable reference."],
     ]);
+    expect(parsed.blocks[2]!.text).toContain("still code");
   });
 });
 
