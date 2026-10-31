@@ -8,10 +8,9 @@ Living status log. Update in the same commit as every change.
 
 ## Next up
 
-1. Owner decision: what to do with exercise sets and worked-example arithmetic (they make up much of the "fact" items).
-2. Owner decision: YouTube captions (see Known issues), keep Gemini + paste only, or something else.
-3. Owner judges chapters 1–2 of the textbook ledger for completeness.
-4. Merge on the cheap model misses obvious duplicates (the "value = mean + (#ofSTDEVs)(standard deviation)" formula appears on pages 120 and 122).
+1. Owner decision: YouTube captions (see Known issues), keep Gemini + paste only, or something else.
+2. Owner judges chapters 1–2 of the textbook ledger for completeness.
+3. Merge on the cheap model misses obvious duplicates (the "value = mean + (#ofSTDEVs)(standard deviation)" formula appears on pages 120 and 122).
 
 ## Phase checklist
 
@@ -97,6 +96,7 @@ Living status log. Update in the same commit as every change.
 - Chapters 1–2 (pages 17–176, 98 chunks) fully distilled. Chapter 2: 525 items, 41 formulas. Page 121's standard deviation formulas, absent from the PDF text layer, came out correct from the page images (the sample and population standard deviation formulas, with and without frequencies). Chapter 2 used ~412k Flash-Lite tokens against a 437k estimate.
 - Audit strength: Flash-Lite's 160 audit calls wrote ~8k output tokens in total, so it rarely finds misses; the strong model's 17 calls wrote 23k. Economy is a quota workaround, not a substitute; "What did we miss?" on Balanced once quota allows is the stronger check.
 - 93 tests.
+- Owner decision: exercise sets and worked-example arithmetic stay in the ledger (recorded in `plan.md` §2).
 
 ## Open questions
 
@@ -107,7 +107,6 @@ See `plan.md` §18.
 - Custom installed fonts are found by family name. Chromium (the desktop build) sees user-installed fonts; Safari only exposes system fonts.
 - YouTube captions are not fetched: YouTube has no public caption download for other people's videos, and reading its internal player API was refused as bot-check circumvention. So the owner's "captions first" step is replaced by the Gemini and paste paths until the owner decides otherwise.
 - On Google's free tier the strong model's daily request quota is very small; a textbook-sized audit needs several days or a paid key.
-- Exercise and homework sections add many trivial "fact" items.
 - Adding a link (and transcribing a video) runs inside the request; a long video keeps the dialog waiting for minutes. Move to a background job if that becomes a problem.
 - Only Google AI Studio has been tested for real; Anthropic, OpenAI and the other providers are still checked only against fakes.
 - The web bundle is one 614 kB chunk (KaTeX and highlight.js). Fine when served locally; split it if load time ever matters.

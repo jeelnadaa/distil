@@ -66,6 +66,7 @@ quality and completeness.
 | Extraction strategy | **Cheap model extracts, strong model audits and merges** by default (about 3–5× cheaper than strong-everywhere); a per-subject switch uses the strong model for everything. Decided 2026-10-31. |
 | YouTube transcripts | **Public captions first, Gemini fallback, paste as last resort.** Captions are fetched directly (unofficial, may break); if that fails and a Google key exists, Gemini reads the video by URL; otherwise the user pastes the transcript. Decided 2026-10-31. *Built so far: Gemini and paste only. Fetching captions needs YouTube's internal player API, which was refused as bot-check circumvention; awaiting the owner's call.* |
 | Phase 2 test material | **An openly licensed textbook** for development and the exit test; the owner judges completeness on their own material later. Decided 2026-10-31. |
+| Exercises and worked examples | **Keep everything in the ledger**: exercise set-ups, worked-example arithmetic and calculator steps are extracted like any other content, not filtered out or set aside for practice. Decided 2026-10-31. |
 | Model suggestions | **Suggested per role** during onboarding and in Settings › Models, picked from the models the user's key actually lists; always overridable. Decided 2026-10-31. |
 
 ---
