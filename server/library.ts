@@ -186,6 +186,12 @@ export function createLibrary(db: Db, now = () => Date.now()) {
       getChat(id);
       db.prepare("DELETE FROM chats WHERE id = ?").run(id);
     },
+
+    // Chats are created when their first message is sent; any left without one (from before that,
+    // or a send that never reached the server) would only clutter the library, so startup drops them.
+    removeEmptyChats(): number {
+      return Number(db.prepare("DELETE FROM chats WHERE NOT EXISTS (SELECT 1 FROM messages WHERE chat_id = chats.id)").run().changes);
+    },
   };
 }
 

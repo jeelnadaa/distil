@@ -34,7 +34,7 @@
       {:else if nav.route.name === "settings"}
         <SettingsView section={nav.route.section} />
       {:else}
-        <Home />
+        {#key nav.route.folderId}<Home folderId={nav.route.folderId} />{/key}
       {/if}
     {/if}
   </main>

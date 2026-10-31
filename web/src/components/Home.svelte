@@ -1,17 +1,21 @@
 <script lang="ts">
   import ActivityDock from "./ActivityDock.svelte";
   import { api } from "../lib/api.ts";
-  import { app, attempt, go, nav, pending, refreshLibrary } from "../lib/state.svelte.ts";
+  import { app, attempt, folderPath, go, library, nav, pending, refreshLibrary } from "../lib/state.svelte.ts";
   import Composer from "./Composer.svelte";
   import Icon from "./Icon.svelte";
   import Mark from "./Mark.svelte";
 
+  // The one screen every chat starts from: the logo, New chat, and New chat in a folder all come here.
+  let { folderId }: { folderId?: string } = $props();
+
   let draft = $state("");
+  const folder = $derived(library.folders.find((f) => f.id === folderId));
   const connected = $derived(app.providers.some((p) => p.configured));
   const ready = $derived(connected && app.settings?.models.strong);
 
   async function start(text: string) {
-    const chat = await attempt(() => api.createChat(null));
+    const chat = await attempt(() => api.createChat(folder ? folder.id : null));
     if (!chat) return;
     pending.chatId = chat.id;
     pending.text = text;
@@ -30,7 +34,11 @@
     <Mark size={44} />
     {#if ready}
       <h1 class="display-xl" data-condense>What do you want to <em>learn?</em></h1>
-      <p class="body-lg muted">Ask anything. Folders in the sidebar keep each subject's chats together.</p>
+      {#if folder}
+        <p class="body-lg muted">New chat in <strong>{folderPath(folder.id).map((f) => f.name).join(" › ")}</strong>. It can use that folder's materials.</p>
+      {:else}
+        <p class="body-lg muted">Ask anything. Folders in the sidebar keep each subject's chats together.</p>
+      {/if}
       <Composer bind:value={draft} onsend={start} />
     {:else}
       <h1 class="display-xl">Connect a <em>model</em> first.</h1>

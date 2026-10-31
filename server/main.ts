@@ -27,6 +27,8 @@ export function createServer({ port, dataDir = defaultDataDir(), fetch }: { port
   const settings = createSettings(db);
   const messages = createMessages(db);
   messages.recoverInterrupted();
+  const library = createLibrary(db);
+  library.removeEmptyChats();
   const log = (msg: string) => console.error(`[distil] ${msg}`);
   const materials = createMaterials(db, join(dataDir, "materials"));
   const jobs = createJobs(db, { log });
@@ -38,7 +40,7 @@ export function createServer({ port, dataDir = defaultDataDir(), fetch }: { port
   const deps = {
     dataDir,
     allowedHosts: [`localhost:${port}`, `127.0.0.1:${port}`, `[::1]:${port}`],
-    library: createLibrary(db),
+    library,
     messages,
     settings,
     usage,

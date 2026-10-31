@@ -72,3 +72,16 @@ describe("messages", () => {
     expect(messages.list(chat.id)[0]).toMatchObject({ status: "aborted", content: "half" });
   });
 });
+
+describe("empty chats", () => {
+  it("are removed, and chats with messages kept", () => {
+    const db = openDb(":memory:");
+    const lib = createLibrary(db);
+    const empty = lib.createChat(null);
+    const used = lib.createChat(null);
+    createMessages(db).add({ chatId: used.id, role: "user", content: "hi", status: "done" });
+    expect(lib.removeEmptyChats()).toBe(1);
+    expect(() => lib.getChat(empty.id)).toThrow();
+    expect(lib.getChat(used.id).id).toBe(used.id);
+  });
+});

@@ -23,12 +23,10 @@
   };
 
   const act: TreeActions = {
-    async newChat(folderId) {
-      const chat = await attempt(() => api.createChat(folderId));
-      if (!chat) return;
+    // A chat is only created when its first message is sent, so an abandoned "New chat" leaves nothing behind.
+    newChat(folderId) {
       if (folderId) folderPath(folderId).forEach((f) => toggleFolder(f.id, true));
-      await refreshLibrary();
-      go(`#/chat/${chat.id}`);
+      go(folderId ? `#/new/${folderId}` : "#/");
     },
     newFolder(parentId) {
       const parent = library.folders.find((f) => f.id === parentId);
