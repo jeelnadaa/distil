@@ -94,7 +94,7 @@ Living status log. Update in the same commit as every change.
 ### 2026-10-31 · Economy strategy and textbook chapters 1–2
 - Owner chose to audit with Flash-Lite while the strong model's free quota is small: new **Economy** strategy (cheap model for extract, audit and merge), offered in the Distil dialog next to Balanced and Thorough.
 - Fixed: a chunk whose audit rounds were used up before it was marked done (a run stopped in between) was skipped forever, so its material never reached 100 %.
-- Chapters 1–2 (pages 17–176, 98 chunks) fully distilled. Chapter 2: 525 items, 41 formulas. Page 121's standard deviation formulas, absent from the PDF text layer, came out correct from the page images, e.g. $s = \sqrt{rac{\Sigma f(x-ar{x})^2}{n-1}}$. Chapter 2 used ~412k Flash-Lite tokens against a 437k estimate.
+- Chapters 1–2 (pages 17–176, 98 chunks) fully distilled. Chapter 2: 525 items, 41 formulas. Page 121's standard deviation formulas, absent from the PDF text layer, came out correct from the page images (the sample and population standard deviation formulas, with and without frequencies). Chapter 2 used ~412k Flash-Lite tokens against a 437k estimate.
 - Audit strength: Flash-Lite's 160 audit calls wrote ~8k output tokens in total, so it rarely finds misses; the strong model's 17 calls wrote 23k. Economy is a quota workaround, not a substitute; "What did we miss?" on Balanced once quota allows is the stronger check.
 - 93 tests.
 
