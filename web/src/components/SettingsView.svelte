@@ -243,7 +243,7 @@
             </div></div>
           <TextFontSetting />
           <div class="srow"><div><strong>Motion</strong><span class="caption muted">Reduced replaces movement with quick fades</span></div>
-            <Segmented label="Motion" value={motion} options={[{ value: "system", label: "System" }, { value: "full", label: "Full" }, { value: "reduce", label: "Reduced" }]}
+            <Segmented label="Motion" value={motion} options={[{ value: "system", label: "System", tip: "Follow this computer's setting" }, { value: "full", label: "Full" }, { value: "reduce", label: "Reduced", tip: "Quick fades instead of movement" }]}
               onchange={(v) => { motion = v; setMotion(v); }} /></div>
         </section>
 

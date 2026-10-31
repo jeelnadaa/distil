@@ -138,13 +138,13 @@
         <input class="input title-input" bind:value={titleDraft} autofocus aria-label="Chat name" maxlength="120"
           onblur={saveTitle} onkeydown={(e) => { if (e.key === "Enter") saveTitle(); if (e.key === "Escape") editingTitle = false; }} />
       {:else}
-        <button type="button" class="title-btn" title="Rename" onclick={() => { titleDraft = chat!.title; editingTitle = true; }}><strong>{chat.title}</strong></button>
+        <button type="button" class="title-btn" data-tip="Rename" onclick={() => { titleDraft = chat!.title; editingTitle = true; }}><strong>{chat.title}</strong></button>
       {/if}
     {/if}
   </nav>
   <span class="topbar__spacer"></span>
   {#if meter}
-    <span class="meter" title="Tokens used in this chat{contextPct !== null ? ` · last prompt filled ${contextPct.toFixed(0)} % of the model's context` : ''}">
+    <span class="meter" data-tip="Tokens used in this chat{contextPct !== null ? ` · last prompt filled ${contextPct.toFixed(0)} % of the model's context` : ''}">
       {fmt.format(meter.input + meter.output)} tokens
       {#if contextPct !== null}<span class="meter__track"><span style:--v="{contextPct}%"></span></span>{/if}
     </span>

@@ -121,7 +121,7 @@
     ondragover={(e) => { if (e.dataTransfer?.types.includes(DRAG_TYPE)) { e.preventDefault(); rootDrop = true; } }}
     ondragleave={() => (rootDrop = false)} ondrop={dropOnRoot}>
     <span class="eyebrow">Library</span>
-    <button type="button" class="btn btn--ghost btn--icon btn--sm" aria-label="New folder" title="New folder" onclick={() => act.newFolder(null)}>
+    <button type="button" class="btn btn--ghost btn--icon btn--sm" aria-label="New folder" data-tip="New folder" onclick={() => act.newFolder(null)}>
       <Icon name="folder-plus" size="sm" />
     </button>
   </div>

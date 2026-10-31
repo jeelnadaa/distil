@@ -61,9 +61,9 @@
     <p class="body-sm">Pick a model in <a href="#/settings/models">Settings › Models</a> first.</p>
   {:else}
     <Segmented label="Strategy" value={strategy} onchange={(v) => (strategy = v)} options={[
-      { value: "balanced", label: "Balanced" },
-      { value: "thorough", label: "Thorough" },
-      { value: "economy", label: "Economy" },
+      { value: "balanced", label: "Balanced", tip: "Cheap model lists, strong model audits" },
+      { value: "thorough", label: "Thorough", tip: "Strong model does every step" },
+      { value: "economy", label: "Economy", tip: "Cheap model does every step" },
     ]} />
     <p class="body-sm muted">
       {#if reaudit}

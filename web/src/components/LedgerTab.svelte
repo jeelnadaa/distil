@@ -8,6 +8,7 @@
   import Icon from "./Icon.svelte";
   import Menu, { type MenuItem } from "./Menu.svelte";
   import Segmented from "./Segmented.svelte";
+  import Select from "./Select.svelte";
 
   let { folderId, items, materials, distilling, canDistil, onchange, ondistil }: {
     folderId: string; items: Item[]; materials: FolderMaterial[]; distilling: boolean; canDistil: boolean;
@@ -21,6 +22,7 @@
 
   let query = $state("");
   let type = $state<ItemType | "">("");
+  const typeOptions = ITEM_TYPES.map((t) => ({ value: t, label: t[0]!.toUpperCase() + t.slice(1) }));
   let view = $state<View>("all");
   let editing = $state<{ id: string | null; type: ItemType; title: string; statement: string } | null>(null);
 
@@ -112,12 +114,10 @@
 {:else}
   <div class="filters">
     <input class="input" type="search" placeholder="Filter {items.length} items…" aria-label="Filter items" bind:value={query} />
-    <select class="select" aria-label="Item type" bind:value={type}>
-      <option value="">All types</option>
-      {#each ITEM_TYPES as t (t)}<option value={t}>{t[0]!.toUpperCase() + t.slice(1)}</option>{/each}
-    </select>
+    <Select label="Item type" tip="Show one type of item" value={type} onchange={(v) => (type = v as ItemType | "")}
+      options={[{ value: "", label: "All types" }, ...typeOptions]} />
     <Segmented label="Scope" value={view} onchange={(v) => (view = v)} options={[
-      { value: "all", label: "All" }, { value: "scope", label: "In scope" }, { value: "marked", label: "Marked" },
+      { value: "all", label: "All", tip: "Every item" }, { value: "scope", label: "In scope", tip: "Items not marked known, skipped or out of scope" }, { value: "marked", label: "Marked", tip: "Items marked known, skipped or out of scope" },
     ]} />
     <span class="spacer"></span>
     <button type="button" class="btn btn--ghost btn--sm" onclick={() => (editing = { id: null, type: "concept", title: "", statement: "" })}><Icon name="plus" size="sm" />Add item</button>
@@ -138,7 +138,7 @@
                   {#if item.statement}<div class="ledger__statement">{@html renderInline(item.statement)}</div>{/if}
                 </td>
                 <td class="sources">
-                  {#each anchors(item) as s (`${s.materialId}:${s.loc}`)}<a class="anchor" href="#/material/{s.materialId}/{s.loc}/{item.id}" title={s.quote}>{where(s)}</a>{/each}
+                  {#each anchors(item) as s (`${s.materialId}:${s.loc}`)}<a class="anchor" href="#/material/{s.materialId}/{s.loc}/{item.id}" data-tip={s.quote}>{where(s)}</a>{/each}
                 </td>
                 <td><span class="status status--{item.status}"><i></i>{item.mark ? MARKS[item.mark] : STATUS[item.status]}</span></td>
                 <td class="num"><Menu label="Actions for {item.title}" items={actions(item)} /></td>
@@ -163,9 +163,9 @@
   {#if editing}
     <form id="item-form" class="item-form" onsubmit={(e) => { e.preventDefault(); save(); }}>
       <label class="field"><span class="field__label">Title</span><input class="input" bind:value={editing.title} maxlength="200" required /></label>
-      <label class="field"><span class="field__label">Type</span>
-        <select class="select" bind:value={editing.type}>{#each ITEM_TYPES as t (t)}<option value={t}>{t[0]!.toUpperCase() + t.slice(1)}</option>{/each}</select>
-      </label>
+      <div class="field"><span class="field__label">Type</span>
+        <Select label="Type" value={editing.type} onchange={(v) => (editing!.type = v as ItemType)} options={typeOptions} />
+      </div>
       <label class="field"><span class="field__label">Statement <span class="field__hint">· Markdown and $maths$</span></span><textarea class="textarea" rows="4" bind:value={editing.statement} maxlength="2000"></textarea></label>
     </form>
   {/if}

@@ -1,6 +1,6 @@
 <script lang="ts" generics="T extends string">
   let { options, value, onchange, label }: {
-    options: { value: T; label: string }[]; value: T; onchange: (v: T) => void; label: string;
+    options: { value: T; label: string; tip?: string }[]; value: T; onchange: (v: T) => void; label: string;
   } = $props();
 
   let root = $state<HTMLElement>();
@@ -17,6 +17,6 @@
 <div class="segmented" role="group" aria-label={label} bind:this={root}>
   <span class="segmented__thumb" style:width="{thumb.w}px" style:transform="translateX({thumb.x}px)"></span>
   {#each options as option (option.value)}
-    <button type="button" aria-pressed={option.value === value} onclick={() => onchange(option.value)}>{option.label}</button>
+    <button type="button" aria-pressed={option.value === value} data-tip={option.tip} onclick={() => onchange(option.value)}>{option.label}</button>
   {/each}
 </div>

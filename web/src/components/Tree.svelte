@@ -66,7 +66,7 @@
           <span class="tree__label">{folder.name}</span>
         </button>
         <span class="tree__actions">
-          <button type="button" class="btn btn--ghost btn--icon btn--sm" aria-label="New chat in {folder.name}" title="New chat here"
+          <button type="button" class="btn btn--ghost btn--icon btn--sm" aria-label="New chat in {folder.name}" data-tip="New chat here"
             onclick={() => act.newChat(folder.id)}><Icon name="plus" size="sm" /></button>
           <Menu label="More actions for {folder.name}" items={[
             ...(depth + 1 < MAX_FOLDER_DEPTH ? [{ label: "New subfolder", icon: "folder-plus", run: () => act.newFolder(folder.id) }] : []),

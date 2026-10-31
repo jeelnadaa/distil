@@ -40,9 +40,9 @@
     <span class="spacer"></span>
     <span class="caption faint hint">{busy ? "Esc to stop" : "Shift + Enter for a new line"}</span>
     {#if busy}
-      <button type="button" class="btn btn--secondary btn--icon btn--sm" aria-label="Stop" title="Stop (Esc)" onclick={() => onstop?.()}><Icon name="stop" size="sm" /></button>
+      <button type="button" class="btn btn--secondary btn--icon btn--sm" aria-label="Stop" data-tip="Stop (Esc)" onclick={() => onstop?.()}><Icon name="stop" size="sm" /></button>
     {:else}
-      <button type="submit" class="btn btn--primary btn--icon btn--sm" aria-label="Send" title="Send (Enter)" disabled={!value.trim()}><Icon name="arrow-up" size="sm" /></button>
+      <button type="submit" class="btn btn--primary btn--icon btn--sm" aria-label="Send" data-tip="Send (Enter)" disabled={!value.trim()}><Icon name="arrow-up" size="sm" /></button>
     {/if}
   </div>
 </form>

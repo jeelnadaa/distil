@@ -5,6 +5,7 @@
   import MaterialView from "./components/MaterialView.svelte";
   import SettingsView from "./components/SettingsView.svelte";
   import Sidebar from "./components/Sidebar.svelte";
+  import Tooltip from "./components/Tooltip.svelte";
   import Toasts from "./components/Toasts.svelte";
   import WorkspaceView from "./components/WorkspaceView.svelte";
   import { attempt, loadModels, nav, refreshLibrary, refreshProviders, refreshSettings } from "./lib/state.svelte.ts";
@@ -40,6 +41,7 @@
   </main>
 </div>
 <Toasts />
+<Tooltip />
 
 <style>
   .sb-scrim { display: none; }

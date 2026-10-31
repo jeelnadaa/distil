@@ -64,10 +64,10 @@
   </nav>
   <span class="topbar__spacer"></span>
   {#if material?.kind === "pdf"}
-    <Segmented label="View" value={view} onchange={(v) => (view = v)} options={[{ value: "text", label: "Text" }, { value: "original", label: "Original" }]} />
+    <Segmented label="View" value={view} onchange={(v) => (view = v)} options={[{ value: "text", label: "Text", tip: "The text Distil read from the file" }, { value: "original", label: "Original", tip: "The file as it was uploaded" }]} />
   {/if}
   {#if material}
-    <a class="btn btn--ghost btn--icon btn--sm" href="/api/materials/{id}/file" download={material.name} aria-label="Download the original" title="Download the original"><Icon name="download" size="sm" /></a>
+    <a class="btn btn--ghost btn--icon btn--sm" href="/api/materials/{id}/file" download={material.name} aria-label="Download the original" data-tip="Download the original"><Icon name="download" size="sm" /></a>
   {/if}
   <ActivityDock />
 </header>
