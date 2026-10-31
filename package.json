@@ -24,7 +24,6 @@
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^7.3.1",
-    "@types/markdown-it": "^14.2.0",
     "@types/node": "^26.6.6",
     "svelte": "^5.57.3",
     "svelte-check": "^4.7.7",

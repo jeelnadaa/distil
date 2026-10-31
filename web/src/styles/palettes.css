@@ -1,0 +1,310 @@
+/* User-selectable palettes (DESIGN.md §4.4). Copper is the default and also lives in tokens.css.
+   Each overrides the surface, text and accent tokens for both themes; semantic colours stay shared.
+   Scoped to :root or any .pal-scope so the comparison page can show several side by side. */
+
+.pal-scope { background: var(--bg); color: var(--text); }
+
+/* Copper */
+:is(:root, .pal-scope)[data-palette="copper"] {
+  color-scheme: light;
+  --bg: #F5F2EB;
+  --surface: #FBFAF6;
+  --surface-sunken: #ECE8DE;
+  --text: #15130F;
+  --text-muted: #57524A;
+  --text-faint: #6E675E;
+  --border: #DAD4C8;
+  --border-control: #8A8276;
+  --accent: #A8461A;
+  --on-accent: #FFF8F2;
+  --accent-wash: rgb(168 70 26 / .08);
+  --accent-wash-strong: rgb(168 70 26 / .16);
+  --primary: #15130F;
+  --on-primary: #FBFAF6;
+  --scrim: rgb(245 242 235 / .72);
+  --viz-2: #A8461A;
+}
+:is(:root, .pal-scope)[data-palette="copper"][data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #11100E;
+  --surface: #1A1815;
+  --surface-sunken: #0B0A09;
+  --text: #F1EDE4;
+  --text-muted: #B5AEA2;
+  --text-faint: #948C80;
+  --border: #2E2A25;
+  --border-control: #756E63;
+  --accent: #E07A45;
+  --on-accent: #1A0D05;
+  --accent-wash: rgb(224 122 69 / .12);
+  --accent-wash-strong: rgb(224 122 69 / .22);
+  --primary: #F1EDE4;
+  --on-primary: #11100E;
+  --scrim: rgb(17 16 14 / .72);
+  --viz-2: #E07A45;
+}
+@media (prefers-color-scheme: dark) {
+  :is(:root, .pal-scope)[data-palette="copper"]:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #11100E;
+    --surface: #1A1815;
+    --surface-sunken: #0B0A09;
+    --text: #F1EDE4;
+    --text-muted: #B5AEA2;
+    --text-faint: #948C80;
+    --border: #2E2A25;
+    --border-control: #756E63;
+    --accent: #E07A45;
+    --on-accent: #1A0D05;
+    --accent-wash: rgb(224 122 69 / .12);
+    --accent-wash-strong: rgb(224 122 69 / .22);
+    --primary: #F1EDE4;
+    --on-primary: #11100E;
+    --scrim: rgb(17 16 14 / .72);
+    --viz-2: #E07A45;
+  }
+}
+
+/* Verdigris */
+:is(:root, .pal-scope)[data-palette="verdigris"] {
+  color-scheme: light;
+  --bg: #F1F3F0;
+  --surface: #FAFBF9;
+  --surface-sunken: #E4E8E3;
+  --text: #111614;
+  --text-muted: #4E5753;
+  --text-faint: #5F6864;
+  --border: #D3D9D4;
+  --border-control: #7F8984;
+  --accent: #1C6B62;
+  --on-accent: #F2FBF9;
+  --accent-wash: rgb(28 107 98 / .08);
+  --accent-wash-strong: rgb(28 107 98 / .16);
+  --primary: #111614;
+  --on-primary: #FAFBF9;
+  --scrim: rgb(241 243 240 / .72);
+  --viz-2: #1C6B62;
+}
+:is(:root, .pal-scope)[data-palette="verdigris"][data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0E1211;
+  --surface: #161B19;
+  --surface-sunken: #090C0B;
+  --text: #E9EFEC;
+  --text-muted: #A9B4AF;
+  --text-faint: #8A9590;
+  --border: #26302C;
+  --border-control: #6B7772;
+  --accent: #5CC2B2;
+  --on-accent: #04201C;
+  --accent-wash: rgb(92 194 178 / .12);
+  --accent-wash-strong: rgb(92 194 178 / .22);
+  --primary: #E9EFEC;
+  --on-primary: #0E1211;
+  --scrim: rgb(14 18 17 / .72);
+  --viz-2: #5CC2B2;
+}
+@media (prefers-color-scheme: dark) {
+  :is(:root, .pal-scope)[data-palette="verdigris"]:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #0E1211;
+    --surface: #161B19;
+    --surface-sunken: #090C0B;
+    --text: #E9EFEC;
+    --text-muted: #A9B4AF;
+    --text-faint: #8A9590;
+    --border: #26302C;
+    --border-control: #6B7772;
+    --accent: #5CC2B2;
+    --on-accent: #04201C;
+    --accent-wash: rgb(92 194 178 / .12);
+    --accent-wash-strong: rgb(92 194 178 / .22);
+    --primary: #E9EFEC;
+    --on-primary: #0E1211;
+    --scrim: rgb(14 18 17 / .72);
+    --viz-2: #5CC2B2;
+  }
+}
+
+/* Oxblood */
+:is(:root, .pal-scope)[data-palette="oxblood"] {
+  color-scheme: light;
+  --bg: #F6F1EA;
+  --surface: #FCF9F4;
+  --surface-sunken: #EDE5DA;
+  --text: #1A1212;
+  --text-muted: #5A4F4C;
+  --text-faint: #706461;
+  --border: #DDD2C6;
+  --border-control: #8C807A;
+  --accent: #862B3A;
+  --on-accent: #FFF5F5;
+  --accent-wash: rgb(134 43 58 / .08);
+  --accent-wash-strong: rgb(134 43 58 / .16);
+  --primary: #1A1212;
+  --on-primary: #FCF9F4;
+  --scrim: rgb(246 241 234 / .72);
+  --viz-2: #862B3A;
+}
+:is(:root, .pal-scope)[data-palette="oxblood"][data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #120E0E;
+  --surface: #1B1616;
+  --surface-sunken: #0B0909;
+  --text: #F2EAE6;
+  --text-muted: #B9ADA8;
+  --text-faint: #998C88;
+  --border: #302827;
+  --border-control: #786C69;
+  --accent: #E8899A;
+  --on-accent: #2A0810;
+  --accent-wash: rgb(232 137 154 / .12);
+  --accent-wash-strong: rgb(232 137 154 / .22);
+  --primary: #F2EAE6;
+  --on-primary: #120E0E;
+  --scrim: rgb(18 14 14 / .72);
+  --viz-2: #E8899A;
+}
+@media (prefers-color-scheme: dark) {
+  :is(:root, .pal-scope)[data-palette="oxblood"]:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #120E0E;
+    --surface: #1B1616;
+    --surface-sunken: #0B0909;
+    --text: #F2EAE6;
+    --text-muted: #B9ADA8;
+    --text-faint: #998C88;
+    --border: #302827;
+    --border-control: #786C69;
+    --accent: #E8899A;
+    --on-accent: #2A0810;
+    --accent-wash: rgb(232 137 154 / .12);
+    --accent-wash-strong: rgb(232 137 154 / .22);
+    --primary: #F2EAE6;
+    --on-primary: #120E0E;
+    --scrim: rgb(18 14 14 / .72);
+    --viz-2: #E8899A;
+  }
+}
+
+/* Cobalt */
+:is(:root, .pal-scope)[data-palette="cobalt"] {
+  color-scheme: light;
+  --bg: #F3F4F6;
+  --surface: #FBFBFC;
+  --surface-sunken: #E6E8EC;
+  --text: #11131A;
+  --text-muted: #4E5260;
+  --text-faint: #646876;
+  --border: #D5D8E0;
+  --border-control: #7F8392;
+  --accent: #2A47C9;
+  --on-accent: #F5F7FF;
+  --accent-wash: rgb(42 71 201 / .08);
+  --accent-wash-strong: rgb(42 71 201 / .16);
+  --primary: #11131A;
+  --on-primary: #FBFBFC;
+  --scrim: rgb(243 244 246 / .72);
+  --viz-2: #2A47C9;
+}
+:is(:root, .pal-scope)[data-palette="cobalt"][data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0E0F13;
+  --surface: #16181D;
+  --surface-sunken: #090A0D;
+  --text: #ECEEF4;
+  --text-muted: #ABB0BE;
+  --text-faint: #8C91A0;
+  --border: #272A33;
+  --border-control: #6D7282;
+  --accent: #8FA3FF;
+  --on-accent: #0A1240;
+  --accent-wash: rgb(143 163 255 / .12);
+  --accent-wash-strong: rgb(143 163 255 / .22);
+  --primary: #ECEEF4;
+  --on-primary: #0E0F13;
+  --scrim: rgb(14 15 19 / .72);
+  --viz-2: #8FA3FF;
+}
+@media (prefers-color-scheme: dark) {
+  :is(:root, .pal-scope)[data-palette="cobalt"]:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #0E0F13;
+    --surface: #16181D;
+    --surface-sunken: #090A0D;
+    --text: #ECEEF4;
+    --text-muted: #ABB0BE;
+    --text-faint: #8C91A0;
+    --border: #272A33;
+    --border-control: #6D7282;
+    --accent: #8FA3FF;
+    --on-accent: #0A1240;
+    --accent-wash: rgb(143 163 255 / .12);
+    --accent-wash-strong: rgb(143 163 255 / .22);
+    --primary: #ECEEF4;
+    --on-primary: #0E0F13;
+    --scrim: rgb(14 15 19 / .72);
+    --viz-2: #8FA3FF;
+  }
+}
+
+/* Citron */
+:is(:root, .pal-scope)[data-palette="citron"] {
+  color-scheme: light;
+  --bg: #F2F2EF;
+  --surface: #FAFAF8;
+  --surface-sunken: #E6E6E1;
+  --text: #121311;
+  --text-muted: #50524C;
+  --text-faint: #666862;
+  --border: #D6D7D1;
+  --border-control: #80827B;
+  --accent: #566600;
+  --on-accent: #FBFFE8;
+  --accent-wash: rgb(86 102 0 / .08);
+  --accent-wash-strong: rgb(86 102 0 / .16);
+  --primary: #121311;
+  --on-primary: #FAFAF8;
+  --scrim: rgb(242 242 239 / .72);
+  --viz-2: #566600;
+}
+:is(:root, .pal-scope)[data-palette="citron"][data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0F100E;
+  --surface: #171815;
+  --surface-sunken: #0A0A09;
+  --text: #EDEEE8;
+  --text-muted: #AEB0A8;
+  --text-faint: #8F9189;
+  --border: #282A25;
+  --border-control: #6E7169;
+  --accent: #D2E35A;
+  --on-accent: #1A1F00;
+  --accent-wash: rgb(210 227 90 / .12);
+  --accent-wash-strong: rgb(210 227 90 / .22);
+  --primary: #EDEEE8;
+  --on-primary: #0F100E;
+  --scrim: rgb(15 16 14 / .72);
+  --viz-2: #D2E35A;
+}
+@media (prefers-color-scheme: dark) {
+  :is(:root, .pal-scope)[data-palette="citron"]:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #0F100E;
+    --surface: #171815;
+    --surface-sunken: #0A0A09;
+    --text: #EDEEE8;
+    --text-muted: #AEB0A8;
+    --text-faint: #8F9189;
+    --border: #282A25;
+    --border-control: #6E7169;
+    --accent: #D2E35A;
+    --on-accent: #1A1F00;
+    --accent-wash: rgb(210 227 90 / .12);
+    --accent-wash-strong: rgb(210 227 90 / .22);
+    --primary: #EDEEE8;
+    --on-primary: #0F100E;
+    --scrim: rgb(15 16 14 / .72);
+    --viz-2: #D2E35A;
+  }
+}

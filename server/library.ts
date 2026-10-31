@@ -1,9 +1,9 @@
 import { randomUUID } from "node:crypto";
 import type { Db } from "./db.ts";
+import { DEFAULT_CHAT_TITLE, MAX_FOLDER_DEPTH } from "./constants.ts";
 import { AppError, notFound } from "./errors.ts";
 
-export const MAX_FOLDER_DEPTH = 5;
-export const DEFAULT_CHAT_TITLE = "New chat";
+export { MAX_FOLDER_DEPTH };
 
 export type Folder = { id: string; parentId: string | null; name: string; createdAt: number };
 export type Chat = {

@@ -1,0 +1,38 @@
+/* Rendered model output (Markdown, maths, code). Same type scale as lessons, so modes read alike. */
+
+.md { font-size: var(--t-body); line-height: 27px; overflow-wrap: anywhere; }
+.md > * + * { margin-top: var(--s-3); }
+.md h1, .md h2, .md h3, .md h4 { font-weight: 650; letter-spacing: -.005em; margin-top: var(--s-5); }
+.md h1 { font-size: var(--t-heading-lg); line-height: 30px; }
+.md h2 { font-size: var(--t-heading-md); line-height: 28px; }
+.md h3, .md h4 { font-size: var(--t-heading-sm); line-height: 24px; }
+.md > :first-child { margin-top: 0; }
+.md strong { font-weight: 650; }
+.md a { color: var(--accent); text-underline-offset: 3px; }
+.md ul, .md ol { padding-left: 1.4em; display: grid; gap: var(--s-1); }
+.md li::marker { color: var(--text-faint); }
+.md ol > li::marker { font-family: var(--font-mono); font-size: .86em; }
+.md blockquote { padding: var(--s-2) var(--s-4); border-left: 2px solid var(--accent); background: var(--accent-wash); border-radius: 0 var(--r-sm) var(--r-sm) 0; color: var(--text-muted); }
+.md hr { border: 0; height: 1px; background: linear-gradient(90deg, var(--border), transparent); margin-block: var(--s-5); }
+.md :not(pre) > code { font-family: var(--font-mono); font-size: .86em; background: var(--surface-sunken); padding: 1px 5px; border-radius: var(--r-xs); }
+
+.md table { width: 100%; border-collapse: collapse; font-size: var(--t-body-sm); display: block; overflow-x: auto; }
+.md th { text-align: left; font-family: var(--font-mono); font-size: 11px; font-weight: 500; letter-spacing: .06em; text-transform: uppercase; color: var(--text-faint); }
+.md th, .md td { padding: var(--s-2) var(--s-3); border-bottom: 1px solid var(--border); }
+
+.md .math-block { margin-block: var(--s-4); padding: var(--s-4); background: var(--surface-sunken); border-radius: var(--r-md); overflow-x: auto; font: inherit; text-align: initial; }
+.md .katex { font-size: 1.08em; }
+.md .katex-display { margin: 0; }
+.md .katex-error { color: var(--danger); font-family: var(--font-mono); font-size: .86em; }
+
+/* Code blocks, coloured from the data-viz tokens so every palette and theme stays legible. */
+.md pre.code { position: relative; margin-block: var(--s-4); padding: var(--s-6) var(--s-4) var(--s-4); background: var(--surface-sunken); border-radius: var(--r-md); overflow-x: auto; }
+.md pre.code code { font-family: var(--font-mono); font-size: 13px; line-height: 21px; white-space: pre; }
+.code__lang { position: absolute; top: var(--s-2); left: var(--s-4); font-family: var(--font-mono); font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--text-faint); }
+.hljs-comment, .hljs-quote { color: var(--text-faint); font-style: italic; }
+.hljs-keyword, .hljs-selector-tag, .hljs-built_in, .hljs-type { color: var(--accent); }
+.hljs-string, .hljs-attr, .hljs-template-tag, .hljs-addition { color: var(--viz-3); }
+.hljs-number, .hljs-literal, .hljs-symbol, .hljs-bullet { color: var(--viz-5); }
+.hljs-title, .hljs-section, .hljs-function .hljs-title { color: var(--viz-4); font-weight: 600; }
+.hljs-variable, .hljs-params, .hljs-property { color: var(--text); }
+.hljs-meta, .hljs-deletion { color: var(--viz-6); }

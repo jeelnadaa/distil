@@ -20,5 +20,6 @@ export default defineConfig({
     },
   ],
   server: { port: 5173, strictPort: true, host: "127.0.0.1" },
-  build: { outDir: "../dist", emptyOutDir: true },
+  // Served from the local machine, so one bundle (KaTeX and highlight.js included) is fine.
+  build: { outDir: "../dist", emptyOutDir: true, chunkSizeWarningLimit: 1000 },
 });

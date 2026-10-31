@@ -4,11 +4,12 @@ Living status log. Update in the same commit as every change.
 
 ## Current phase
 
-**Phase 1 — Foundation** (started 2026-10-31).
+**Phase 1 — Foundation** complete (2026-10-31). Phase 2 — Materials & Coverage Ledger is next.
 
 ## Next up
 
-1. Phase 1: app shell, local data store, settings, BYOK providers + model picker, streaming chat, folders + chats, auto-naming, rendering, token recording + meter + caps.
+1. Phase 2 (`plan.md` §15): material upload and parsing, the Coverage Ledger, and the workspace view.
+2. Owner smoke test with a real key (Settings › Providers); only a local fake endpoint has been used so far.
 
 ## Phase checklist
 
@@ -17,7 +18,7 @@ Living status log. Update in the same commit as every change.
 - [x] Phase 0c — `DESIGN.md` written and approved
 - [x] Phase 0d — Logo chosen: Condense
 - [x] Phase 0e — Landing page and app mock-ups built and approved
-- [ ] Phase 1 — Foundation
+- [x] Phase 1 — Foundation
 - [ ] Phase 2 — Materials & Coverage Ledger
 - [ ] Phase 3 — Study Plan
 - [ ] Phase 4 — Teach
@@ -47,12 +48,17 @@ Living status log. Update in the same commit as every change.
 ### 2026-10-31 · Phase 1
 - Stack chosen (see `AGENTS.md` §4): Node 24 + TypeScript without a build step, Hono, `node:sqlite`, Zod, Svelte 5 + Vite, Vitest.
 - Server foundation: SQLite schema with migrations; library with the 5-level depth rule enforced on create and move (F-001, F-004); messages with crash recovery (F-1306); settings with model slots (F-401) and caps; keys in a user-only `secrets.json`, masked in every response (F-1206); streaming adapters for OpenAI-compatible, Anthropic and Gemini with real usage (F-1201, F-1202, F-1101); chat turns with cap pre-check, abort and estimated usage when a provider reports none (F-1104, F-1105, F-407); auto-naming on the cheap slot that never overrides a manual title (F-005). API refuses foreign hosts, cross-origin calls and non-JSON writes. 34 tests.
+- Web app (`web/`): sidebar library tree (create, rename, move by menu or drag, delete with counts, nesting to 5 levels), Ask chat with streaming, stop, retry, inline rename, per-chat model picker, chat token meter with context fill, cap warning banner and cap-reached dialog; home onboarding to a free Google AI Studio key; Settings for providers (test-and-save keys, custom OpenAI-compatible endpoints), model slots, token caps (global and per provider, "200k" style input), theme, palette, motion and data folder. Markdown with KaTeX maths (`$…$`, `\(…\)`, `$$…$$`, `\[…\]`, prices left alone) and highlighted code; raw HTML never rendered.
+- Verified in the browser against a local fake OpenAI-compatible server: folder → chat → streamed reply with maths, table and code; auto-named; usage recorded and shown; stop keeps the partial reply; a 1k daily cap blocks the next send. Checked at 1440 px, 1024 px and phone width. 38 tests.
 
 ## Open questions
 
 See `plan.md` §18.
 
 ## Known issues
+
+- Only tested against a local fake model; a real-provider smoke test is still owed (needs the owner's key).
+- The web bundle is one 614 kB chunk (KaTeX and highlight.js). Fine when served locally; split it if load time ever matters.
 
 - Caps are in tokens only. Cost caps need per-model prices; planned with the usage dashboard (Phase 8).
 - A cap is checked before each request, so one reply already in flight can finish past 100 %.

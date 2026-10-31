@@ -37,7 +37,9 @@ Read this file fully before doing anything in this repo.
 - **Server:** Hono on `@hono/node-server`, SQLite via built-in `node:sqlite`, Zod for every request body and stored setting.
 - **UI:** Svelte 5 + Vite (`web/`). In dev the API is mounted inside Vite, so `npm run dev` is the only process.
 - `npm run dev` · `npm test` · `npm run check` (tsc + svelte-check) · `npm run build` then `npm start` (serves `dist/` and the API on `127.0.0.1:4321`).
-- Data lives in `DISTIL_DATA_DIR` (default `~/Distil`): `distil.db` and `secrets.json`.
+- Data lives in `DISTIL_DATA_DIR` (default `~/Distil`): `distil.db` and `secrets.json`. Point it at a scratch folder when testing by hand.
+- Svelte 5 gotcha: `$state(new Set())` is not reactive; use `SvelteSet`/`SvelteMap` from `svelte/reactivity`.
+- To test chat without a real key, add a custom endpoint that points at a local fake OpenAI-compatible server.
 
 ## 5. Repository map
 
@@ -54,7 +56,11 @@ Read this file fully before doing anything in this repo.
 | `design/scripts/fetch-fonts.sh` | Downloads Satoshi (licence forbids committing it) |
 | `server/` | Local API (Node 24 runs the TypeScript directly): SQLite store, library, chat turns, providers, usage and caps |
 | `server/providers/` | Streaming adapters (OpenAI-compatible, Anthropic, Gemini), catalog and key-checked service |
+| `server/constants.ts` | Limits shared with the browser (no Node imports) |
+| `web/src/components/` | Svelte screens and parts: `App`, `Sidebar`/`Tree`, `ChatView`, `SettingsView`, `Home`, dialogs |
+| `web/src/lib/` | `api.ts` (typed client, SSE), `state.svelte.ts` (app state, routes `#/chat/:id`, `#/settings/:section`), `markdown.ts`, `prefs.ts`, `icons.ts` |
+| `web/src/styles/` | Design tokens, palettes, base and shell CSS ported from `design/` |
 | `test/` | Vitest suites; fake fetch and scripted models, never real LLMs or the network |
-| `.claude/launch.json` | Preview server `design` on port 4173 |
+| `.claude/launch.json` | Preview servers: `app` (Vite dev, 5173) and `design` (mock-ups, 4173) |
 
 Extend this table as code directories are created.

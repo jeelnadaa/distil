@@ -1,12 +1,26 @@
 # Distil
 
-> Status: **planning** — no app code yet. See [plan.md](plan.md).
+> Status: **early development** — Phase 1 (folders, chats, streaming Ask mode, your own keys, token caps) works. Study plans, teaching and the coverage ledger come next. See [PROGRESS.md](PROGRESS.md).
 
 A local-first, open-source study app. Bring your material (PDFs, slides, notes, photos, links,
 YouTube) or just a goal, and get a study plan that provably covers everything in it. Then learn it
 in the same app: an AI teacher that probes what you know, teaches one step at a time with
 diagrams and interactive mini-apps, checks you after every step, and keeps you retaining it with
 practice exams, flashcards, a knowledge graph and progress tracking.
+
+## Run it
+
+Needs [Node.js](https://nodejs.org) 24 or newer.
+
+```bash
+npm install
+npm run fonts   # downloads Satoshi once (its licence doesn't allow committing it)
+npm run dev     # http://127.0.0.1:5173
+```
+
+For a production build: `npm run build`, then `npm start` (http://127.0.0.1:4321). Your data lives in
+`~/Distil`; set `DISTIL_DATA_DIR` to put it elsewhere. Add a provider key under Settings › Providers.
+Google AI Studio has a free tier. Keys stay in that folder and are only sent to their own provider.
 
 ## Planned highlights
 
