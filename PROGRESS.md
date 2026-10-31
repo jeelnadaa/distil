@@ -4,14 +4,14 @@ Living status log. Update in the same commit as every change.
 
 ## Current phase
 
-**Phase 2 — Materials & Coverage Ledger** in progress: every input type (files, images, web pages, YouTube), extraction with vision, the ledger, the workspace, the viewer and re-import are done and browser-verified. The textbook exit test is half run: chapter 1 is extracted, its audit stopped on the free-tier quota.
+**Phase 2 — Materials & Coverage Ledger** in progress: every input type (files, images, web pages, YouTube), extraction with vision, the ledger, the workspace, the viewer and re-import are done and browser-verified. Textbook chapters 1–2 are fully distilled; the owner's completeness judgement and the extraction-noise decision are what's left.
 
 ## Next up
 
-1. Owner decision: how audits should run when the strong model's free-tier daily quota is tiny (it allowed 17 audit calls; chapter 1 needs ~60).
+1. Owner decision: what to do with exercise sets and worked-example arithmetic (they make up much of the "fact" items).
 2. Owner decision: YouTube captions (see Known issues), keep Gemini + paste only, or something else.
-3. Finish the textbook exit test: resume chapter 1's audit, then chapter 2 (pages 77–176, the formula-heavy one), and judge completeness.
-4. Tighten extraction on exercise sets (they produce trivial "Let X be…" facts).
+3. Owner judges chapters 1–2 of the textbook ledger for completeness.
+4. Merge on the cheap model misses obvious duplicates (the "value = mean + (#ofSTDEVs)(standard deviation)" formula appears on pages 120 and 122).
 
 ## Phase checklist
 
@@ -90,6 +90,13 @@ Living status log. Update in the same commit as every change.
 - Re-import (F-212): "Replace with a new version" for files, "Fetch again" for pages (not videos). Unchanged sections keep their extraction progress and items, anchors move with them; the row shows new/changed sections and lists items removed with the old text.
 - Textbook exit test: OpenStax *Introductory Statistics 2e* (CC BY 4.0, 847 pages, 555 chunks, 412 visual pages). Chapter 1 (pages 17–76): all 47 chunks extracted, 489 items (110 definitions, 90 examples, 164 facts, 29 procedures, …), maths in LaTeX where present. Usage so far ~113k cheap + ~55k strong tokens, in line with the 287k estimate. The audit stopped after 17 strong-model calls: `gemini-3.5-flash` free-tier daily quota.
 - 91 tests.
+
+### 2026-10-31 · Economy strategy and textbook chapters 1–2
+- Owner chose to audit with Flash-Lite while the strong model's free quota is small: new **Economy** strategy (cheap model for extract, audit and merge), offered in the Distil dialog next to Balanced and Thorough.
+- Fixed: a chunk whose audit rounds were used up before it was marked done (a run stopped in between) was skipped forever, so its material never reached 100 %.
+- Chapters 1–2 (pages 17–176, 98 chunks) fully distilled. Chapter 2: 525 items, 41 formulas. Page 121's standard deviation formulas, absent from the PDF text layer, came out correct from the page images, e.g. $s = \sqrt{rac{\Sigma f(x-ar{x})^2}{n-1}}$. Chapter 2 used ~412k Flash-Lite tokens against a 437k estimate.
+- Audit strength: Flash-Lite's 160 audit calls wrote ~8k output tokens in total, so it rarely finds misses; the strong model's 17 calls wrote 23k. Economy is a quota workaround, not a substitute; "What did we miss?" on Balanced once quota allows is the stronger check.
+- 93 tests.
 
 ## Open questions
 
