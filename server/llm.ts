@@ -1,15 +1,37 @@
 import { z } from "zod";
 import { AppError } from "./errors.ts";
 import type { Providers } from "./providers/service.ts";
-import type { ChatMessage, Usage } from "./providers/types.ts";
+import { ProviderError, type ChatMessage, type Usage } from "./providers/types.ts";
 import type { ModelRef, SettingsStore } from "./settings.ts";
 import { estimateTokens, type UsageStore } from "./usage.ts";
 
 // One-shot model calls for background agents: each call checks caps first (F-1106), records its
-// usage under the agent's role, and structured replies are validated, with one retry that carries
-// the validation error back to the model (F-405).
+// usage under the agent's role, retries rate limits and outages with backoff, and structured replies
+// are validated, with one retry that carries the validation error back to the model (F-405).
 
-export type LlmDeps = { providers: Providers; settings: SettingsStore; usage: UsageStore };
+// wait is injectable so tests don't sleep.
+export type LlmDeps = { providers: Providers; settings: SettingsStore; usage: UsageStore; wait?: (ms: number, signal?: AbortSignal) => Promise<void> };
+
+const ATTEMPTS = 5;
+const BASE_DELAY_MS = 2000;
+// A provider asking us to come back later than this is out of quota for the day, not busy.
+export const MAX_WAIT_MS = 2 * 60 * 1000;
+
+const sleep = (ms: number, signal?: AbortSignal) => new Promise<void>((resolve, reject) => {
+  if (signal?.aborted) return reject(signal.reason);
+  const timer = setTimeout(() => { signal?.removeEventListener("abort", stop); resolve(); }, ms);
+  const stop = () => { clearTimeout(timer); reject(signal!.reason); };
+  signal?.addEventListener("abort", stop, { once: true });
+});
+
+const retryable = (err: unknown) => err instanceof ProviderError && (err.status === 429 || err.status >= 500 || err.status === 0);
+
+// "Please retry in 17h36m20.3s" (Gemini) or "retry after 30s"; null when the provider didn't say.
+export function retryDelay(message: string): number | null {
+  const m = message.match(/retry (?:in|after)\s+(?:(\d+)h)?\s*(?:(\d+)m(?!s))?\s*(?:([\d.]+)s)?/i);
+  if (!m || !(m[1] || m[2] || m[3])) return null;
+  return ((Number(m[1] ?? 0) * 60 + Number(m[2] ?? 0)) * 60 + Number(m[3] ?? 0)) * 1000;
+}
 export type Slot = "strong" | "cheap";
 export type CallOptions = {
   slot: Slot; role: string; folderId: string | null; system: string; prompt: string;
@@ -24,6 +46,22 @@ export function modelFor(settings: SettingsStore, slot: Slot): ModelRef {
 }
 
 export async function complete(deps: LlmDeps, o: CallOptions, history: ChatMessage[] = []): Promise<string> {
+  const wait = deps.wait ?? sleep;
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return await completeOnce(deps, o, history);
+    } catch (err) {
+      if (!retryable(err) || attempt >= ATTEMPTS || o.signal?.aborted) throw err;
+      const asked = retryDelay((err as Error).message);
+      if (asked !== null && asked > MAX_WAIT_MS) {
+        throw new AppError(429, "quota_exhausted", `${modelFor(deps.settings, o.slot).id} is out of quota for now. Distil stopped here and keeps what it found; resume once the quota resets, or switch to another model in Settings.`);
+      }
+      await wait(asked ?? BASE_DELAY_MS * 2 ** (attempt - 1) * (0.75 + Math.random() / 2), o.signal);
+    }
+  }
+}
+
+async function completeOnce(deps: LlmDeps, o: CallOptions, history: ChatMessage[]): Promise<string> {
   const ref = modelFor(deps.settings, o.slot);
   const cap = deps.usage.capStatus(deps.settings.get().caps, ref.provider);
   if (cap.state === "blocked") throw new AppError(429, "cap_reached", "A token cap was reached, so Distil paused here. Raise the cap or wait for it to reset, then resume.", cap);
@@ -36,7 +74,8 @@ export async function complete(deps: LlmDeps, o: CallOptions, history: ChatMessa
       else reported = event.usage;
     }
   } finally {
-    deps.usage.record({
+    // A request refused before any output (rate limit, outage) cost nothing.
+    if (reported || text) deps.usage.record({
       provider: ref.provider, model: ref.id, role: o.role, chatId: null, folderId: o.folderId,
       usage: reported ?? { input: estimateTokens(o.system + messages.map((m) => m.content).join("")), output: estimateTokens(text), cached: 0, reasoning: 0 },
       estimated: !reported,
