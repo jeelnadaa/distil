@@ -1,7 +1,7 @@
 // Typed client for the local API. Types come straight from the server modules.
 import type { Meter, TurnEvent } from "../../../server/chat.ts";
 import type { Chat, Folder } from "../../../server/library.ts";
-import type { FontInfo } from "../../../server/fonts.ts";
+import type { SavedFont } from "../../../server/fonts.ts";
 import type { Job } from "../../../server/jobs.ts";
 import type { estimateExtraction, Strategy } from "../../../server/ledger/extract.ts";
 import type { Item, ItemMark, ItemType } from "../../../server/ledger/store.ts";
@@ -12,7 +12,7 @@ import type { ModelInfo } from "../../../server/providers/types.ts";
 import type { ModelRef, Settings } from "../../../server/settings.ts";
 import type { CapStatus } from "../../../server/usage.ts";
 
-export type { CapStatus, Chat, FontInfo, Folder, Item, ItemMark, ItemType, Job, Message, Meter, ModelInfo, ModelRef, Settings, Strategy, TurnEvent };
+export type { CapStatus, Chat, SavedFont, Folder, Item, ItemMark, ItemType, Job, Message, Meter, ModelInfo, ModelRef, Settings, Strategy, TurnEvent };
 export type FolderMaterial = Material & { inherited: boolean };
 export type { Material, StoredChunk };
 export type Estimate = ReturnType<typeof estimateExtraction> & { materials: number };
@@ -82,9 +82,10 @@ export const api = {
 
   settings: () => json<SettingsView>("GET", "/settings"),
   updateSettings: (patch: Partial<Settings>) => json<SettingsView>("PATCH", "/settings", patch),
-  fontInfo: () => json<FontInfo | null>("GET", "/fonts/text/info"),
-  uploadFont: (name: string, data: string) => json<FontInfo>("PUT", "/fonts/text", { name, data }),
-  removeFont: () => done("DELETE", "/fonts/text"),
+  fonts: () => json<SavedFont[]>("GET", "/fonts"),
+  addFont: (font: { family: string; name?: string } | { fileName: string; data: string; name?: string }) => json<SavedFont>("POST", "/fonts", font),
+  renameFont: (id: string, name: string) => json<SavedFont>("PATCH", `/fonts/${id}`, { name }),
+  removeFont: (id: string) => done("DELETE", `/fonts/${id}`),
 
   materials: (folderId: string) => json<FolderMaterial[]>("GET", `/folders/${folderId}/materials`),
   uploadMaterial: async (folderId: string, file: File): Promise<FolderMaterial> =>

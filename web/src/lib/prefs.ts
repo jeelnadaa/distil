@@ -152,31 +152,36 @@ export function setMotion(value: Motion) {
 
 /* ---------- Text font (F-1309, DESIGN.md §3) ----------
  * Swaps the face behind --font-text, which every Satoshi use reads. Display serif and mono stay.
- * Installed fonts are used by family name and never bundled; an uploaded file is served from the data folder. */
+ * Installed fonts are used by family name and never bundled; a saved font file is served from the data folder. */
 export type TextFont =
   | { kind: "satoshi" }
   | { kind: "anthropic" }
+  | { kind: "saved"; id: string; family?: string } // family: an installed font; none: an uploaded file
+  // Before saved fonts: one typed family or one uploaded file.
   | { kind: "installed"; family: string }
   | { kind: "upload"; name: string; version: number };
 
-export const ANTHROPIC_SANS = "Anthropic Sans";
-const UPLOAD_FAMILY = "Distil Custom Text";
+// Anthropic Sans installs as two optical sizes; text sizes use "Text", and older builds use the plain name.
+export const ANTHROPIC_SANS = ["Anthropic Sans Text", "Anthropic Sans", "Anthropic Sans Display"];
 const FALLBACK = `"Satoshi", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif`;
+const savedFamily = (id: string) => `Distil Font ${id.slice(0, 8)}`;
 
 // Family names go into CSS strings, so only plain name characters are kept.
 export const cleanFamily = (name: string) => name.replace(/[^\p{L}\p{N} _.-]/gu, "").replace(/\s+/g, " ").trim().slice(0, 80);
 
 export function fontStack(font: TextFont): string {
-  const family = font.kind === "anthropic" ? ANTHROPIC_SANS
-    : font.kind === "installed" ? cleanFamily(font.family)
-    : font.kind === "upload" ? UPLOAD_FAMILY : "";
-  return family ? `"${family}", ${FALLBACK}` : FALLBACK;
+  const families = font.kind === "anthropic" ? ANTHROPIC_SANS
+    : font.kind === "installed" ? [cleanFamily(font.family)]
+    : font.kind === "saved" ? [font.family ? cleanFamily(font.family) : savedFamily(font.id)]
+    : [];
+  return [...families.filter(Boolean).map((f) => `"${f}"`), FALLBACK].join(", ");
 }
 
 export const textFontPref = (): TextFont => {
   try {
     const saved = JSON.parse(read("distil-font") ?? "null") as TextFont | null;
     if (saved?.kind === "anthropic" || saved?.kind === "satoshi") return saved;
+    if (saved?.kind === "saved" && typeof saved.id === "string" && /^[\w-]{8,64}$/.test(saved.id)) return saved;
     if (saved?.kind === "installed" && typeof saved.family === "string" && cleanFamily(saved.family)) return saved;
     if (saved?.kind === "upload" && typeof saved.name === "string" && typeof saved.version === "number") return saved;
   } catch { /* fall through to the default */ }
@@ -185,13 +190,13 @@ export const textFontPref = (): TextFont => {
 
 export function setTextFont(font: TextFont) {
   let face = document.getElementById("distil-text-font");
-  if (font.kind === "upload") {
+  if (font.kind === "saved" && !font.family) {
     face ??= document.head.appendChild(Object.assign(document.createElement("style"), { id: "distil-text-font" }));
-    face.textContent = `@font-face { font-family: "${UPLOAD_FAMILY}"; src: url("/api/fonts/text?v=${font.version}"); font-weight: 100 900; font-display: swap; }`;
+    face.textContent = `@font-face { font-family: "${savedFamily(font.id)}"; src: url("/api/fonts/${encodeURIComponent(font.id)}/file"); font-weight: 100 900; font-display: swap; }`;
   } else {
     face?.remove();
   }
-  if (font.kind === "satoshi") root().style.removeProperty("--font-text");
+  if (font.kind === "satoshi" || font.kind === "upload") root().style.removeProperty("--font-text");
   else root().style.setProperty("--font-text", fontStack(font));
   write("distil-font", JSON.stringify(font));
 }

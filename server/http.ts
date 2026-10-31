@@ -254,19 +254,25 @@ export function createApp(deps: AppDeps) {
     return c.json(jobs.get(c.req.param("id")));
   });
 
-  /* ---------- Text font (F-1309) ---------- */
-  app.get("/fonts/text", (c) => {
-    const font = deps.fonts.read();
-    if (!font) throw notFound("Font");
-    return c.body(new Uint8Array(font.bytes), 200, { "content-type": font.type, "cache-control": "no-cache" });
+  /* ---------- Saved text fonts (F-1309) ---------- */
+  app.get("/fonts", (c) => c.json(deps.fonts.list()));
+  app.post("/fonts", async (c) => {
+    const input = await body(c, z.union([
+      z.object({ family: z.string().min(1).max(200), name: z.string().max(200).optional() }),
+      z.object({ fileName: z.string().max(200), data: z.base64(), name: z.string().max(200).optional() }),
+    ]));
+    return c.json("family" in input ? deps.fonts.addInstalled(input.family, input.name) : deps.fonts.addFile(input.fileName, input.data, input.name), 201);
   });
-  app.get("/fonts/text/info", (c) => c.json(deps.fonts.info()));
-  app.put("/fonts/text", async (c) => {
-    const { name, data } = await body(c, z.object({ name: z.string().max(200), data: z.base64() }));
-    return c.json(deps.fonts.save(name, data));
+  app.patch("/fonts/:id", async (c) => {
+    const { name } = await body(c, z.object({ name: z.string().max(200) }));
+    return c.json(deps.fonts.rename(c.req.param("id"), name));
   });
-  app.delete("/fonts/text", (c) => {
-    deps.fonts.remove();
+  app.get("/fonts/:id/file", (c) => {
+    const font = deps.fonts.read(c.req.param("id"));
+    return c.body(new Uint8Array(font.bytes), 200, { "content-type": font.type, "cache-control": "private, max-age=31536000, immutable" });
+  });
+  app.delete("/fonts/:id", (c) => {
+    deps.fonts.remove(c.req.param("id"));
     return c.body(null, 204);
   });
 
