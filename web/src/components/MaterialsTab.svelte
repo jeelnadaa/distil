@@ -3,6 +3,7 @@
   import { attempt, toast } from "../lib/state.svelte.ts";
   import Dialog from "./Dialog.svelte";
   import Icon from "./Icon.svelte";
+  import Segmented from "./Segmented.svelte";
 
   let { folderId, materials, jobs, onchange, ondistil }: {
     folderId: string; materials: FolderMaterial[]; jobs: Job[]; onchange: () => void; ondistil: (m: FolderMaterial) => void;
@@ -47,13 +48,23 @@
   }
 
   // Links are fetched by Distil now and kept as a copy; the page can change or vanish later.
+  // A YouTube link asks first how to get its transcript, since one way spends tokens.
+  const YOUTUBE = /^https?:\/\/(?:(?:www|m|music)\.)?(?:youtube\.com|youtube-nocookie\.com|youtu\.be)\//i;
+  let video = $state<{ url: string; how: "gemini" | "paste"; transcript: string } | null>(null);
+
   async function addLink(e: SubmitEvent) {
     e.preventDefault();
-    if (!link.trim() || fetching) return;
+    const url = link.trim();
+    if (!url || fetching) return;
+    if (YOUTUBE.test(url)) { video = { url, how: "gemini", transcript: "" }; return; }
+    await submitLink(url);
+  }
+
+  async function submitLink(url: string, transcript?: string) {
     fetching = true;
-    const added = await attempt(() => api.addLink(folderId, link.trim()));
+    const added = await attempt(() => api.addLink(folderId, url, transcript));
     fetching = false;
-    if (added) { link = ""; onchange(); }
+    if (added) { link = ""; video = null; onchange(); }
   }
   const host = (url: string) => { try { return new URL(url).hostname.replace(/^www\./, ""); } catch { return url; } };
 
@@ -75,9 +86,9 @@
   </span>
 </button>
 <form class="link-row" onsubmit={addLink}>
-  <label class="sr-only" for="material-link">Link to a web page or PDF</label>
+  <label class="sr-only" for="material-link">Link to a web page, PDF or YouTube video</label>
   <span class="link-row__icon"><Icon name="link" size="sm" /></span>
-  <input id="material-link" class="input" type="url" placeholder="Or paste a link to a web page or PDF" bind:value={link} disabled={fetching} />
+  <input id="material-link" class="input" type="url" placeholder="Or paste a link to a web page, PDF or YouTube video" bind:value={link} disabled={fetching} />
   <button type="submit" class="btn btn--secondary btn--sm" disabled={!link.trim() || fetching}>{fetching ? "Fetching…" : "Add link"}</button>
 </form>
 <input type="file" multiple accept={ACCEPT} hidden bind:this={input} onchange={(e) => { const t = e.currentTarget; if (t.files?.length) upload(t.files); t.value = ""; }} />
@@ -91,7 +102,7 @@
           {@const s = statusOf(m)}
           <tr>
             <td>
-              <a class="pf-src" href="#/material/{m.id}"><Icon name={m.source && m.kind === "markdown" ? "link" : KIND_ICON[m.kind] ?? "file"} size="sm" /><span>{m.name}</span></a>
+              <a class="pf-src" href="#/material/{m.id}"><Icon name={m.source && m.kind === "markdown" ? (/youtube\.com/.test(m.source) ? "video" : "link") : KIND_ICON[m.kind] ?? "file"} size="sm" /><span>{m.name}</span></a>
               {#if m.source}<a class="caption faint source" href={m.source} target="_blank" rel="noopener noreferrer">{host(m.source)}</a>{/if}
               {#if m.inherited}<span class="caption faint"> · from a parent folder</span>{/if}
               {#if m.error}<div class="caption error">{m.error}</div>{/if}
@@ -114,6 +125,32 @@
   </div>
 {/if}
 
+<Dialog bind:open={() => !!video, (v) => { if (!v && !fetching) video = null; }} title="Add a video" eyebrow="YouTube">
+  {#if video}
+    <div class="video-how">
+      <Segmented label="How to get the transcript" value={video.how} onchange={(v) => (video!.how = v)}
+        options={[{ value: "gemini", label: "Transcribe with Gemini" }, { value: "paste", label: "Paste transcript" }]} />
+      {#if video.how === "gemini"}
+        <p class="body-sm">A Gemini model watches the video and writes down what is said and what is shown on screen: formulas, slides and code.</p>
+        <p class="caption faint">Roughly 6,000 tokens per minute of video, from your Gemini quota. A long lecture can take a few minutes.</p>
+      {:else}
+        <label class="field">
+          <span class="field__label">Transcript</span>
+          <textarea class="textarea" rows="8" bind:value={video.transcript} placeholder="0:00&#10;Today we look at…"></textarea>
+          <span class="field__hint">On YouTube, open the description, choose Show transcript, then select all of it and copy. Costs no tokens, but leaves out what is only shown on screen.</span>
+        </label>
+      {/if}
+    </div>
+  {/if}
+  {#snippet footer()}
+    <button type="button" class="btn btn--ghost" disabled={fetching} onclick={() => (video = null)}>Cancel</button>
+    <button type="button" class="btn btn--primary" disabled={fetching || (video?.how === "paste" && !video.transcript.trim())}
+      onclick={() => submitLink(video!.url, video!.how === "paste" ? video!.transcript : undefined)}>
+      {fetching ? (video?.how === "gemini" ? "Transcribing…" : "Adding…") : "Add video"}
+    </button>
+  {/snippet}
+</Dialog>
+
 <Dialog bind:open={() => !!removing, (v) => { if (!v) removing = null; }} title="Remove {removing?.name}?" eyebrow="Remove material" danger>
   <p class="body-sm">Distil deletes its copy of the file. Ledger items found only in it go too; items you added by hand stay.</p>
   {#snippet footer()}
@@ -128,6 +165,8 @@
   .link-row .input { flex: 1; min-width: 0; padding-left: 34px; }
   .link-row__icon { position: absolute; left: 11px; display: flex; color: var(--text-faint); pointer-events: none; }
   .source { margin-left: var(--s-2); }
+  .video-how { display: grid; gap: var(--s-3); justify-items: start; }
+  .video-how .field { width: 100%; }
   .materials a.pf-src { color: inherit; text-decoration: none; max-width: 44ch; }
   .materials a.pf-src:hover span { text-decoration: underline; text-underline-offset: 3px; }
   .error { color: var(--danger); }

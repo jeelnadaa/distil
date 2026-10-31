@@ -10,6 +10,7 @@ import type { Ledger } from "./ledger/store.ts";
 import { MAX_MATERIAL_BYTES, type Material, type Materials, type StoredChunk } from "./materials/store.ts";
 import { parseLabel } from "./materials/ingest.ts";
 import { type FetchFn, fetchUrl, parseUrl } from "./materials/web.ts";
+import { MAX_PASTED_CHARS, pastedTranscript, transcribeVideo, videoTitle, watchUrl, youtubeId } from "./materials/youtube.ts";
 import { ProviderError } from "./providers/types.ts";
 import { ITEM_TYPES } from "./prompts.ts";
 import { SettingsPatch } from "./settings.ts";
@@ -142,13 +143,22 @@ export function createApp(deps: AppDeps) {
     jobs.enqueue("parse", parseLabel(material.name), { folderId: material.folderId, materialId: material.id });
     return c.json(material, 201);
   });
-  // A link: the page (or the file it points to) is fetched now and kept as a copy (F-204).
+  // A link: the page (or the file it points to) is fetched now and kept as a copy (F-204). A YouTube
+  // link becomes a transcript: the one pasted with it, or else one a Gemini model writes (F-205).
   app.post("/folders/:id/materials/url", async (c) => {
-    const { url } = await body(c, z.object({ url: z.string().min(1).max(2000) }));
+    const { url, transcript } = await body(c, z.object({ url: z.string().min(1).max(2000), transcript: z.string().max(MAX_PASTED_CHARS).optional() }));
+    const folderId = c.req.param("id");
     const target = parseUrl(url);
-    library.requireFolder(c.req.param("id"));
-    const fetched = await fetchUrl(target, deps.fetch);
-    const material = materials.add(c.req.param("id"), fetched.name, fetched.bytes, target.href);
+    library.requireFolder(folderId);
+    const video = youtubeId(target);
+    let fetched;
+    if (video) {
+      const title = await videoTitle(video, deps.fetch);
+      fetched = transcript?.trim() ? pastedTranscript(title, video, transcript) : await transcribeVideo(deps, video, title, folderId);
+    } else {
+      fetched = await fetchUrl(target, deps.fetch);
+    }
+    const material = materials.add(folderId, fetched.name, fetched.bytes, video ? watchUrl(video) : target.href);
     jobs.enqueue("parse", parseLabel(material.name), { folderId: material.folderId, materialId: material.id });
     return c.json(material, 201);
   });

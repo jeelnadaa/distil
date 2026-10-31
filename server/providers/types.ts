@@ -2,7 +2,8 @@ export type Usage = { input: number; output: number; cached: number; reasoning: 
 
 // images: base64 page renders or photos sent with a user turn (vision extraction); each adapter encodes them its own way.
 export type ImagePart = { mime: string; data: string };
-export type ChatMessage = { role: "user" | "assistant"; content: string; images?: ImagePart[] };
+// videos: public video links (YouTube) the model watches itself; only Gemini can.
+export type ChatMessage = { role: "user" | "assistant"; content: string; images?: ImagePart[]; videos?: string[] };
 
 export type ChatRequest = {
   model: string;

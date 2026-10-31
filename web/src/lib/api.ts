@@ -89,7 +89,7 @@ export const api = {
   materials: (folderId: string) => json<FolderMaterial[]>("GET", `/folders/${folderId}/materials`),
   uploadMaterial: async (folderId: string, file: File): Promise<FolderMaterial> =>
     (await call("POST", `/folders/${folderId}/materials`, undefined, undefined, file)).json(),
-  addLink: (folderId: string, url: string) => json<FolderMaterial>("POST", `/folders/${folderId}/materials/url`, { url }),
+  addLink: (folderId: string, url: string, transcript?: string) => json<FolderMaterial>("POST", `/folders/${folderId}/materials/url`, { url, transcript }),
   material: (id: string) => json<{ material: Material; chunks: StoredChunk[] }>("GET", `/materials/${id}`),
   deleteMaterial: (id: string) => done("DELETE", `/materials/${id}`),
   estimate: (folderId: string, scope: DistilScope, reaudit = false) => {

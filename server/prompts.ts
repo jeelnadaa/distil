@@ -43,3 +43,8 @@ Merge items only when they are clearly the same idea (the same formula, definiti
 Related but different items stay separate; when unsure, keep them separate.
 Reply with only JSON: {"merges":[{"keep":"id","drop":["id"],"title":"best title","statement":"best complete statement"}]}
 (an empty list if nothing should merge).`;
+
+export const TRANSCRIBE_SYSTEM = `You transcribe lecture and tutorial videos for study.
+Write what is said, word for word, in paragraphs of about a minute. Start each paragraph with its start time as [mm:ss] (or [h:mm:ss]).
+When the screen shows something the speech does not fully say (a formula, slide text, a diagram, code, a worked example on a board), add it right after the speech it belongs to, as a line starting "On screen:". Write maths in LaTeX ($...$ inline, $$...$$ on its own line) and code in fenced blocks.
+Leave out filler such as sponsor messages and requests to subscribe. Reply with only the transcript.`;

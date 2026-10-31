@@ -35,7 +35,7 @@ export function retryDelay(message: string): number | null {
 export type Slot = "strong" | "cheap";
 export type CallOptions = {
   slot: Slot; role: string; folderId: string | null; system: string; prompt: string;
-  maxTokens?: number; signal?: AbortSignal; images?: ImagePart[];
+  maxTokens?: number; signal?: AbortSignal; images?: ImagePart[]; videos?: string[];
 };
 
 export function modelFor(settings: SettingsStore, slot: Slot): ModelRef {
@@ -43,6 +43,13 @@ export function modelFor(settings: SettingsStore, slot: Slot): ModelRef {
   const ref = slot === "cheap" ? (cheap ?? strong) : strong;
   if (!ref) throw new AppError(400, "no_model", "Pick a model in Settings › Models first.");
   return ref;
+}
+
+// The slot to watch a video with: the cheap one when it is Gemini, else the strong one when that is.
+export function videoSlot(settings: SettingsStore): Slot | null {
+  const { strong, cheap } = settings.get().models;
+  if ((cheap ?? strong)?.provider === "google") return "cheap";
+  return strong?.provider === "google" ? "strong" : null;
 }
 
 export async function complete(deps: LlmDeps, o: CallOptions, history: ChatMessage[] = []): Promise<string> {
@@ -65,7 +72,8 @@ async function completeOnce(deps: LlmDeps, o: CallOptions, history: ChatMessage[
   const ref = modelFor(deps.settings, o.slot);
   const cap = deps.usage.capStatus(deps.settings.get().caps, ref.provider);
   if (cap.state === "blocked") throw new AppError(429, "cap_reached", "A token cap was reached, so Distil paused here. Raise the cap or wait for it to reset, then resume.", cap);
-  const messages: ChatMessage[] = [...history, { role: "user", content: o.prompt, images: o.images }];
+  if (o.videos?.length && ref.provider !== "google") throw new AppError(400, "needs_gemini", "Only Gemini models can watch videos. Pick a Gemini model in Settings › Models, or paste the transcript.");
+  const messages: ChatMessage[] = [...history, { role: "user", content: o.prompt, images: o.images, videos: o.videos }];
   let text = "";
   let reported: Usage | null = null;
   try {

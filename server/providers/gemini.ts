@@ -10,6 +10,7 @@ type GeminiModel = { name: string; displayName?: string; inputTokenLimit?: numbe
 
 export const gemini: Adapter = {
   async *stream(endpoint, req) {
+    const videos = req.messages.some((m) => m.videos?.length);
     const res = await send(endpoint, `/models/${encodeURIComponent(req.model)}:streamGenerateContent?alt=sse`, {
       method: "POST",
       headers: headers(endpoint),
@@ -17,10 +18,15 @@ export const gemini: Adapter = {
       body: JSON.stringify({
         contents: req.messages.map((m) => ({
           role: m.role === "assistant" ? "model" : "user",
-          parts: [...(m.images ?? []).map((i) => ({ inline_data: { mime_type: i.mime, data: i.data } })), { text: m.content }],
+          parts: [
+            ...(m.videos ?? []).map((uri) => ({ file_data: { file_uri: uri } })),
+            ...(m.images ?? []).map((i) => ({ inline_data: { mime_type: i.mime, data: i.data } })),
+            { text: m.content },
+          ],
         })),
         ...(req.system && { systemInstruction: { parts: [{ text: req.system }] } }),
-        ...(req.maxTokens && { generationConfig: { maxOutputTokens: req.maxTokens } }),
+        // Low media resolution: ~100 tokens per second of video instead of ~300; slides and boards stay legible.
+        ...((req.maxTokens || videos) && { generationConfig: { ...(req.maxTokens && { maxOutputTokens: req.maxTokens }), ...(videos && { mediaResolution: "MEDIA_RESOLUTION_LOW" }) } }),
       }),
     });
     // usageMetadata is cumulative; the last chunk's value is the total.

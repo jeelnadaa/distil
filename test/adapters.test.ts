@@ -105,3 +105,14 @@ describe("images in a request", () => {
     expect(JSON.parse(calls[0]!.init.body as string).messages).toEqual([{ role: "user", content: "Hi" }]);
   });
 });
+
+describe("videos in a request", () => {
+  it("are sent to Gemini as file links, at low media resolution", async () => {
+    const { fetch, calls } = fakeFetch(() => sseResponse([]));
+    const video = { model: "m", maxTokens: 100, messages: [{ role: "user" as const, content: "Transcribe", videos: ["https://www.youtube.com/watch?v=abcdefghijk"] }] };
+    await collect(gemini.stream({ baseUrl: "https://g.test", apiKey: "k", fetch }, video));
+    const body = JSON.parse(calls[0]!.init.body as string);
+    expect(body.contents[0].parts).toEqual([{ file_data: { file_uri: "https://www.youtube.com/watch?v=abcdefghijk" } }, { text: "Transcribe" }]);
+    expect(body.generationConfig).toEqual({ maxOutputTokens: 100, mediaResolution: "MEDIA_RESOLUTION_LOW" });
+  });
+});
