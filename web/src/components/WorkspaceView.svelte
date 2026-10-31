@@ -145,7 +145,7 @@
                   <div class="mini-still__raw"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
                   <div class="mini-still__filter"></div>
                   <ul class="mini-still__out">
-                    {#each latest as item (item.id)}<li><span class="chip">{item.type}</span>{item.title}</li>{/each}
+                    {#each latest as item (item.id)}<li><span class="chip">{item.type}</span><span class="mini-still__title">{item.title}</span></li>{/each}
                   </ul>
                 </div>
               {/if}

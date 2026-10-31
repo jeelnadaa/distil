@@ -145,20 +145,29 @@
             <td class="body-sm muted">{size(m.size)}</td>
             <td class="body-sm muted">{length(m)}</td>
             <td><span class="status status--{s.tone}"><i></i>{s.label}</span></td>
-            <td class="num">
-              {#if !m.inherited && m.status === "ready" && m.distilled < m.chunks && !extracting(m)}
-                <button type="button" class="btn btn--ghost btn--sm" onclick={() => ondistil(m)}>Distil…</button>
-              {/if}
-              {#if !m.inherited && m.status !== "queued" && m.status !== "parsing" && !isVideo(m)}
-                {#if m.source}
-                  <button type="button" class="btn btn--ghost btn--icon btn--sm" aria-label="Fetch {m.name} again" title="Fetch again" onclick={() => refetch(m)}><Icon name="refresh" size="sm" /></button>
-                {:else}
-                  <button type="button" class="btn btn--ghost btn--icon btn--sm" aria-label="Replace {m.name} with a new version" title="Replace with a new version" onclick={() => { replacing = m; replaceInput?.click(); }}><Icon name="upload" size="sm" /></button>
-                {/if}
-              {/if}
-              {#if !m.inherited}
-                <button type="button" class="btn btn--ghost btn--icon btn--sm" aria-label="Remove {m.name}" title="Remove" onclick={() => (removing = m)}><Icon name="trash" size="sm" /></button>
-              {/if}
+            <td class="actions">
+              <!-- Fixed slots, so each button lines up with the same button in other rows. -->
+              <div class="row-actions">
+                <span>
+                  {#if !m.inherited && m.status === "ready" && m.distilled < m.chunks && !extracting(m)}
+                    <button type="button" class="btn btn--ghost btn--sm" onclick={() => ondistil(m)}>Distil…</button>
+                  {/if}
+                </span>
+                <span>
+                  {#if !m.inherited && m.status !== "queued" && m.status !== "parsing" && !isVideo(m)}
+                    {#if m.source}
+                      <button type="button" class="btn btn--ghost btn--icon btn--sm" aria-label="Fetch {m.name} again" data-tip="Fetch the page again" onclick={() => refetch(m)}><Icon name="refresh" size="sm" /></button>
+                    {:else}
+                      <button type="button" class="btn btn--ghost btn--icon btn--sm" aria-label="Replace {m.name} with a new version" data-tip="Replace with a new version" onclick={() => { replacing = m; replaceInput?.click(); }}><Icon name="upload" size="sm" /></button>
+                    {/if}
+                  {/if}
+                </span>
+                <span>
+                  {#if !m.inherited}
+                    <button type="button" class="btn btn--ghost btn--icon btn--sm" aria-label="Remove {m.name}" data-tip="Remove" onclick={() => (removing = m)}><Icon name="trash" size="sm" /></button>
+                  {/if}
+                </span>
+              </div>
             </td>
           </tr>
         {/each}
@@ -220,6 +229,8 @@
   .link-row .input { flex: 1; min-width: 0; padding-left: 34px; }
   .link-row__icon { position: absolute; left: 11px; display: flex; color: var(--text-faint); pointer-events: none; }
   .source { margin-left: var(--s-2); }
+  .actions { width: 1%; }
+  .row-actions { display: grid; grid-template-columns: auto 32px 32px; gap: var(--s-1); align-items: center; justify-items: end; }
   .reimport { display: flex; flex-wrap: wrap; gap: var(--s-2); align-items: baseline; margin-top: 2px; }
   .linkish { color: var(--text-muted); text-decoration: underline; text-underline-offset: 3px; }
   .linkish:hover { color: var(--text); }

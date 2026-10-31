@@ -51,6 +51,8 @@
 .mini-still__filter { height: 100%; background: linear-gradient(180deg, transparent, var(--accent), transparent); border-radius: 1px; }
 .mini-still__out { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; align-content: center; height: 100%; overflow: hidden; }
 .mini-still__out li { display: flex; gap: var(--s-2); align-items: center; min-width: 0; font-size: 12.5px; font-weight: 550; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; animation: row-in var(--dur-slow) var(--spring-settle) both; }
+.mini-still__out .chip { flex: none; }
+.mini-still__title { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 @keyframes row-in { from { opacity: 0; transform: translateX(-10px); filter: blur(3px); } }
 
 .ledger td strong { font-weight: 600; }
