@@ -44,10 +44,17 @@ Living status log. Update in the same commit as every change.
 - Logo: three directions (Condense, Drop-d, Converge) with colour, app-icon, mono and animated SVGs, a review page, and an in-app preview switch. Recommended Drop-d.
 - Owner approved the design. Decisions: Condense logo (alternatives removed), dark theme on first run, Ask mode gets the lighter conversational treatment (owner left it to design). Phase 0 complete.
 
+### 2026-10-31 · Phase 1
+- Stack chosen (see `AGENTS.md` §4): Node 24 + TypeScript without a build step, Hono, `node:sqlite`, Zod, Svelte 5 + Vite, Vitest.
+- Server foundation: SQLite schema with migrations; library with the 5-level depth rule enforced on create and move (F-001, F-004); messages with crash recovery (F-1306); settings with model slots (F-401) and caps; keys in a user-only `secrets.json`, masked in every response (F-1206); streaming adapters for OpenAI-compatible, Anthropic and Gemini with real usage (F-1201, F-1202, F-1101); chat turns with cap pre-check, abort and estimated usage when a provider reports none (F-1104, F-1105, F-407); auto-naming on the cheap slot that never overrides a manual title (F-005). API refuses foreign hosts, cross-origin calls and non-JSON writes. 34 tests.
+
 ## Open questions
 
 See `plan.md` §18.
 
 ## Known issues
 
-None yet.
+- Caps are in tokens only. Cost caps need per-model prices; planned with the usage dashboard (Phase 8).
+- A cap is checked before each request, so one reply already in flight can finish past 100 %.
+- Keys are in a user-only file, not yet the OS credential store; the desktop build (Phase 9) moves them.
+- `npm audit`: two low-severity advisories in a build-time dependency of the Svelte Vite plugin (deepmerge); nothing ships to users.

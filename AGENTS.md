@@ -31,7 +31,15 @@ Read this file fully before doing anything in this repo.
 - Every feature ships with tests for its deterministic logic. Tests must not call real LLMs or the network.
 - Keep the app runnable after every commit.
 
-## 4. Repository map
+## 4. Stack and commands
+
+- **Node ≥ 24**, TypeScript run natively (type stripping): only erasable syntax, no enums or parameter properties, import with `.ts` extensions.
+- **Server:** Hono on `@hono/node-server`, SQLite via built-in `node:sqlite`, Zod for every request body and stored setting.
+- **UI:** Svelte 5 + Vite (`web/`). In dev the API is mounted inside Vite, so `npm run dev` is the only process.
+- `npm run dev` · `npm test` · `npm run check` (tsc + svelte-check) · `npm run build` then `npm start` (serves `dist/` and the API on `127.0.0.1:4321`).
+- Data lives in `DISTIL_DATA_DIR` (default `~/Distil`): `distil.db` and `secrets.json`.
+
+## 5. Repository map
 
 | Path | Purpose |
 |---|---|
@@ -44,6 +52,9 @@ Read this file fully before doing anything in this repo.
 | `design/` | Clickable design mock-ups (landing, app screens, dialogs) on the real tokens; open `design/index.html` |
 | `design/assets/logo/` | Approved logo SVGs: colour, `-icon` (favicon/app tile), `-mono`, `-animated` (geometry mirrors `design/js/brand.js`) |
 | `design/scripts/fetch-fonts.sh` | Downloads Satoshi (licence forbids committing it) |
+| `server/` | Local API (Node 24 runs the TypeScript directly): SQLite store, library, chat turns, providers, usage and caps |
+| `server/providers/` | Streaming adapters (OpenAI-compatible, Anthropic, Gemini), catalog and key-checked service |
+| `test/` | Vitest suites; fake fetch and scripted models, never real LLMs or the network |
 | `.claude/launch.json` | Preview server `design` on port 4173 |
 
 Extend this table as code directories are created.
