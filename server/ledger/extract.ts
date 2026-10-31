@@ -45,19 +45,22 @@ async function pool<T>(items: T[], limit: number, signal: AbortSignal, fn: (item
 }
 
 // Token estimate before spending anything (F-208). Ratios are deliberately on the generous side.
-export function estimateExtraction(chunks: Pick<StoredChunk, "tokens">[], strategy: Strategy) {
+// auditOnly: a "What did we miss?" pass, which re-audits chunks that were already extracted.
+export function estimateExtraction(chunks: Pick<StoredChunk, "tokens">[], strategy: Strategy, auditOnly = false) {
   const s = slots(strategy);
   const totals = { strong: { input: 0, output: 0 }, cheap: { input: 0, output: 0 } };
   const extractSys = estimateTokens(EXTRACT_SYSTEM);
   const auditSys = estimateTokens(AUDIT_SYSTEM);
   for (const { tokens } of chunks) {
-    totals[s.extract].input += extractSys + tokens + 40;
-    totals[s.extract].output += Math.ceil(tokens * 0.6);
+    if (!auditOnly) {
+      totals[s.extract].input += extractSys + tokens + 40;
+      totals[s.extract].output += Math.ceil(tokens * 0.6);
+    }
     // About 1.3 audit rounds per chunk on average; each re-reads the chunk plus a summary of its items.
     totals[s.audit].input += Math.ceil(1.3 * (auditSys + tokens * 1.5 + 40));
     totals[s.audit].output += Math.ceil(tokens * 0.15);
   }
-  const extractedOut = totals[s.extract].output;
+  const extractedOut = chunks.reduce((sum, c) => sum + Math.ceil(c.tokens * (auditOnly ? 0.15 : 0.6)), 0);
   totals[s.merge].input += Math.ceil(extractedOut * 0.2) + estimateTokens(MERGE_SYSTEM);
   totals[s.merge].output += Math.ceil(extractedOut * 0.05);
   return { chunks: chunks.length, ...totals, total: totals.strong.input + totals.strong.output + totals.cheap.input + totals.cheap.output };

@@ -1,4 +1,7 @@
 // System prompts. Kept together so they can later become editable in Settings (F-404).
+import { ITEM_TYPES } from "./constants.ts";
+
+export { ITEM_TYPES };
 
 export const ASK_SYSTEM = `You are Distil, a patient and precise study companion.
 Answer the learner's question directly, then add only the explanation that helps them understand.
@@ -13,7 +16,6 @@ in Title Case, with no quotes, emoji or trailing punctuation.
 Good: "Bayes' Theorem with Medical Tests". Bad: "Help With Statistics".`;
 
 // Coverage Ledger agents (plan.md §4.3). Kept short: they are sent once per chunk.
-export const ITEM_TYPES = ["concept", "definition", "formula", "theorem", "derivation", "procedure", "fact", "example", "diagram", "code"] as const;
 
 const ITEM_SHAPE = `{"type":"${ITEM_TYPES.join("|")}","title":"...","statement":"...","quote":"..."}
 - title: at most 10 words and specific ("Nyquist sampling theorem", not "Theorem")

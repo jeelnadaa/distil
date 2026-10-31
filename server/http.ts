@@ -164,6 +164,10 @@ export function createApp(deps: AppDeps) {
     const parsed = StrategyBody.safeParse({ strategy: c.req.query("strategy") });
     if (!parsed.success) throw new AppError(400, "invalid_request", z.prettifyError(parsed.error));
     const { strategy } = parsed.data;
+    if (c.req.query("reaudit")) {
+      const ids = materials.idsUnder(c.req.param("id")).filter((id) => materials.get(id).status === "ready");
+      return c.json({ materials: ids.length, ...estimateExtraction(ids.flatMap((id) => materials.chunks(id)), strategy, true) });
+    }
     const work = pending(c.req.param("id"));
     return c.json({ materials: work.length, ...estimateExtraction(work.flatMap((w) => w.chunks), strategy) });
   });

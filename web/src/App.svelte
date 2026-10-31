@@ -4,6 +4,7 @@
   import SettingsView from "./components/SettingsView.svelte";
   import Sidebar from "./components/Sidebar.svelte";
   import Toasts from "./components/Toasts.svelte";
+  import WorkspaceView from "./components/WorkspaceView.svelte";
   import { attempt, loadModels, nav, refreshLibrary, refreshProviders, refreshSettings } from "./lib/state.svelte.ts";
 
   let ready = $state(false);
@@ -23,6 +24,8 @@
     {#if ready}
       {#if nav.route.name === "chat"}
         {#key nav.route.id}<ChatView id={nav.route.id} />{/key}
+      {:else if nav.route.name === "folder"}
+        {#key nav.route.id}<WorkspaceView id={nav.route.id} tab={nav.route.tab} />{/key}
       {:else if nav.route.name === "settings"}
         <SettingsView section={nav.route.section} />
       {:else}

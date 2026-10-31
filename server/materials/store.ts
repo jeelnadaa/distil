@@ -15,7 +15,7 @@ export type MaterialStatus = "queued" | "parsing" | "ready" | "error";
 export type Material = {
   id: string; folderId: string; kind: MaterialKind; name: string; size: number; sha256: string;
   status: MaterialStatus; error: string | null; unit: LocUnit | null; length: number | null;
-  chunks: number; tokens: number; createdAt: number;
+  chunks: number; tokens: number; distilled: number; createdAt: number;
 };
 export type StoredChunk = {
   id: string; ord: number; from: number; to: number; headings: string[]; text: string; tokens: number;
@@ -24,14 +24,15 @@ export type StoredChunk = {
 
 type Row = {
   id: string; folder_id: string; kind: MaterialKind; name: string; size: number; sha256: string; status: MaterialStatus;
-  error: string | null; unit: LocUnit | null; length: number | null; created_at: number; chunks: number; tokens: number;
+  error: string | null; unit: LocUnit | null; length: number | null; created_at: number; chunks: number; tokens: number; distilled: number;
 };
 const toMaterial = (r: Row): Material => ({
   id: r.id, folderId: r.folder_id, kind: r.kind, name: r.name, size: r.size, sha256: r.sha256, status: r.status,
-  error: r.error, unit: r.unit, length: r.length, chunks: r.chunks, tokens: r.tokens, createdAt: r.created_at,
+  error: r.error, unit: r.unit, length: r.length, chunks: r.chunks, tokens: r.tokens, distilled: r.distilled, createdAt: r.created_at,
 });
 
-const SELECT = `SELECT m.*, COUNT(c.id) AS chunks, COALESCE(SUM(c.tokens), 0) AS tokens
+const SELECT = `SELECT m.*, COUNT(c.id) AS chunks, COALESCE(SUM(c.tokens), 0) AS tokens,
+  COUNT(CASE WHEN c.audit_done = 1 THEN 1 END) AS distilled
   FROM materials m LEFT JOIN chunks c ON c.material_id = m.id`;
 
 const MIME: Record<MaterialKind, string> = {

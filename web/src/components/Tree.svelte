@@ -24,7 +24,7 @@
 
 <script lang="ts">
   import { MAX_FOLDER_DEPTH } from "../../../server/constants.ts";
-  import { library, nav } from "../lib/state.svelte.ts";
+  import { go, library, nav } from "../lib/state.svelte.ts";
   import Icon from "./Icon.svelte";
   import Menu from "./Menu.svelte";
   import Tree from "./Tree.svelte";
@@ -52,12 +52,15 @@
 <ul class="tree" class:tree--root={depth === 0} role={depth === 0 ? "tree" : "group"}>
   {#each folders as folder (folder.id)}
     {@const open = openFolders.has(folder.id)}
+    {@const here = nav.route.name === "folder" && nav.route.id === folder.id}
     <li class="tree__folder" role="treeitem" aria-expanded={open} aria-selected="false">
       <div class="tree__item" class:is-drop={dropTarget === folder.id} style:--depth={depth}
         draggable="true" ondragstart={(e) => drag(e, "folder", folder.id)}
         ondragover={(e) => { if (e.dataTransfer?.types.includes(DRAG_TYPE)) { e.preventDefault(); dropTarget = folder.id; } }}
         ondragleave={() => (dropTarget = null)} ondrop={(e) => drop(e, folder.id)} role="presentation">
-        <button type="button" class="tree__row" onclick={() => toggleFolder(folder.id)}>
+        <!-- The first click opens the folder's workspace; clicking it again while it's open collapses it. -->
+        <button type="button" class="tree__row" class:is-active={here} aria-current={here ? "page" : undefined}
+          onclick={() => { if (here) toggleFolder(folder.id); else { toggleFolder(folder.id, true); go(`#/folder/${folder.id}`); } }}>
           <span class="tree__chev" class:is-open={open}><Icon name="chevron-right" size="sm" /></span>
           <Icon name={open ? "folder-open" : "folder"} size="sm" />
           <span class="tree__label">{folder.name}</span>
@@ -106,7 +109,7 @@
   .tree__chev { display: inline-flex; width: 16px; color: var(--text-faint); transition: transform var(--dur-base) var(--spring-snappy); }
   .tree__chev.is-open { transform: rotate(90deg); }
   .tree__chat :global(.icon) { color: var(--text-faint); }
-  .tree__chat .is-active :global(.icon) { color: var(--accent); }
+  .tree__chat .is-active :global(.icon), .tree__item .is-active :global(.icon) { color: var(--accent); }
   .tree__actions { position: absolute; right: 2px; top: 0; bottom: 0; display: flex; align-items: center; opacity: 0; transition: opacity var(--dur-fast) linear; }
   .tree__item:hover .tree__actions, .tree__item:focus-within .tree__actions { opacity: 1; }
   .tree__actions :global(.btn) { width: 26px; --h: 26px; }

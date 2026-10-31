@@ -80,3 +80,5 @@ md.renderer.rules.link_open = (tokens, i, options, env, self) => {
 };
 
 export const renderMarkdown = (source: string) => md.render(source);
+// For one-line fields such as ledger statements: inline Markdown and maths, no block elements.
+export const renderInline = (source: string) => md.renderInline(source);

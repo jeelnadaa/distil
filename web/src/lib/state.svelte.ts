@@ -1,11 +1,13 @@
 // App-wide state: route, library tree, providers and models, settings and toasts.
 import { api, ApiError, type Chat, type Folder, type ModelInfo, type Provider, type SettingsView } from "./api.ts";
 
-export type Route = { name: "home" } | { name: "chat"; id: string } | { name: "settings"; section?: string };
+export type FolderTab = "materials" | "ledger";
+export type Route = { name: "home" } | { name: "chat"; id: string } | { name: "folder"; id: string; tab: FolderTab } | { name: "settings"; section?: string };
 
 const parseHash = (): Route => {
-  const [, name, id] = location.hash.split("/");
+  const [, name, id, sub] = location.hash.split("/");
   if (name === "chat" && id) return { name: "chat", id };
+  if (name === "folder" && id) return { name: "folder", id, tab: sub === "ledger" ? "ledger" : "materials" };
   if (name === "settings") return { name: "settings", section: id };
   return { name: "home" };
 };

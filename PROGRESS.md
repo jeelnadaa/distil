@@ -8,7 +8,7 @@ Living status log. Update in the same commit as every change.
 
 ## Next up
 
-1. Phase 2 workspace UI: folder view with Materials and Ledger tabs, upload drop zone, cost estimate before extraction, activity dock, ledger table with filters and coverage, material viewer.
+1. Phase 2 workspace UI: built (folder route `#/folder/:id/:tab`, Materials tab with drop zone, Distil cost pre-flight dialog, activity panel with the mini still, Ledger table with filters, marks, add/edit) and type-checked, but NOT yet verified in the browser. Verify next, then the material viewer.
 2. Phase 2 later inputs: images (vision), web articles, YouTube (captions, then Gemini fallback, then paste), re-import diff.
 3. Phase 2 exit test on an open textbook (owner chose this; ask before downloading one).
 4. Owner smoke test with a real key (Settings › Providers); only a local fake endpoint has been used so far.

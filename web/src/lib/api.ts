@@ -2,13 +2,19 @@
 import type { Meter, TurnEvent } from "../../../server/chat.ts";
 import type { Chat, Folder } from "../../../server/library.ts";
 import type { FontInfo } from "../../../server/fonts.ts";
+import type { Job } from "../../../server/jobs.ts";
+import type { estimateExtraction, Strategy } from "../../../server/ledger/extract.ts";
+import type { Item, ItemMark, ItemType } from "../../../server/ledger/store.ts";
+import type { Material } from "../../../server/materials/store.ts";
 import type { Message } from "../../../server/messages.ts";
 import type { ProviderSpec } from "../../../server/providers/catalog.ts";
 import type { ModelInfo } from "../../../server/providers/types.ts";
 import type { ModelRef, Settings } from "../../../server/settings.ts";
 import type { CapStatus } from "../../../server/usage.ts";
 
-export type { CapStatus, Chat, FontInfo, Folder, Message, Meter, ModelInfo, ModelRef, Settings, TurnEvent };
+export type { CapStatus, Chat, FontInfo, Folder, Item, ItemMark, ItemType, Job, Message, Meter, ModelInfo, ModelRef, Settings, Strategy, TurnEvent };
+export type FolderMaterial = Material & { inherited: boolean };
+export type Estimate = ReturnType<typeof estimateExtraction> & { materials: number };
 export type Provider = ProviderSpec & { configured: boolean; keyPreview: string | null };
 export type SettingsView = Settings & { dataDir: string };
 
@@ -25,14 +31,15 @@ export class ApiError extends Error {
   }
 }
 
-async function call(method: string, path: string, body?: unknown, signal?: AbortSignal): Promise<Response> {
+async function call(method: string, path: string, body?: unknown, signal?: AbortSignal, file?: File): Promise<Response> {
   let res: Response;
   try {
     res = await fetch(`/api${path}`, {
       method,
       signal,
-      headers: body === undefined ? undefined : { "content-type": "application/json" },
-      body: body === undefined ? undefined : JSON.stringify(body),
+      headers: file ? { "content-type": "application/octet-stream", "x-file-name": encodeURIComponent(file.name) }
+        : body === undefined ? undefined : { "content-type": "application/json" },
+      body: file ?? (body === undefined ? undefined : JSON.stringify(body)),
     });
   } catch (err) {
     if (signal?.aborted) throw err;
@@ -75,6 +82,21 @@ export const api = {
   fontInfo: () => json<FontInfo | null>("GET", "/fonts/text/info"),
   uploadFont: (name: string, data: string) => json<FontInfo>("PUT", "/fonts/text", { name, data }),
   removeFont: () => done("DELETE", "/fonts/text"),
+
+  materials: (folderId: string) => json<FolderMaterial[]>("GET", `/folders/${folderId}/materials`),
+  uploadMaterial: async (folderId: string, file: File): Promise<FolderMaterial> =>
+    (await call("POST", `/folders/${folderId}/materials`, undefined, undefined, file)).json(),
+  deleteMaterial: (id: string) => done("DELETE", `/materials/${id}`),
+  estimate: (folderId: string, strategy: Strategy, reaudit = false) =>
+    json<Estimate>("GET", `/folders/${folderId}/estimate?strategy=${strategy}${reaudit ? "&reaudit=1" : ""}`),
+  extract: (folderId: string, strategy: Strategy) => json<Job[]>("POST", `/folders/${folderId}/extract`, { strategy }),
+  reaudit: (folderId: string, strategy: Strategy) => json<Job[]>("POST", `/folders/${folderId}/reaudit`, { strategy }),
+  items: (folderId: string) => json<Item[]>("GET", `/folders/${folderId}/items`),
+  addItem: (folderId: string, item: { type: ItemType; title: string; statement: string }) => json<Item>("POST", `/folders/${folderId}/items`, item),
+  updateItem: (id: string, patch: { title?: string; statement?: string; type?: ItemType; mark?: ItemMark | null }) => json<Item>("PATCH", `/items/${id}`, patch),
+  deleteItem: (id: string) => done("DELETE", `/items/${id}`),
+  jobs: () => json<Job[]>("GET", "/jobs"),
+  abortJob: (id: string) => json<Job>("POST", `/jobs/${id}/abort`),
 
   usage: () => json<{ today: number; month: number; cap: CapStatus }>("GET", "/usage"),
 
