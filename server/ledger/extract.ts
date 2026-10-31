@@ -155,6 +155,11 @@ export function registerExtraction(jobs: Jobs, deps: LlmDeps & { materials: Mate
 
       // 2. Recall audit: re-read each chunk against what was found, until nothing is missing (F-302).
       await pool(chunks.filter((c) => !c.audited), PARALLEL_CALLS, signal, async (chunk) => {
+        // Rounds already used up (a run stopped between its last round and marking the chunk) count as done.
+        if (chunk.auditRounds >= MAX_AUDIT_ROUNDS) {
+          materials.markAudited(chunk.id, true);
+          return step();
+        }
         const { images, pages } = await imagesFor(chunk);
         for (let round = chunk.auditRounds; round < MAX_AUDIT_ROUNDS && !signal.aborted; round++) {
           const found = ledger.summariesForChunk(chunk.id);

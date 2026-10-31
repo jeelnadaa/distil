@@ -151,6 +151,17 @@ describe("extraction", () => {
     expect(t.ledger.list(t.folder.id)).toHaveLength(1);
   });
 
+  it("finishes a chunk whose audit rounds were used up before it was marked done", async () => {
+    const t = setup({ extract: () => json({ items: [item("Nyquist rate", "x", "")] }) });
+    const material = await t.addMaterial("notes.md", NOTES);
+    await t.extract(material.id);
+    t.db.prepare("UPDATE chunks SET audit_rounds = 3, audit_done = 0 WHERE material_id = ?").run(material.id);
+    const before = t.calls.length;
+    expect((await t.extract(material.id)).status).toBe("done");
+    expect(t.calls.slice(before).filter((c) => c.role === "audit")).toEqual([]);
+    expect(t.materials.get(material.id).distilled).toBe(1);
+  });
+
   it("merges duplicates across materials, keeping every source", async () => {
     const t = setup({
       extract: (_req, prompt) => json({ items: [item(prompt.includes("slides.md") ? "The Nyquist rate" : "Nyquist rate", "Twice the highest frequency.", "Nyquist rate")] }),
