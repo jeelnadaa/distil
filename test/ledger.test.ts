@@ -119,6 +119,14 @@ describe("extraction", () => {
     expect(new Set(t.calls.map((c) => c.model))).toEqual(new Set(["strong"]));
   });
 
+  it("uses the cheap model for everything in economy mode, audits included", async () => {
+    const t = setup({ extract: () => json({ items: [item("Nyquist rate", "Twice the highest frequency.", "Nyquist rate")] }) });
+    const material = await t.addMaterial("notes.md", NOTES);
+    await t.extract(material.id, "economy");
+    expect(t.calls.some((c) => c.role === "audit")).toBe(true);
+    expect(new Set(t.calls.map((c) => c.model))).toEqual(new Set(["cheap"]));
+  });
+
   it("retries once with the validation error, then fails the job clearly", async () => {
     let tries = 0;
     const t = setup({ extract: () => (tries++ === 0 ? "not json" : json({ items: [item("Nyquist rate", "x", "")] })) });
@@ -184,6 +192,7 @@ describe("extraction", () => {
     expect(balanced.cheap.input).toBeGreaterThan(0);
     expect(balanced.strong.input).toBeGreaterThan(0);
     expect(estimateExtraction(chunks, "thorough").cheap.input).toBe(0);
+    expect(estimateExtraction(chunks, "economy").strong.input).toBe(0);
     await t.extract(material.id);
     expect(t.materials.chunks(material.id).filter((c) => !c.extracted || !c.audited)).toHaveLength(0);
   });

@@ -63,14 +63,17 @@
     <Segmented label="Strategy" value={strategy} onchange={(v) => (strategy = v)} options={[
       { value: "balanced", label: "Balanced" },
       { value: "thorough", label: "Thorough" },
+      { value: "economy", label: "Economy" },
     ]} />
     <p class="body-sm muted">
       {#if reaudit}
-        The strong model re-reads every part against what's already in the ledger and adds what was missed, then merges duplicates.
+        <strong>{strategy === "economy" ? (cheap ?? strong).id : strong.id}</strong> re-reads every part against what's already in the ledger and adds what was missed, then merges duplicates.
       {:else if strategy === "balanced"}
         <strong>{cheap?.id}</strong> lists every learnable item, then <strong>{strong.id}</strong> audits each part for anything missed and merges duplicates.
-      {:else}
+      {:else if strategy === "thorough"}
         <strong>{strong.id}</strong> does every step. Slower and costlier; use it for dense or high-stakes material.
+      {:else}
+        <strong>{(cheap ?? strong).id}</strong> does every step, audits included. Cheapest, and it fits small free-tier quotas; it may miss a little more than Balanced.
       {/if}
     </p>
     {#if material && last > 1}

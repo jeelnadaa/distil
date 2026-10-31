@@ -10,10 +10,11 @@ import type { ItemDraft, Ledger } from "./store.ts";
 
 // Exhaustive extraction (F-207, F-302, F-303). Default strategy (owner decision): the cheap model
 // extracts every chunk, the strong model audits each chunk for misses and judges duplicates.
-// "thorough" uses the strong model for everything. Pages whose content is drawn rather than written
+// "thorough" uses the strong model for everything; "economy" the cheap one, for when the strong
+// model's quota is too small (Gemini's free tier allows a few dozen strong calls a day). Pages whose content is drawn rather than written
 // (formulas, figures, scans) go to the model as images alongside their text.
 
-export type Strategy = "balanced" | "thorough";
+export type Strategy = "balanced" | "thorough" | "economy";
 // from/to: only the chunks overlapping this location range ("chapters 1 and 2 are in the exam").
 export type ExtractParams = { strategy?: Strategy; from?: number; to?: number };
 export const MAX_AUDIT_ROUNDS = 2;
@@ -36,7 +37,9 @@ const Audited = z.object({ missed: z.array(Draft) });
 const Merged = z.object({ merges: z.array(z.object({ keep: z.string(), drop: z.array(z.string()), title: z.string(), statement: z.string() })) });
 
 const slots = (strategy: Strategy): Record<"extract" | "audit" | "merge", Slot> =>
-  strategy === "thorough" ? { extract: "strong", audit: "strong", merge: "strong" } : { extract: "cheap", audit: "strong", merge: "strong" };
+  strategy === "thorough" ? { extract: "strong", audit: "strong", merge: "strong" }
+    : strategy === "economy" ? { extract: "cheap", audit: "cheap", merge: "cheap" }
+    : { extract: "cheap", audit: "strong", merge: "strong" };
 
 // The visual pages a chunk covers; their images go with its text.
 export const visualPages = (material: Pick<Material, "visual">, chunk: Pick<StoredChunk, "from" | "to">) =>

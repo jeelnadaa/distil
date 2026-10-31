@@ -19,7 +19,7 @@ export type AppDeps = ChatDeps & { dataDir: string; allowedHosts: string[]; font
 
 const NullableId = z.string().min(1).nullable();
 const ModelRefBody = z.object({ provider: z.string().min(1), id: z.string().min(1) });
-const StrategyBody = z.object({ strategy: z.enum(["balanced", "thorough"]).default("balanced") });
+const StrategyBody = z.object({ strategy: z.enum(["balanced", "thorough", "economy"]).default("balanced") });
 const Location = z.coerce.number().int().positive().optional();
 const Scope = StrategyBody.extend({ materialId: z.string().min(1).optional(), from: Location, to: Location });
 const ItemType = z.enum(ITEM_TYPES);
