@@ -10,14 +10,14 @@ Living status log. Update in the same commit as every change.
 
 1. Owner reviews the clickable mock-ups in `design/` (run `bash design/scripts/fetch-fonts.sh`, then serve `design/` and open `index.html`), approves or requests changes.
 2. Owner answers the remaining `DESIGN.md` §13 questions (Ask-mode treatment, default theme).
-3. Logo: 3 SVG directions, recommendation, icon-only, monochrome and animated versions (current mark is provisional).
+3. Owner picks a logo in `design/logo.html` (Drop-d recommended); then make it the default mark and favicon.
 
 ## Phase checklist
 
 - [x] Phase 0a — Study the LearnHarness reference and draft `plan.md`
 - [ ] Phase 0b — Owner approves `plan.md`
 - [ ] Phase 0c — `DESIGN.md` written (done) and approved (pending)
-- [ ] Phase 0d — Logo directions
+- [ ] Phase 0d — Logo directions drawn (done), chosen (pending)
 - [ ] Phase 0e — Landing page and app mock-ups built (done), approved (pending)
 - [ ] Phase 1 — Foundation
 - [ ] Phase 2 — Materials & Coverage Ledger
@@ -43,6 +43,7 @@ Living status log. Update in the same commit as every change.
 - Satoshi licence forbids repo distribution: font files gitignored, fetched by `design/scripts/fetch-fonts.sh`.
 - Mock-ups approved in principle; copper liked. Added four alternative palettes (Verdigris, Oxblood, Cobalt, Citron), AA-checked, with a comparison page and a live switcher on every mock-up.
 - Palettes decided: all five ship, Copper default, picked in Settings › Appearance (mock-up updated; review switcher removed).
+- Logo: three directions (Condense, Drop-d, Converge) with colour, app-icon, mono and animated SVGs, a review page, and an in-app preview switch. Recommended Drop-d.
 
 ## Open questions
 

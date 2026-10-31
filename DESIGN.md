@@ -41,6 +41,21 @@ The motif shows up as **behaviour and geometry**, never as pictures of flasks or
 | **Concentration gradient** | Raw on one side, refined on the other | The ingestion screen (raw chunks on the left, ledger items on the right), the landing-page hero |
 | **Fewer, denser** | Many items reduce to a few | Collapsing lists into counts, three coverage bars merging into one drop at 100 % |
 
+### 2.1 Logo (under review)
+
+The wordmark is "distil" in Instrument Serif with accent drops for the two i-dots. Three marks share
+it, all on a 32-unit grid and all ending in the accent drop. Compare them in `design/logo.html`.
+
+| Direction | Idea | Verdict |
+|---|---|---|
+| Condense (current placeholder) | Three bars narrowing to a drop | Clear, but reads as the standard UI filter icon |
+| **Drop-d** (recommended) | A lowercase d whose bowl is a drop; the essence sits in the counter | Ownable letterform, crisp at 16px, works in one colour |
+| Converge | Five lines converging into a drop | Expressive, but blurs below 24px; better as illustration |
+
+Each ships as `design/assets/logo/distil-<id>.svg` plus `-icon` (app tile), `-mono` (single colour;
+Drop-d knocks the counter out) and `-animated` (2.8 s loop, still under reduced motion). The wordmark
+must be outlined to paths before it ships as a standalone file.
+
 ---
 
 ## 3. Typography

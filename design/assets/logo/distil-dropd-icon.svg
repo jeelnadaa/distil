@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="Distil app icon (Drop-d)">
+<title>Distil app icon (Drop-d)</title>
+<rect width="32" height="32" rx="7.5" fill="#15130F"/>
+<g transform="translate(5.6 5.6) scale(.65)">
+      <rect class="mk-stem" x="20.5" y="3" width="4.5" height="25.5" rx="2.25" fill="#F5F2EB"/>
+      <path class="mk-bowl" d="M14 4C14 4 6 13.3 6 20.5A8 8 0 0 0 22 20.5C22 13.3 14 4 14 4Z" fill="#F5F2EB" fill-rule="evenodd"/>
+      <circle class="mk-core" cx="14" cy="20.5" r="3.4" fill="#E07A45"/></g>
+</svg>

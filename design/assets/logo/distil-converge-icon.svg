@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="Distil app icon (Converge)">
+<title>Distil app icon (Converge)</title>
+<rect width="32" height="32" rx="7.5" fill="#15130F"/>
+<g transform="translate(5.6 5.6) scale(.65)">
+      <g class="mk-lines" stroke="#F5F2EB" stroke-width="2.2" stroke-linecap="round" fill="none">
+        <path class="mk-line" style="--n:0" d="M4.5 4L12.6 18" pathLength="1"/><path class="mk-line" style="--n:1" d="M10.25 4L14.3 18" pathLength="1"/><path class="mk-line" style="--n:2" d="M16 4L16 18" pathLength="1"/><path class="mk-line" style="--n:3" d="M21.75 4L17.7 18" pathLength="1"/><path class="mk-line" style="--n:4" d="M27.5 4L19.4 18" pathLength="1"/>
+      </g>
+      <path class="mk-drop" d="M16 20C16 20 12.6 22.44 12.6 25.5A3.4 3.4 0 0 0 19.4 25.5C19.4 22.44 16 20 16 20Z" fill="#E07A45"/></g>
+</svg>

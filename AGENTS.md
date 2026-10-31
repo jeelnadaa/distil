@@ -42,6 +42,7 @@ Read this file fully before doing anything in this repo.
 | `AGENTS.md` | This file |
 | `CLAUDE.md` | Pointer to this file |
 | `design/` | Clickable design mock-ups (landing, app screens, dialogs) on the real tokens; open `design/index.html` |
+| `design/assets/logo/` | Logo SVGs per direction: colour, `-icon`, `-mono`, `-animated` (geometry mirrors `design/js/brand.js`) |
 | `design/scripts/fetch-fonts.sh` | Downloads Satoshi (licence forbids committing it) |
 | `.claude/launch.json` | Preview server `design` on port 4173 |
 
