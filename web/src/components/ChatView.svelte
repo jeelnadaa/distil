@@ -73,6 +73,8 @@
           assistantId = event.assistant.id;
           messages = [...messages, event.user, event.assistant];
           draft = "";
+        } else if (event.type === "model") {
+          patch((m) => ({ ...m, provider: event.provider, model: event.model }));
         } else if (event.type === "delta") {
           patch((m) => ({ ...m, content: m.content + event.text }));
         } else if (event.type === "done") {
@@ -170,6 +172,9 @@
             <Markdown source={message.content} streaming={message.status === "streaming"} />
           {:else if message.status === "streaming"}
             <span class="drop drop--pulse" aria-label="Thinking"></span>
+          {/if}
+          {#if message.model && model && message.model !== model.id && message.status !== "error"}
+            <p class="caption faint" data-tip="Not this chat's model: it was picked earlier, or the chat's model was busy and a fallback answered">Answered by {message.model}</p>
           {/if}
           {#if message.status === "error"}
             <div class="banner banner--danger"><Icon name="warning" /><span>{message.error}</span><span class="spacer"></span>

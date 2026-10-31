@@ -143,6 +143,10 @@ const MIGRATIONS = [
   -- Phase 2: what the last re-import of a material changed (F-212), as JSON.
   ALTER TABLE materials ADD COLUMN reimport TEXT;
   `,
+  `
+  -- A line about how a running job is going, such as which fallback model is answering.
+  ALTER TABLE jobs ADD COLUMN note TEXT;
+  `,
 ];
 
 export function openDb(file: string): Db {

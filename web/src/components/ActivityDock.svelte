@@ -59,6 +59,7 @@
             <div class="job__bar"><span style:width="{jobPct(job)}%"></span></div>
             <p class="mono caption faint">{jobPct(job)}% · {job.done} of {job.total} {job.total === 1 ? "step" : "steps"}</p>
           {/if}
+          {#if job.note && isActive(job)}<p class="caption muted">{job.note}</p>{/if}
           {#if job.error}<p class="caption job__error">{job.error}</p>{/if}
           {#if isActive(job) || resumable(job)}
             <div class="job__actions">

@@ -14,6 +14,7 @@ function setup(failures: ProviderError[]) {
   let calls = 0;
   const waits: number[] = [];
   const providers = {
+    describe: (ref: { id: string }) => ref.id,
     async *stream() {
       calls++;
       const failure = failures.shift();

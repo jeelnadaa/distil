@@ -51,7 +51,7 @@ describe("API", () => {
   it("never returns API keys in full", async () => {
     const res = await app().fetch(req("GET", "/providers"));
     const list = await res.json();
-    expect(list.find((p: { id: string }) => p.id === "google")).toMatchObject({ configured: false, keyPreview: null });
+    expect(list.find((p: { id: string }) => p.id === "google")).toMatchObject({ configured: false, keys: [] });
   });
 
   it("explains a turn without a model as a 400 before streaming", async () => {

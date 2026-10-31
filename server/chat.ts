@@ -3,7 +3,7 @@ import type { Chat, Library } from "./library.ts";
 import type { Message, Messages } from "./messages.ts";
 import { ASK_SYSTEM, NAMER_SYSTEM } from "./prompts.ts";
 import type { Providers } from "./providers/service.ts";
-import type { ChatMessage, Usage } from "./providers/types.ts";
+import { ProviderError, type ChatMessage, type Usage } from "./providers/types.ts";
 import type { ModelRef, SettingsStore } from "./settings.ts";
 import { type CapStatus, estimateTokens, type UsageStore } from "./usage.ts";
 
@@ -21,6 +21,7 @@ export type Meter = { input: number; output: number; context: number; contextWin
 export type TurnEvent =
   | { type: "start"; user: Message; assistant: Message }
   | { type: "delta"; text: string }
+  | { type: "model"; provider: string; model: string }
   | { type: "done"; message: Message; meter: Meter; cap: CapStatus }
   | { type: "error"; message: Message; error: string }
   | { type: "title"; title: string };
@@ -32,23 +33,32 @@ export const meterFor = (deps: ChatDeps, chat: Chat): Meter => ({
   contextWindow: chat.model ? deps.providers.contextWindow(chat.model) : null,
 });
 
+const sameRef = (a: ModelRef, b: ModelRef) => a.provider === b.provider && a.id === b.id && (a.key ?? "") === (b.key ?? "");
+
 // Validates a turn before any streaming starts, so problems surface as plain HTTP errors.
+// The chat's model comes first, then the strong slot's chain, leaving out providers that are capped.
 export function prepareTurn(deps: ChatDeps, chatId: string, text: string, model?: ModelRef) {
   const chat = deps.library.getChat(chatId);
   const content = text.trim();
   if (!content) throw new AppError(400, "empty_message", "Type a message first.");
-  const ref = model ?? chat.model ?? deps.settings.get().models.strong;
+  const { models, fallbacks, caps } = deps.settings.get();
+  const ref = model ?? chat.model ?? models.strong;
   if (!ref) throw new AppError(400, "no_model", "Pick a model in Settings first.");
-  const cap = deps.usage.capStatus(deps.settings.get().caps, ref.provider);
-  if (cap.state === "blocked") {
-    throw new AppError(429, "cap_reached", "You've reached a token cap. Raise it in Settings or wait for it to reset.", cap);
+  const all = [ref, ...(models.strong ? [models.strong, ...fallbacks.strong] : [])];
+  const chain = all.filter((r, i) => all.findIndex((o) => sameRef(o, r)) === i)
+    .filter((r) => deps.usage.capStatus(caps, r.provider).state !== "blocked");
+  if (!chain.length) {
+    throw new AppError(429, "cap_reached", "You've reached a token cap. Raise it in Settings or wait for it to reset.", deps.usage.capStatus(caps, ref.provider));
   }
-  return { chat, content, ref };
+  return { chat, content, ref, chain };
 }
+
+// Rate limits, outages and quota errors hand the turn to the next model, but only before any text arrived.
+const fallsBack = (err: unknown) => err instanceof ProviderError && (err.status === 429 || err.status >= 500 || err.status === 0);
 
 export async function* streamTurn(
   deps: ChatDeps,
-  { chat, content, ref }: ReturnType<typeof prepareTurn>,
+  { chat, content, ref, chain }: ReturnType<typeof prepareTurn>,
   signal: AbortSignal,
 ): AsyncGenerator<TurnEvent> {
   const { library, messages, providers, usage } = deps;
@@ -58,15 +68,16 @@ export async function* streamTurn(
   history.push({ role: "user", content });
 
   const user = messages.add({ chatId: chat.id, role: "user", content, status: "done" });
-  const assistant = messages.add({ chatId: chat.id, role: "assistant", content: "", status: "streaming", provider: ref.provider, model: ref.id });
-  const current = ref.provider === chat.model?.provider && ref.id === chat.model?.id ? chat : library.updateChat(chat.id, { model: ref });
+  const assistant = messages.add({ chatId: chat.id, role: "assistant", content: "", status: "streaming", provider: chain[0]!.provider, model: chain[0]!.id });
+  const current = chat.model && sameRef(chat.model, ref) ? chat : library.updateChat(chat.id, { model: ref });
   library.touchChat(chat.id);
   yield { type: "start", user, assistant };
 
   let reply = "";
   let reported: Usage | null = null;
+  let answering = chain[0]!;
   const record = () => usage.record({
-    provider: ref.provider, model: ref.id, role: "chat", chatId: chat.id, folderId: chat.folderId,
+    provider: answering.provider, model: answering.id, role: "chat", chatId: chat.id, folderId: chat.folderId,
     usage: reported ?? {
       input: estimateTokens(ASK_SYSTEM + history.map((m) => m.content).join("")),
       output: estimateTokens(reply), cached: 0, reasoning: 0,
@@ -75,12 +86,25 @@ export async function* streamTurn(
   });
 
   try {
-    for await (const event of providers.stream(ref, { system: ASK_SYSTEM, messages: history, signal })) {
-      if (event.type === "text") {
-        reply += event.text;
-        yield { type: "delta", text: event.text };
-      } else {
-        reported = event.usage;
+    for (let i = 0; ; i++) {
+      answering = chain[i]!;
+      if (i > 0) {
+        messages.setModel(assistant.id, answering.provider, answering.id);
+        yield { type: "model", provider: answering.provider, model: answering.id };
+      }
+      try {
+        for await (const event of providers.stream(answering, { system: ASK_SYSTEM, messages: history, signal })) {
+          if (event.type === "text") {
+            reply += event.text;
+            yield { type: "delta", text: event.text };
+          } else {
+            reported = event.usage;
+          }
+        }
+        break;
+      } catch (err) {
+        if (reply || signal.aborted || !fallsBack(err) || i === chain.length - 1) throw err;
+        deps.log?.(`${providers.describe(answering)} failed (${err instanceof Error ? err.message : err}); trying ${providers.describe(chain[i + 1]!)}`);
       }
     }
   } catch (err) {
@@ -93,7 +117,7 @@ export async function* streamTurn(
     const error = err instanceof Error ? err.message : String(err);
     messages.finish(assistant.id, reply, "error", error);
     if (reply) record();
-    yield { type: "error", message: { ...assistant, content: reply, status: "error", error }, error };
+    yield { type: "error", message: { ...assistant, provider: answering.provider, model: answering.id, content: reply, status: "error", error }, error };
     return;
   }
 
@@ -101,13 +125,13 @@ export async function* streamTurn(
   record();
   yield {
     type: "done",
-    message: { ...assistant, content: reply, status: "done" },
+    message: { ...assistant, provider: answering.provider, model: answering.id, content: reply, status: "done" },
     meter: meterFor(deps, current),
-    cap: usage.capStatus(deps.settings.get().caps, ref.provider),
+    cap: usage.capStatus(deps.settings.get().caps, answering.provider),
   };
 
   if (chat.titleSource === "default") {
-    const title = await nameChat(deps, chat, content, reply, ref).catch((err) => {
+    const title = await nameChat(deps, chat, content, reply, answering).catch((err) => {
       deps.log?.(`Chat naming failed: ${err instanceof Error ? err.message : err}`);
       return null;
     });

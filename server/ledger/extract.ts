@@ -98,7 +98,7 @@ export function estimateExtraction(chunks: (Pick<StoredChunk, "tokens"> & { imag
 export function registerExtraction(jobs: Jobs, deps: LlmDeps & { materials: Materials; ledger: Ledger }) {
   const { materials, ledger } = deps;
 
-  async function mergeFolder(folderId: string, slot: Slot, signal: AbortSignal) {
+  async function mergeFolder(llm: LlmDeps, folderId: string, slot: Slot, signal: AbortSignal) {
     const groups = ledger.mergeCandidates(folderId);
     for (let i = 0; i < groups.length && !signal.aborted; i += MERGE_GROUPS_PER_CALL) {
       const batch = groups.slice(i, i + MERGE_GROUPS_PER_CALL);
@@ -109,7 +109,7 @@ export function registerExtraction(jobs: Jobs, deps: LlmDeps & { materials: Mate
         ids.set(short, item.id);
         return `${short} [${item.type}] ${item.title}: ${item.statement}`;
       }).join("\n")}`).join("\n\n");
-      const { merges } = await completeJson(deps, Merged, { slot, role: "merger", folderId, system: MERGE_SYSTEM, prompt: text, signal });
+      const { merges } = await completeJson(llm, Merged, { slot, role: "merger", folderId, system: MERGE_SYSTEM, prompt: text, signal });
       for (const m of merges) {
         const keep = ids.get(m.keep);
         const drop = m.drop.map((d) => ids.get(d)).filter((d): d is string => !!d);
@@ -119,10 +119,12 @@ export function registerExtraction(jobs: Jobs, deps: LlmDeps & { materials: Mate
     if (!signal.aborted) ledger.markMergeChecked(folderId);
   }
 
-  jobs.register("extract", async (job, { signal, progress }) => {
+  jobs.register("extract", async (job, { signal, progress, note }) => {
     const id = job.materialId!;
     const params = job.params as ExtractParams;
     const slot = slots(params.strategy ?? "balanced");
+    // Say so in the activity dock while a fallback model is doing the work.
+    const llm: LlmDeps = { ...deps, onAnswer: (ref, fellBack) => note(fellBack ? `Answered by ${deps.providers.describe(ref)}, a fallback` : null) };
     const material = materials.get(id);
     const chunks = materials.chunks(id).filter((c) => inRange(c, params));
     const total = chunks.length * 2 + 1;
@@ -143,7 +145,7 @@ export function registerExtraction(jobs: Jobs, deps: LlmDeps & { materials: Mate
       // 1. Extract every chunk that hasn't been mined yet.
       await pool(chunks.filter((c) => !c.extracted), PARALLEL_CALLS, signal, async (chunk) => {
         const { images, pages } = await imagesFor(chunk);
-        const { items } = await completeJson(deps, Extracted, {
+        const { items } = await completeJson(llm, Extracted, {
           slot: slot.extract, role: "extractor", folderId: material.folderId, system: EXTRACT_SYSTEM,
           prompt: chunkPrompt(material.name, material.unit, chunk, pages), maxTokens: 8192, signal, images,
         });
@@ -163,7 +165,7 @@ export function registerExtraction(jobs: Jobs, deps: LlmDeps & { materials: Mate
         const { images, pages } = await imagesFor(chunk);
         for (let round = chunk.auditRounds; round < MAX_AUDIT_ROUNDS && !signal.aborted; round++) {
           const found = ledger.summariesForChunk(chunk.id);
-          const { missed } = await completeJson(deps, Audited, {
+          const { missed } = await completeJson(llm, Audited, {
             slot: slot.audit, role: "auditor", folderId: material.folderId, system: AUDIT_SYSTEM,
             prompt: `${chunkPrompt(material.name, material.unit, chunk, pages)}\n\nItems already extracted:\n${found.join("\n") || "(none)"}`,
             maxTokens: 4096, signal, images,
@@ -178,7 +180,7 @@ export function registerExtraction(jobs: Jobs, deps: LlmDeps & { materials: Mate
       if (signal.aborted) return;
 
       // 3. Merge duplicates across chunks and materials in this folder (F-303).
-      await mergeFolder(material.folderId, slot.merge, signal);
+      await mergeFolder(llm, material.folderId, slot.merge, signal);
       progress(total, total);
     } finally {
       await renderer?.close();

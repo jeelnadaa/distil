@@ -1,13 +1,16 @@
 import { z } from "zod";
 import type { Db } from "./db.ts";
 
-const ModelRef = z.object({ provider: z.string().min(1), id: z.string().min(1) });
+// key: which of the provider's saved keys to use; its default key when absent.
+const ModelRef = z.object({ provider: z.string().min(1), id: z.string().min(1), key: z.string().min(1).optional() });
 const Limit = z.number().int().positive().nullable();
 const CapPair = z.object({ daily: Limit, monthly: Limit });
 
 export const SettingsSchema = z.object({
   // Two slots cover every job (F-401): strong for teaching and chat, cheap for naming and small tasks.
   models: z.object({ strong: ModelRef.nullable(), cheap: ModelRef.nullable() }),
+  // Each slot's fallback chain: tried in order when the model before it is rate-limited, out of quota or capped.
+  fallbacks: z.object({ strong: z.array(ModelRef).max(8), cheap: z.array(ModelRef).max(8) }),
   // Token caps (F-1104): warn at `warnAt`, hard stop at 100 %.
   caps: z.object({
     warnAt: z.number().min(0.1).max(0.99),
@@ -26,6 +29,7 @@ export type ModelRef = z.infer<typeof ModelRef>;
 
 export const DEFAULT_SETTINGS: Settings = {
   models: { strong: null, cheap: null },
+  fallbacks: { strong: [], cheap: [] },
   caps: { warnAt: 0.8, global: { daily: null, monthly: null }, perProvider: {} },
   customEndpoints: [],
 };

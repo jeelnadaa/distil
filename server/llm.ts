@@ -6,11 +6,17 @@ import type { ModelRef, SettingsStore } from "./settings.ts";
 import { estimateTokens, type UsageStore } from "./usage.ts";
 
 // One-shot model calls for background agents: each call checks caps first (F-1106), records its
-// usage under the agent's role, retries rate limits and outages with backoff, and structured replies
-// are validated, with one retry that carries the validation error back to the model (F-405).
+// usage under the agent's role, and walks the slot's fallback chain: a model that is rate-limited,
+// down, out of quota or capped hands the call to the next one, and only when every model in the chain
+// is busy does it wait and go round again. Structured replies are validated, with one retry that
+// carries the validation error back to the model (F-405).
 
-// wait is injectable so tests don't sleep.
-export type LlmDeps = { providers: Providers; settings: SettingsStore; usage: UsageStore; wait?: (ms: number, signal?: AbortSignal) => Promise<void> };
+// wait is injectable so tests don't sleep. onAnswer hears which model answered each call.
+export type LlmDeps = {
+  providers: Providers; settings: SettingsStore; usage: UsageStore;
+  wait?: (ms: number, signal?: AbortSignal) => Promise<void>;
+  onAnswer?: (ref: ModelRef, fellBack: boolean) => void;
+};
 
 const ATTEMPTS = 5;
 const BASE_DELAY_MS = 2000;
@@ -38,41 +44,65 @@ export type CallOptions = {
   maxTokens?: number; signal?: AbortSignal; images?: ImagePart[]; videos?: string[];
 };
 
-export function modelFor(settings: SettingsStore, slot: Slot): ModelRef {
-  const { strong, cheap } = settings.get().models;
-  const ref = slot === "cheap" ? (cheap ?? strong) : strong;
-  if (!ref) throw new AppError(400, "no_model", "Pick a model in Settings › Models first.");
-  return ref;
+const sameRef = (a: ModelRef, b: ModelRef) => a.provider === b.provider && a.id === b.id && (a.key ?? "") === (b.key ?? "");
+
+// The slot's model followed by its fallbacks, without repeats. The cheap slot uses the strong chain while it's unset.
+export function chainFor(settings: SettingsStore, slot: Slot): ModelRef[] {
+  const { models, fallbacks } = settings.get();
+  const chain = slot === "cheap" && models.cheap ? [models.cheap, ...fallbacks.cheap] : models.strong ? [models.strong, ...fallbacks.strong] : [];
+  if (!chain.length) throw new AppError(400, "no_model", "Pick a model in Settings › Models first.");
+  return chain.filter((ref, i) => chain.findIndex((other) => sameRef(other, ref)) === i);
 }
 
-// The slot to watch a video with: the cheap one when it is Gemini, else the strong one when that is.
+export const modelFor = (settings: SettingsStore, slot: Slot): ModelRef => chainFor(settings, slot)[0]!;
+
+// The slot to watch a video with: the cheap chain when it has a Gemini model, else the strong one when it does.
 export function videoSlot(settings: SettingsStore): Slot | null {
-  const { strong, cheap } = settings.get().models;
-  if ((cheap ?? strong)?.provider === "google") return "cheap";
-  return strong?.provider === "google" ? "strong" : null;
+  const hasGemini = (slot: Slot) => { try { return chainFor(settings, slot).some((r) => r.provider === "google"); } catch { return false; } };
+  return hasGemini("cheap") ? "cheap" : hasGemini("strong") ? "strong" : null;
 }
 
 export async function complete(deps: LlmDeps, o: CallOptions, history: ChatMessage[] = []): Promise<string> {
   const wait = deps.wait ?? sleep;
+  const all = chainFor(deps.settings, o.slot);
+  const chain = o.videos?.length ? all.filter((r) => r.provider === "google") : all;
+  if (!chain.length) throw new AppError(400, "needs_gemini", "Only Gemini models can watch videos. Pick a Gemini model in Settings › Models, or paste the transcript.");
+  // Models out of quota for hours, or capped, sit out the rest of this call.
+  const gone = new Set<ModelRef>();
+  let last: unknown;
+  let outOfQuota = false;
   for (let attempt = 1; ; attempt++) {
-    try {
-      return await completeOnce(deps, o, history);
-    } catch (err) {
-      if (!retryable(err) || attempt >= ATTEMPTS || o.signal?.aborted) throw err;
-      const asked = retryDelay((err as Error).message);
-      if (asked !== null && asked > MAX_WAIT_MS) {
-        throw new AppError(429, "quota_exhausted", `${modelFor(deps.settings, o.slot).id} is out of quota for now. Distil stopped here and keeps what it found; resume once the quota resets, or switch to another model in Settings.`);
+    let soonest: number | null = null;
+    for (const ref of chain) {
+      if (gone.has(ref)) continue;
+      try {
+        const text = await completeOnce(deps, ref, o, history);
+        deps.onAnswer?.(ref, ref !== chain[0]);
+        return text;
+      } catch (err) {
+        if (o.signal?.aborted) throw err;
+        last = err;
+        if (err instanceof AppError && err.code === "cap_reached") { gone.add(ref); continue; }
+        if (!retryable(err)) throw err;
+        const asked = retryDelay((err as Error).message);
+        if (asked !== null && asked > MAX_WAIT_MS) { gone.add(ref); outOfQuota = true; continue; }
+        const delay = asked ?? BASE_DELAY_MS * 2 ** (attempt - 1) * (0.75 + Math.random() / 2);
+        soonest = Math.min(soonest ?? delay, delay);
       }
-      await wait(asked ?? BASE_DELAY_MS * 2 ** (attempt - 1) * (0.75 + Math.random() / 2), o.signal);
     }
+    if (soonest === null) {
+      if (!outOfQuota) throw last;
+      const what = chain.length === 1 ? `${deps.providers.describe(chain[0]!)} is` : "Every model in this slot's fallback chain is";
+      throw new AppError(429, "quota_exhausted", `${what} out of quota for now. Distil stopped here and keeps what it found; resume once the quota resets, or add a fallback model in Settings › Models.`);
+    }
+    if (attempt >= ATTEMPTS) throw last;
+    await wait(soonest, o.signal);
   }
 }
 
-async function completeOnce(deps: LlmDeps, o: CallOptions, history: ChatMessage[]): Promise<string> {
-  const ref = modelFor(deps.settings, o.slot);
+async function completeOnce(deps: LlmDeps, ref: ModelRef, o: CallOptions, history: ChatMessage[]): Promise<string> {
   const cap = deps.usage.capStatus(deps.settings.get().caps, ref.provider);
   if (cap.state === "blocked") throw new AppError(429, "cap_reached", "A token cap was reached, so Distil paused here. Raise the cap or wait for it to reset, then resume.", cap);
-  if (o.videos?.length && ref.provider !== "google") throw new AppError(400, "needs_gemini", "Only Gemini models can watch videos. Pick a Gemini model in Settings › Models, or paste the transcript.");
   const messages: ChatMessage[] = [...history, { role: "user", content: o.prompt, images: o.images, videos: o.videos }];
   let text = "";
   let reported: Usage | null = null;

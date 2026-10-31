@@ -18,7 +18,8 @@ export type { Material, StoredChunk };
 export type Estimate = ReturnType<typeof estimateExtraction> & { materials: number };
 // What a Distil run covers: a whole folder, or one material, optionally only a location range of it.
 export type DistilScope = { strategy: Strategy; materialId?: string; from?: number; to?: number };
-export type Provider = ProviderSpec & { configured: boolean; keyPreview: string | null };
+export type ProviderKey = { id: string; label: string; preview: string };
+export type Provider = ProviderSpec & { configured: boolean; keys: ProviderKey[] };
 export type SettingsView = Settings & { dataDir: string };
 
 export class ApiError extends Error {
@@ -77,8 +78,9 @@ export const api = {
 
   providers: () => json<Provider[]>("GET", "/providers"),
   models: (provider: string, refresh = false) => json<ModelInfo[]>("GET", `/providers/${provider}/models${refresh ? "?refresh=1" : ""}`),
-  setKey: (provider: string, key: string) => json<{ models: number }>("PUT", `/providers/${provider}/key`, { key }),
-  removeKey: (provider: string) => done("DELETE", `/providers/${provider}/key`),
+  addKey: (provider: string, key: string, label?: string) => json<{ models: number; key: ProviderKey }>("POST", `/providers/${provider}/keys`, { key, label }),
+  // Without keyId, every key of the provider.
+  removeKey: (provider: string, keyId?: string) => done("DELETE", `/providers/${provider}/keys${keyId ? `/${keyId}` : ""}`),
 
   settings: () => json<SettingsView>("GET", "/settings"),
   updateSettings: (patch: Partial<Settings>) => json<SettingsView>("PATCH", "/settings", patch),

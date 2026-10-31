@@ -8,19 +8,19 @@ import { AppError, notFound } from "./errors.ts";
 export type JobStatus = "queued" | "running" | "done" | "error" | "aborted";
 export type Job = {
   id: string; kind: string; folderId: string | null; materialId: string | null; label: string;
-  status: JobStatus; done: number; total: number; error: string | null; params: Record<string, unknown>;
+  status: JobStatus; done: number; total: number; error: string | null; note: string | null; params: Record<string, unknown>;
   createdAt: number; updatedAt: number;
 };
-export type JobContext = { signal: AbortSignal; progress: (done: number, total: number) => void };
+export type JobContext = { signal: AbortSignal; progress: (done: number, total: number) => void; note: (text: string | null) => void };
 export type JobHandler = (job: Job, ctx: JobContext) => Promise<void>;
 
 type Row = {
   id: string; kind: string; folder_id: string | null; material_id: string | null; label: string;
-  status: JobStatus; done: number; total: number; error: string | null; params: string; created_at: number; updated_at: number;
+  status: JobStatus; done: number; total: number; error: string | null; note: string | null; params: string; created_at: number; updated_at: number;
 };
 const toJob = (r: Row): Job => ({
   id: r.id, kind: r.kind, folderId: r.folder_id, materialId: r.material_id, label: r.label, status: r.status,
-  done: r.done, total: r.total, error: r.error, params: JSON.parse(r.params) as Record<string, unknown>, createdAt: r.created_at, updatedAt: r.updated_at,
+  done: r.done, total: r.total, error: r.error, note: r.note, params: JSON.parse(r.params) as Record<string, unknown>, createdAt: r.created_at, updatedAt: r.updated_at,
 });
 
 const RECENT_MS = 24 * 60 * 60 * 1000; // the activity dock shows what finished or failed in the last day
@@ -39,16 +39,21 @@ export function createJobs(db: Db, opts: { concurrency?: number; now?: () => num
     if (!row) throw notFound("Job");
     return toJob(row);
   };
-  const set = (id: string, fields: Partial<Pick<Row, "status" | "done" | "total" | "error">>) => {
+  const set = (id: string, fields: Partial<Pick<Row, "status" | "done" | "total" | "error" | "note">>) => {
     const keys = Object.keys(fields) as (keyof typeof fields)[];
     db.prepare(`UPDATE jobs SET ${keys.map((k) => `${k} = ?`).join(", ")}, updated_at = ? WHERE id = ?`)
       .run(...keys.map((k) => fields[k] ?? null), now(), id);
   };
 
   async function run(job: Job, handler: JobHandler, controller: AbortController) {
-    set(job.id, { status: "running", error: null });
+    set(job.id, { status: "running", error: null, note: null });
+    let note: string | null = null;
     try {
-      await handler(job, { signal: controller.signal, progress: (done, total) => set(job.id, { done, total }) });
+      await handler(job, {
+        signal: controller.signal,
+        progress: (done, total) => set(job.id, { done, total }),
+        note: (text) => { if (text !== note) set(job.id, { note: (note = text) }); },
+      });
       set(job.id, { status: controller.signal.aborted ? "aborted" : "done" });
     } catch (err) {
       if (controller.signal.aborted) set(job.id, { status: "aborted" });

@@ -1,7 +1,7 @@
 <script lang="ts">
   import ActivityDock from "./ActivityDock.svelte";
   import { tick } from "svelte";
-  import { api, type ModelRef, type Provider, type Settings } from "../lib/api.ts";
+  import { api, type ModelRef, type Provider, type ProviderKey, type Settings } from "../lib/api.ts";
   import { motionPref, palettePref, PALETTES, setMotion, setPalette, setTheme, themePref, type Motion, type PaletteId, type Theme } from "../lib/prefs.ts";
   import { app, attempt, loadModels, nav, refreshProviders, refreshSettings, toast } from "../lib/state.svelte.ts";
   import Dialog from "./Dialog.svelte";
@@ -43,10 +43,10 @@
   }
 
   /* ---------- Providers ---------- */
-  let keyDialog = $state({ open: false, provider: null as Provider | null, key: "", busy: false, error: "" });
+  let keyDialog = $state({ open: false, provider: null as Provider | null, key: "", label: "", busy: false, error: "" });
   let endpointDialog = $state({ open: false, name: "", baseUrl: "", key: "", busy: false, error: "" });
 
-  const openKey = (provider: Provider) => { keyDialog = { open: true, provider, key: "", busy: false, error: "" }; };
+  const openKey = (provider: Provider) => { keyDialog = { open: true, provider, key: "", label: "", busy: false, error: "" }; };
 
   async function saveKey(e: SubmitEvent) {
     e.preventDefault();
@@ -54,7 +54,7 @@
     keyDialog.busy = true;
     keyDialog.error = "";
     try {
-      const { models } = await api.setKey(keyDialog.provider.id, keyDialog.key);
+      const { models } = await api.addKey(keyDialog.provider.id, keyDialog.key, keyDialog.label.trim() || undefined);
       const name = keyDialog.provider.name;
       keyDialog.open = false;
       await refreshProviders();
@@ -67,11 +67,14 @@
     }
   }
 
-  async function removeKey(provider: Provider) {
-    if (!(await attempt(() => api.removeKey(provider.id)))) return;
+  // Model choices that used the key move to the provider's default key, or are cleared with its last key.
+  async function removeKey(provider: Provider, key: ProviderKey) {
+    if (!(await attempt(() => api.removeKey(provider.id, key.id)))) return;
     await refreshProviders();
-    delete app.models[provider.id];
-    toast(`Removed the ${provider.name} key.`);
+    const next = await attempt(() => api.settings());
+    if (next) app.settings = next;
+    if (!app.providers.find((p) => p.id === provider.id)?.configured) delete app.models[provider.id];
+    toast(`Removed ${key.label} from ${provider.name}.`);
   }
 
   async function addEndpoint(e: SubmitEvent) {
@@ -86,7 +89,7 @@
       app.settings = await api.updateSettings({
         customEndpoints: [...settings.customEndpoints, { id, name: endpointDialog.name.trim(), baseUrl: endpointDialog.baseUrl.trim() }],
       });
-      if (endpointDialog.key.trim()) await api.setKey(id, endpointDialog.key);
+      if (endpointDialog.key.trim()) await api.addKey(id, endpointDialog.key);
       endpointDialog.open = false;
       await refreshProviders();
       await loadModels(true);
@@ -100,14 +103,27 @@
 
   async function removeEndpoint(provider: Provider) {
     if (!settings) return;
-    if (provider.keyPreview) await attempt(() => api.removeKey(provider.id));
+    if (provider.keys.length) await attempt(() => api.removeKey(provider.id));
     const unset = (ref: ModelRef | null) => (ref?.provider === provider.id ? null : ref);
+    const keep = (refs: ModelRef[]) => refs.filter((r) => r.provider !== provider.id);
     await save({
       customEndpoints: settings.customEndpoints.filter((c) => c.id !== provider.id),
       models: { strong: unset(settings.models.strong), cheap: unset(settings.models.cheap) },
+      fallbacks: { strong: keep(settings.fallbacks.strong), cheap: keep(settings.fallbacks.cheap) },
     });
     await refreshProviders();
     delete app.models[provider.id];
+  }
+
+  /* ---------- Fallback chains ---------- */
+  type Slot = "strong" | "cheap";
+  let addingFallback = $state<Slot | null>(null);
+  const fallbacksOf = (slot: Slot) => $state.snapshot(settings!.fallbacks[slot]) as ModelRef[];
+  const setFallbacks = (slot: Slot, refs: ModelRef[]) => save({ fallbacks: { ...$state.snapshot(settings!.fallbacks), [slot]: refs } });
+  function moveFallback(slot: Slot, i: number) {
+    const refs = fallbacksOf(slot);
+    [refs[i - 1], refs[i]] = [refs[i]!, refs[i - 1]!];
+    void setFallbacks(slot, refs);
   }
 
   /* ---------- Limits ---------- */
@@ -167,17 +183,16 @@
                 <div class="prov__name"><strong>{p.name}</strong>
                   <span class="caption muted">{#if p.custom}{p.baseUrl}{:else if p.keyUrl}<a href={p.keyUrl} target="_blank" rel="noopener noreferrer">Get a key</a>{/if}</span></div>
                 <span class="chip" class:chip--success={p.configured}>{p.configured ? "Connected" : "Not set"}</span>
-                <span class="mono faint prov__key">{p.keyPreview ?? ""}</span>
+                <span class="prov__keys">
+                  {#each p.keys as k (k.id)}
+                    <span class="prov__key"><span class="caption">{k.label}</span><span class="mono faint caption">{k.preview}</span>
+                      <button type="button" class="btn btn--ghost btn--icon btn--sm" aria-label="Remove {k.label}" onclick={() => removeKey(p, k)}><Icon name="x" size="sm" /></button></span>
+                  {/each}
+                </span>
                 <span class="prov__actions">
-                  {#if p.custom}
-                    <button type="button" class="btn btn--ghost btn--sm" onclick={() => openKey(p)}>{p.keyPreview ? "Replace key" : "Add key"}</button>
-                    <button type="button" class="btn btn--ghost btn--sm" onclick={() => removeEndpoint(p)}>Remove</button>
-                  {:else if p.configured}
-                    <button type="button" class="btn btn--ghost btn--sm" onclick={() => openKey(p)}>Replace</button>
-                    <button type="button" class="btn btn--ghost btn--sm" onclick={() => removeKey(p)}>Remove</button>
-                  {:else}
-                    <button type="button" class="btn btn--secondary btn--sm" onclick={() => openKey(p)}>Add key</button>
-                  {/if}
+                  <button type="button" class="btn btn--sm" class:btn--secondary={!p.configured} class:btn--ghost={p.configured} onclick={() => openKey(p)}
+                    data-tip={p.keys.length ? "Save another key for this provider, to use in fallback lists" : undefined}>{p.keys.length ? "Add another key" : "Add key"}</button>
+                  {#if p.custom}<button type="button" class="btn btn--ghost btn--sm" onclick={() => removeEndpoint(p)}>Remove</button>{/if}
                 </span>
               </li>
             {/each}
@@ -188,13 +203,16 @@
         </section>
 
         <section id="models" class="sset">
-          <header><h2 class="display-md">Models</h2><p class="muted">Two slots cover every job. Each chat can also pick its own model from the composer.</p></header>
+          <header><h2 class="display-md">Models</h2><p class="muted">Two slots cover every job. Each chat can also pick its own model from the composer.
+            When a model is rate-limited, out of quota or capped, the next one in its slot's fallback list takes over, and the chat or the activity panel says which one answered.</p></header>
           {#if configured.length}
             <div class="slots">
               <div class="field"><span class="field__label">Strong <span class="faint caption">chat and teaching</span></span>
-                <ModelSelect value={settings.models.strong} label="Strong model" onchange={(ref) => save({ models: { ...settings.models, strong: ref } })} /></div>
+                <ModelSelect value={settings.models.strong} label="Strong model" onchange={(ref) => save({ models: { ...settings.models, strong: ref } })} />
+                {#if settings.models.strong}{@render chain("strong")}{/if}</div>
               <div class="field"><span class="field__label">Cheap <span class="faint caption">naming chats and small jobs</span></span>
-                <ModelSelect value={settings.models.cheap} label="Cheap model" placeholder="Same as strong" onchange={(ref) => save({ models: { ...settings.models, cheap: ref } })} /></div>
+                <ModelSelect value={settings.models.cheap} label="Cheap model" placeholder="Same as strong" onchange={(ref) => save({ models: { ...settings.models, cheap: ref } })} />
+                {#if settings.models.cheap}{@render chain("cheap")}{:else}<span class="caption faint">Uses the strong model and its fallbacks.</span>{/if}</div>
             </div>
             <div><button type="button" class="btn btn--ghost btn--sm" onclick={() => loadModels(true)}><Icon name="refresh" size="sm" />Refresh model lists</button></div>
           {:else}
@@ -257,8 +275,35 @@
   </div>
 </div>
 
+{#snippet chain(slot: Slot)}
+  <ol class="chain" aria-label="{slot === "strong" ? "Strong" : "Cheap"} fallbacks">
+    {#each settings!.fallbacks[slot] as ref, i (`${i}:${ref.provider}:${ref.id}:${ref.key ?? ""}`)}
+      <li class="chain__row">
+        <span class="mono caption faint chain__n" data-tip="Tried after the ones above">{i + 2}</span>
+        <ModelSelect value={ref} label="Fallback {i + 1}" onchange={(next) => setFallbacks(slot, fallbacksOf(slot).map((r, j) => (j === i ? next : r)))} />
+        <button type="button" class="btn btn--ghost btn--icon btn--sm" aria-label="Try earlier" disabled={i === 0} onclick={() => moveFallback(slot, i)}><Icon name="arrow-up" size="sm" /></button>
+        <button type="button" class="btn btn--ghost btn--icon btn--sm" aria-label="Remove this fallback" onclick={() => setFallbacks(slot, fallbacksOf(slot).filter((_, j) => j !== i))}><Icon name="x" size="sm" /></button>
+      </li>
+    {/each}
+    {#if addingFallback === slot}
+      <li class="chain__row chain__row--new">
+        <span class="mono caption faint chain__n">{settings!.fallbacks[slot].length + 2}</span>
+        <ModelSelect value={null} label="New fallback" placeholder="Choose a fallback model"
+          onchange={(ref) => { addingFallback = null; void setFallbacks(slot, [...fallbacksOf(slot), ref]); }} />
+        <button type="button" class="btn btn--ghost btn--icon btn--sm" aria-label="Cancel" onclick={() => (addingFallback = null)}><Icon name="x" size="sm" /></button>
+      </li>
+    {:else if settings!.fallbacks[slot].length < 8}
+      <li><button type="button" class="btn btn--ghost btn--sm" onclick={() => (addingFallback = slot)}
+        data-tip="Tried in order when the models above are rate-limited, out of quota or capped"><Icon name="plus" size="sm" />Add fallback</button></li>
+    {/if}
+  </ol>
+{/snippet}
+
 <Dialog bind:open={keyDialog.open} eyebrow="Provider" title={keyDialog.provider ? `${keyDialog.provider.name} key` : "Key"}>
-  <form id="key-form" onsubmit={saveKey}>
+  <form id="key-form" class="form" onsubmit={saveKey}>
+    <label class="field"><span class="field__label">Name <span class="faint caption">optional</span></span>
+      <input class="input" bind:value={keyDialog.label} maxlength="40" placeholder={`Key ${(keyDialog.provider?.keys.length ?? 0) + 1}`} />
+      {#if keyDialog.provider?.keys.length}<span class="field__hint">To tell keys apart, such as a personal and a work account. Use extra keys only as your provider's terms allow: Google's, for one, don't allow extra keys or projects to get around rate limits.</span>{/if}</label>
     <label class="field"><span class="field__label">API key</span>
       <input class="input mono" type="password" autocomplete="off" spellcheck="false" bind:value={keyDialog.key} placeholder={keyDialog.provider?.keyHint} required={keyDialog.provider?.keyRequired} />
       <span class="field__hint">Checked with the provider before saving. Only ever sent to {keyDialog.provider ? new URL(keyDialog.provider.baseUrl).host : "the provider"}.</span></label>
@@ -287,6 +332,13 @@
 <style>
   .add-endpoint { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2); }
   .prov__actions { display: flex; gap: var(--s-1); justify-content: flex-end; }
+  .prov__keys { display: grid; gap: 2px; min-width: 0; }
+  .prov__key { display: flex; align-items: center; gap: var(--s-2); min-width: 0; }
+  .prov__key .mono { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .chain { display: grid; gap: var(--s-1); margin: var(--s-1) 0 0; padding: 0; list-style: none; }
+  .chain__row { display: grid; grid-template-columns: 18px minmax(0, 1fr) 32px 32px; align-items: center; gap: var(--s-1); }
+  .chain__row--new { grid-template-columns: 18px minmax(0, 1fr) 32px; }
+  .chain__n { text-align: center; }
   .prov__name a { color: var(--accent); }
   .caps { display: grid; grid-template-columns: minmax(0, 1fr) 160px 160px; gap: var(--s-2) var(--s-4); align-items: center; }
   .caps > span:not(.eyebrow), .caps > strong { font-size: var(--t-body-sm); }

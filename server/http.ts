@@ -116,12 +116,16 @@ export function createApp(deps: AppDeps) {
   /* ---------- Providers & models (F-1201, F-1202, F-1205) ---------- */
   app.get("/providers", (c) => c.json(providers.list()));
   app.get("/providers/:id/models", async (c) => c.json(await providers.models(c.req.param("id"), c.req.query("refresh") === "1")));
-  app.put("/providers/:id/key", async (c) => {
-    const { key } = await body(c, z.object({ key: z.string() }));
-    return c.json(await providers.setKey(c.req.param("id"), key));
+  app.post("/providers/:id/keys", async (c) => {
+    const { key, label } = await body(c, z.object({ key: z.string(), label: z.string().max(40).optional() }));
+    return c.json(await providers.addKey(c.req.param("id"), key, label), 201);
   });
-  app.delete("/providers/:id/key", (c) => {
+  app.delete("/providers/:id/keys", (c) => {
     providers.removeKey(c.req.param("id"));
+    return c.body(null, 204);
+  });
+  app.delete("/providers/:id/keys/:key", (c) => {
+    providers.removeKey(c.req.param("id"), c.req.param("key"));
     return c.body(null, 204);
   });
 

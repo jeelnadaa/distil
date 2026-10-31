@@ -41,6 +41,11 @@ export function createMessages(db: Db, now = () => Date.now()) {
       return message;
     },
 
+    // A reply answered by a fallback model is credited to that model.
+    setModel(id: string, provider: string, model: string) {
+      db.prepare("UPDATE messages SET provider = ?, model = ? WHERE id = ?").run(provider, model, id);
+    },
+
     finish(id: string, content: string, status: Exclude<MessageStatus, "streaming">, error: string | null = null) {
       db.prepare("UPDATE messages SET content = ?, status = ?, error = ? WHERE id = ?").run(content, status, error, id);
     },
