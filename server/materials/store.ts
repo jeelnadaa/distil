@@ -16,7 +16,7 @@ export type MaterialStatus = "queued" | "parsing" | "ready" | "error";
 export type Material = {
   id: string; folderId: string; kind: MaterialKind; name: string; size: number; sha256: string;
   status: MaterialStatus; error: string | null; unit: LocUnit | null; length: number | null;
-  chunks: number; tokens: number; distilled: number; visual: number[]; createdAt: number;
+  chunks: number; tokens: number; distilled: number; visual: number[]; source: string | null; createdAt: number;
 };
 export type StoredChunk = {
   id: string; ord: number; from: number; to: number; headings: string[]; text: string; tokens: number;
@@ -25,11 +25,11 @@ export type StoredChunk = {
 
 type Row = {
   id: string; folder_id: string; kind: MaterialKind; name: string; size: number; sha256: string; status: MaterialStatus;
-  error: string | null; unit: LocUnit | null; length: number | null; created_at: number; chunks: number; tokens: number; distilled: number; visual: string;
+  error: string | null; unit: LocUnit | null; length: number | null; created_at: number; chunks: number; tokens: number; distilled: number; visual: string; source: string | null;
 };
 const toMaterial = (r: Row): Material => ({
   id: r.id, folderId: r.folder_id, kind: r.kind, name: r.name, size: r.size, sha256: r.sha256, status: r.status,
-  error: r.error, unit: r.unit, length: r.length, chunks: r.chunks, tokens: r.tokens, distilled: r.distilled, visual: JSON.parse(r.visual) as number[], createdAt: r.created_at,
+  error: r.error, unit: r.unit, length: r.length, chunks: r.chunks, tokens: r.tokens, distilled: r.distilled, visual: JSON.parse(r.visual) as number[], source: r.source, createdAt: r.created_at,
 });
 
 const SELECT = `SELECT m.*, COUNT(c.id) AS chunks, COALESCE(SUM(c.tokens), 0) AS tokens,
@@ -69,7 +69,8 @@ export function createMaterials(db: Db, dir: string, now = () => Date.now()) {
   return {
     get,
 
-    add(folderId: string, fileName: string, bytes: Uint8Array): Material {
+    // source: the link a fetched material came from.
+    add(folderId: string, fileName: string, bytes: Uint8Array, source: string | null = null): Material {
       if (!ancestors(folderId).length) throw notFound("Folder");
       if (!bytes.length) throw new AppError(400, "empty_file", "That file is empty.");
       if (bytes.length > MAX_MATERIAL_BYTES) throw new AppError(413, "file_too_large", "Files can be up to 200 MB.");
@@ -77,12 +78,12 @@ export function createMaterials(db: Db, dir: string, now = () => Date.now()) {
       const kind = detectKind(name, bytes);
       const sha256 = createHash("sha256").update(bytes).digest("hex");
       const existing = db.prepare("SELECT name FROM materials WHERE folder_id = ? AND sha256 = ?").get(folderId, sha256) as { name: string } | undefined;
-      if (existing) throw new AppError(409, "duplicate_material", `This file is already in this folder as “${existing.name}”.`);
+      if (existing) throw new AppError(409, "duplicate_material", `This ${source ? "page" : "file"} is already in this folder as “${existing.name}”.`);
       const id = randomUUID();
       mkdirSync(join(dir, id), { recursive: true });
       writeFileSync(fileOf(id), bytes);
-      db.prepare("INSERT INTO materials (id, folder_id, kind, name, size, sha256, status, created_at) VALUES (?, ?, ?, ?, ?, ?, 'queued', ?)")
-        .run(id, folderId, kind, name, bytes.length, sha256, now());
+      db.prepare("INSERT INTO materials (id, folder_id, kind, name, size, sha256, status, source, created_at) VALUES (?, ?, ?, ?, ?, ?, 'queued', ?, ?)")
+        .run(id, folderId, kind, name, bytes.length, sha256, source, now());
       return get(id);
     },
 

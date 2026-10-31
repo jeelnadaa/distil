@@ -9,11 +9,12 @@ import { estimateExtraction, type ExtractParams, extractLabel, inRange, visualPa
 import type { Ledger } from "./ledger/store.ts";
 import { MAX_MATERIAL_BYTES, type Material, type Materials, type StoredChunk } from "./materials/store.ts";
 import { parseLabel } from "./materials/ingest.ts";
+import { type FetchFn, fetchUrl, parseUrl } from "./materials/web.ts";
 import { ProviderError } from "./providers/types.ts";
 import { ITEM_TYPES } from "./prompts.ts";
 import { SettingsPatch } from "./settings.ts";
 
-export type AppDeps = ChatDeps & { dataDir: string; allowedHosts: string[]; fonts: Fonts; materials: Materials; ledger: Ledger; jobs: Jobs };
+export type AppDeps = ChatDeps & { dataDir: string; allowedHosts: string[]; fonts: Fonts; materials: Materials; ledger: Ledger; jobs: Jobs; fetch?: FetchFn };
 
 const NullableId = z.string().min(1).nullable();
 const ModelRefBody = z.object({ provider: z.string().min(1), id: z.string().min(1) });
@@ -138,6 +139,16 @@ export function createApp(deps: AppDeps) {
     if (Number(c.req.header("content-length") ?? 0) > MAX_MATERIAL_BYTES) throw new AppError(413, "file_too_large", "Files can be up to 200 MB.");
     const name = decodeURIComponent(c.req.header("x-file-name") ?? "");
     const material = materials.add(c.req.param("id"), name, new Uint8Array(await c.req.arrayBuffer()));
+    jobs.enqueue("parse", parseLabel(material.name), { folderId: material.folderId, materialId: material.id });
+    return c.json(material, 201);
+  });
+  // A link: the page (or the file it points to) is fetched now and kept as a copy (F-204).
+  app.post("/folders/:id/materials/url", async (c) => {
+    const { url } = await body(c, z.object({ url: z.string().min(1).max(2000) }));
+    const target = parseUrl(url);
+    library.requireFolder(c.req.param("id"));
+    const fetched = await fetchUrl(target, deps.fetch);
+    const material = materials.add(c.req.param("id"), fetched.name, fetched.bytes, target.href);
     jobs.enqueue("parse", parseLabel(material.name), { folderId: material.folderId, materialId: material.id });
     return c.json(material, 201);
   });

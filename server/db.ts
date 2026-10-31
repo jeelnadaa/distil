@@ -135,6 +135,10 @@ const MIGRATIONS = [
   -- Phase 2: pages whose content is partly drawn (formulas, figures, scans), sent to the model as images.
   ALTER TABLE materials ADD COLUMN visual TEXT NOT NULL DEFAULT '[]';
   `,
+  `
+  -- Phase 2: where a material was fetched from (a web page or video), so it can be fetched again.
+  ALTER TABLE materials ADD COLUMN source TEXT;
+  `,
 ];
 
 export function openDb(file: string): Db {

@@ -14,12 +14,14 @@ import { createMessages } from "./messages.ts";
 import { createProviders } from "./providers/service.ts";
 import { createSecrets } from "./secrets.ts";
 import { createSettings } from "./settings.ts";
+import type { FetchFn } from "./materials/web.ts";
 import { createUsage } from "./usage.ts";
 
 export const defaultDataDir = () => process.env.DISTIL_DATA_DIR ?? join(homedir(), "Distil");
 
 // Wires the stores to the HTTP app. Shared by the production server and the Vite dev server.
-export function createServer({ port, dataDir = defaultDataDir() }: { port: number; dataDir?: string }) {
+// fetch: replaced in tests so links resolve without the network.
+export function createServer({ port, dataDir = defaultDataDir(), fetch }: { port: number; dataDir?: string; fetch?: FetchFn }) {
   mkdirSync(dataDir, { recursive: true });
   const db = openDb(join(dataDir, "distil.db"));
   const settings = createSettings(db);
@@ -46,6 +48,7 @@ export function createServer({ port, dataDir = defaultDataDir() }: { port: numbe
     jobs,
     providers,
     log,
+    fetch,
   };
   return { app: createApp(deps), db, jobs };
 }
