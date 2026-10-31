@@ -33,9 +33,9 @@
   <main class="pals">
     <div class="pals__top"><a href="index.html" data-slot="lockup" style="text-decoration:none"></a><button class="btn btn--ghost btn--icon btn--sm" data-theme-toggle aria-label="Toggle theme"></button></div>
     <header style="display:grid;gap:var(--s-3)">
-      <p class="eyebrow">Design review · colour</p>
+      <p class="eyebrow">Design reference · palettes</p>
       <h1 class="display-xl" data-condense>One accent, <em>five moods.</em></h1>
-      <p class="body-lg muted" style="max-width:var(--measure)">Each palette changes the paper, ink and the single accent together, in both themes. Success, warning and danger stay the same everywhere. Every text pair passes WCAG AA. Press <b>Use everywhere</b> and open any screen to see it in place.</p>
+      <p class="body-lg muted" style="max-width:var(--measure)">Each palette changes the paper, ink and the single accent together, in both themes. Success, warning and danger stay the same everywhere. Every text pair passes WCAG AA. Copper is the default; users switch in Settings › Appearance. Press <b>Use everywhere</b> to preview one across the mock-ups.</p>
     </header>
     <div data-palettes></div>
   </main>
@@ -43,7 +43,7 @@
     import { initTheme, toggleTheme, currentTheme, observeReveals } from "./js/motion.js";
     import { injectIcons, icon } from "./js/icons.js";
     import { lockupHTML } from "./js/brand.js";
-    import { PALETTES, initPalette, setPalette, mountPaletteSwitcher } from "./js/palette.js";
+    import { PALETTES, initPalette, setPalette } from "./js/palette.js";
     initTheme();
     initPalette();
     injectIcons();
@@ -80,11 +80,8 @@
       const b = e.target.closest("[data-use]");
       if (!b) return;
       setPalette(b.dataset.use);
-      document.querySelector(".pal-switch")?.remove();
-      mountPaletteSwitcher();
       render();
     });
-    mountPaletteSwitcher();
     document.addEventListener("distil:theme", render);
     observeReveals();
   </script>

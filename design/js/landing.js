@@ -1,11 +1,10 @@
 import { SPRINGS, spring, observeReveals, prefersReducedMotion, initTheme, toggleTheme, currentTheme, initSegmented, countUp } from "./motion.js";
 import { injectIcons, icon } from "./icons.js";
-import { initPalette, mountPaletteSwitcher } from "./palette.js";
+import { initPalette } from "./palette.js";
 import { markSVG, lockupHTML, wordmarkHTML } from "./brand.js";
 
 initTheme();
 initPalette();
-mountPaletteSwitcher();
 injectIcons();
 
 const $ = (sel, root = document) => root.querySelector(sel);

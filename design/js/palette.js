@@ -130,21 +130,3 @@ export function setPalette(id) {
   try { localStorage.setItem(KEY, id); } catch { /* preference lasts for this page only */ }
   document.dispatchEvent(new Event("distil:theme"));
 }
-
-// Floating review control: one swatch per palette. Design preview only, not part of the product UI.
-export function mountPaletteSwitcher() {
-  const current = document.documentElement.dataset.palette ?? "copper";
-  const bar = document.createElement("div");
-  bar.className = "pal-switch";
-  bar.setAttribute("role", "radiogroup");
-  bar.setAttribute("aria-label", "Colour palette (design review)");
-  bar.innerHTML = `<a class="pal-switch__label caption" href="palettes.html">Palette</a>` + PALETTES.map((p) =>
-    `<button role="radio" aria-checked="${p.id === current}" data-palette-id="${p.id}" title="${p.name}" style="--sw-l:${p.light};--sw-d:${p.dark}"><span class="sr-only">${p.name}</span></button>`).join("");
-  bar.addEventListener("click", (e) => {
-    const btn = e.target.closest("[data-palette-id]");
-    if (!btn) return;
-    setPalette(btn.dataset.paletteId);
-    bar.querySelectorAll("[data-palette-id]").forEach((b) => b.setAttribute("aria-checked", b === btn));
-  });
-  document.body.append(bar);
-}

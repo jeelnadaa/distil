@@ -151,16 +151,17 @@ Mastery uses a **sequential copper ramp**, not traffic lights: new → shaky →
 4 % → 30 % → 65 % → 100 % copper on surface. Every state also carries a text label, so colour is
 never the only signal.
 
-### 4.4 Alternative palettes (under review)
+### 4.4 Palettes (user setting)
 
-Each alternative swaps paper, ink and the single accent together, in both themes; success, warning and
+Users pick one of five palettes in **Settings › Appearance** (F-1302); **Copper is the default**. Each
+swaps paper, ink and the single accent together, in both themes; success, warning and
 danger stay shared. All text pairs pass AA (accent ≥ 5.0:1 on every surface, muted ≥ 6:1, faint ≥ 4.5:1).
-Values live in `design/css/palettes.css`; compare them in `design/palettes.html` or switch live on any
-mock-up with the swatches bottom-right.
+Values live in `design/css/palettes.css` (applied as `:root[data-palette]`, saved per user); compare
+them in `design/palettes.html`.
 
 | Palette | Mood | Accent light / dark |
 |---|---|---|
-| Copper (current) | Warm paper and ink | `#A8461A` / `#E07A45` |
+| Copper (default) | Warm paper and ink | `#A8461A` / `#E07A45` |
 | Verdigris | Cool stone, deep teal: copper's patina | `#1C6B62` / `#5CC2B2` |
 | Oxblood | Parchment and wine, bookish | `#862B3A` / `#E8899A` |
 | Cobalt | Lab-glass white, cobalt ink (flat, never a gradient) | `#2A47C9` / `#8FA3FF` |
@@ -443,6 +444,6 @@ Limits · Appearance · Keyboard · Prompts · Data.
 ## 13. Open design questions
 
 1. **Satoshi licence:** checked. The licence forbids distributing the files from a repo or public server, so (b) is out. Current approach is (a): the build downloads Satoshi from Fontshare. The alternative is (c), switching to a SIL OFL face such as *Outfit* or *Manrope*, which could ship in the repo.
-2. **Palette:** copper is liked. Four alternatives are under review (§4.4): Verdigris, Oxblood, Cobalt, Citron. Pick one default; open question whether the others ship as a user setting.
+2. ~~**Palette.**~~ **Resolved:** all five ship as a user setting, Copper by default (§4.4).
 3. **Learner cards vs bubbles:** the design follows LearnHarness's "document, not chat" idea for Teach mode. Should Ask mode use the same treatment, or a lighter conversational one?
 4. **Default theme on first run:** System (proposed), or always dark/light?

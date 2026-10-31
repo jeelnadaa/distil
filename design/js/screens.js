@@ -1,5 +1,6 @@
 // Interactions for the app screen mock-ups, keyed by <body data-page>.
 import { countUp, prefersReducedMotion, setMotionPref } from "./motion.js";
+import { PALETTES, setPalette } from "./palette.js";
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
@@ -210,6 +211,20 @@ const screens = {
       else { document.documentElement.dataset.theme = v; try { localStorage.setItem("distil-theme", v); } catch { /* ignore */ } }
     });
     $("[data-motion-seg]").addEventListener("change", (e) => setMotionPref(e.detail));
+
+    const pick = $("[data-palette-pick]");
+    const active = document.documentElement.dataset.palette ?? "copper";
+    pick.innerHTML = PALETTES.map((p) => `
+      <button role="radio" aria-checked="${p.id === active}" data-palette-id="${p.id}">
+        <span class="palette-pick__chip">${["light", "dark"].map((t) => `<span style="background:${p.swatches[t][0]}"><i style="background:${p.swatches[t][2]}"></i><b style="background:${p[t]}"></b></span>`).join("")}</span>
+        <span class="palette-pick__name">${p.name}${p.id === "copper" ? ` <span class="caption faint">Default</span>` : ""}</span>
+      </button>`).join("");
+    pick.addEventListener("click", (e) => {
+      const btn = e.target.closest("[data-palette-id]");
+      if (!btn) return;
+      setPalette(btn.dataset.paletteId);
+      $$("[data-palette-id]", pick).forEach((b) => b.setAttribute("aria-checked", String(b === btn)));
+    });
 
     const links = $$(".settings__nav a");
     links.forEach((a) => a.addEventListener("click", () => links.forEach((l) => l.setAttribute("aria-current", String(l === a)))));

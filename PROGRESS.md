@@ -9,7 +9,7 @@ Living status log. Update in the same commit as every change.
 ## Next up
 
 1. Owner reviews the clickable mock-ups in `design/` (run `bash design/scripts/fetch-fonts.sh`, then serve `design/` and open `index.html`), approves or requests changes.
-2. Owner picks a palette (`design/palettes.html`; copper or one of four alternatives) and answers the other `DESIGN.md` §13 questions.
+2. Owner answers the remaining `DESIGN.md` §13 questions (Ask-mode treatment, default theme).
 3. Logo: 3 SVG directions, recommendation, icon-only, monochrome and animated versions (current mark is provisional).
 
 ## Phase checklist
@@ -42,6 +42,7 @@ Living status log. Update in the same commit as every change.
 - Built clickable mock-ups in `design/` (static HTML/CSS/ES modules, no deps): landing page with interactive hero and scroll-driven sections; app screens Teach, Today, Workspace/Ledger, Plan, Exam, Review, Usage, Settings; modal gallery (onboarding, palette, brief questions, recap, Fully distilled, cap, Google warning, deletes). Light/dark, reduced motion, mobile checked.
 - Satoshi licence forbids repo distribution: font files gitignored, fetched by `design/scripts/fetch-fonts.sh`.
 - Mock-ups approved in principle; copper liked. Added four alternative palettes (Verdigris, Oxblood, Cobalt, Citron), AA-checked, with a comparison page and a live switcher on every mock-up.
+- Palettes decided: all five ship, Copper default, picked in Settings › Appearance (mock-up updated; review switcher removed).
 
 ## Open questions
 

@@ -1,5 +1,5 @@
-/* Alternative palettes for review (DESIGN.md §4). Each overrides the surface, text and accent tokens
-   for both themes; semantic colours (success, warning, danger) stay shared.
+/* User-selectable palettes (DESIGN.md §4.4). Copper is the default and also lives in tokens.css.
+   Each overrides the surface, text and accent tokens for both themes; semantic colours stay shared.
    Scoped to :root or any .pal-scope so the comparison page can show several side by side. */
 
 .pal-scope { background: var(--bg); color: var(--text); }
@@ -308,20 +308,3 @@
     --viz-2: #D2E35A;
   }
 }
-/* Review control (design preview only) */
-.pal-switch {
-  position: fixed; right: 16px; bottom: 16px; z-index: 90;
-  display: flex; align-items: center; gap: 6px; padding: 6px 8px 6px 12px;
-  background: var(--surface); border: 1px dashed var(--border-control); border-radius: 999px;
-  box-shadow: var(--shadow-float);
-}
-.pal-switch__label { color: var(--text-muted); text-decoration: none; margin-right: 4px; }
-.pal-switch__label:hover { color: var(--text); }
-.pal-switch button {
-  width: 20px; height: 20px; border-radius: 50%; border: 0; padding: 0; cursor: pointer;
-  background: linear-gradient(135deg, var(--sw-l) 50%, var(--sw-d) 50%);
-  box-shadow: 0 0 0 1px var(--border);
-  transition: transform var(--dur-fast) var(--spring-snappy), box-shadow var(--dur-fast) var(--ease-out);
-}
-.pal-switch button:hover { transform: scale(1.12); }
-.pal-switch button[aria-checked="true"] { box-shadow: 0 0 0 2px var(--surface), 0 0 0 3.5px var(--text); }

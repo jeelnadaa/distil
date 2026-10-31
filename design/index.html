@@ -41,17 +41,16 @@
       <li><a href="app-usage.html"><span class="num">08</span><div><h2>Usage &amp; caps</h2><p class="caption muted">Token graphs with hover, breakdowns, cap editor, the 100% stop</p></div><svg class="icon"><use href="#i-arrow-right"/></svg></a></li>
       <li><a href="app-settings.html"><span class="num">09</span><div><h2>Settings</h2><p class="caption muted">Providers, the Google sign-in warning, models, learning, appearance and motion</p></div><svg class="icon"><use href="#i-arrow-right"/></svg></a></li>
       <li><a href="modals.html"><span class="num">10</span><div><h2>Modals &amp; overlays</h2><p class="caption muted">First run, command palette, brief questions, recap, "Fully distilled", toasts</p></div><svg class="icon"><use href="#i-arrow-right"/></svg></a></li>
-      <li><a href="palettes.html"><span class="num">11</span><div><h2>Colour palettes</h2><p class="caption muted">Copper and four alternatives, light and dark, side by side. Switch live on any page with the swatches bottom-right</p></div><svg class="icon"><use href="#i-arrow-right"/></svg></a></li>
+      <li><a href="palettes.html"><span class="num">11</span><div><h2>Colour palettes</h2><p class="caption muted">Copper (default) and four more, light and dark. Users pick one in Settings › Appearance</p></div><svg class="icon"><use href="#i-arrow-right"/></svg></a></li>
     </ol>
   </main>
   <script type="module">
     import { initTheme, toggleTheme, currentTheme, observeReveals } from "./js/motion.js";
     import { injectIcons, icon } from "./js/icons.js";
     import { lockupHTML } from "./js/brand.js";
-    import { initPalette, mountPaletteSwitcher } from "./js/palette.js";
+    import { initPalette } from "./js/palette.js";
     initTheme();
     initPalette();
-    mountPaletteSwitcher();
     injectIcons();
     document.querySelector('[data-slot="lockup"]').innerHTML = lockupHTML({ size: 26 });
     const btn = document.querySelector("[data-theme-toggle]");

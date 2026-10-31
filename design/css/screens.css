@@ -266,6 +266,17 @@
 .srow { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: var(--s-4); padding: var(--s-3) 0; border-bottom: 1px solid var(--border); }
 .srow > div:first-child { display: grid; }
 .srow--danger strong { color: var(--danger); }
+.srow--stack { display: grid; justify-content: stretch; }
+.palette-pick { display: grid; grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); gap: var(--s-3); }
+.palette-pick button { display: grid; gap: var(--s-2); padding: var(--s-2); border: 1px solid var(--border); border-radius: var(--r-md); background: var(--surface); text-align: left; cursor: pointer; transition: border-color var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--spring-snappy); }
+.palette-pick button:hover { border-color: var(--border-control); }
+.palette-pick button:active { transform: scale(.98); }
+.palette-pick button[aria-checked="true"] { border-color: var(--text); box-shadow: inset 0 0 0 1px var(--text); }
+.palette-pick__chip { display: grid; grid-template-columns: 1fr 1fr; height: 56px; border-radius: var(--r-sm); overflow: hidden; box-shadow: inset 0 0 0 1px var(--border); }
+.palette-pick__chip > span { display: grid; align-content: end; gap: 5px; padding: 8px; }
+.palette-pick__chip i { display: block; width: 70%; height: 3px; border-radius: 2px; opacity: .8; }
+.palette-pick__chip b { display: block; width: 40%; height: 6px; border-radius: 3px; }
+.palette-pick__name { font-size: 14px; font-weight: 600; display: flex; justify-content: space-between; align-items: baseline; }
 .risk { display: grid; grid-template-columns: 24px 1fr; gap: var(--s-3); padding: var(--s-3) var(--s-4); border-radius: var(--r-sm); background: var(--danger-wash); }
 .risk .icon { color: var(--danger); }
 @media (max-width: 900px) {

@@ -39,6 +39,7 @@ quality and completeness.
 | Topic | Decision |
 |---|---|
 | Product name | **Distil** (British spelling, one "l") — boiling material down to its essence. Decided 2026-10-31. |
+| Colour palettes | Five user-selectable palettes (Copper, Verdigris, Oxblood, Cobalt, Citron), each with light and dark; **Copper is the default**. Chosen in Settings › Appearance. Decided 2026-10-31. |
 | Deployment & data | **Local-first, open source.** Runs on the user's machine; chats, materials, keys stay on disk. No accounts, no server of ours. |
 | Platform | Web app served locally **and** packaged as a Windows desktop app (macOS/Linux later). |
 | Coverage strictness | **Exhaustive + visible ledger.** Every item in the material is extracted, mapped to a lesson, shown with a coverage %; gaps are flagged before studying starts. |
@@ -372,7 +373,7 @@ reliable than generating code every time.
 | ID | Feature | Pri |
 |----|---------|-----|
 | F-1301 | First-run onboarding: pick provider → key or Google sign-in → pick models → create first subject | M |
-| F-1302 | Settings: providers, models/roles, interactivity dial, caps, appearance (light/dark/system), keyboard, prompts, gamification, data location | M |
+| F-1302 | Settings: providers, models/roles, interactivity dial, caps, appearance (light/dark/system, palette), keyboard, prompts, gamification, data location | M |
 | F-1303 | Keyboard shortcuts for everything; shortcut sheet (`?`) | S |
 | F-1304 | Data stored in a user-chosen folder; backup/restore | M |
 | F-1305 | Windows installer + auto-update; local web mode for any OS | M |
