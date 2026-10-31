@@ -54,7 +54,15 @@ quality and completeness.
 | Folders | **Subject workspaces** — folders hold shared materials, a master plan, a coverage ledger and their slice of the graph. Subfolders = units. |
 | Nesting | **Up to 5 levels.** |
 | Token caps | **Warn at threshold, hard stop at cap.** Daily/monthly, global and per provider. |
-| Relation to LearnHarness | **Ideas only, our own code.** Credit in README. We choose our own license (proposed MIT — see §15). |
+| Relation to LearnHarness | **Ideas only, our own code.** Credit in README. |
+| Licence | **MIT** (owner deferred to our recommendation, 2026-10-31): a local-first tool that should be easy to reuse. LearnHarness is AGPL, but no code is taken, so nothing obliges a copyleft licence. |
+| Text font | **Satoshi by default**; Settings › Appearance offers **Anthropic Sans** (used when installed on the machine, never shipped) and **Custom** (an installed font by name, or an uploaded font file). The choice replaces Satoshi everywhere; the display serif and mono stay. Decided 2026-10-31. |
+| Generated visuals | **Always in Distil's design language** (owner, 2026-10-31). Models describe *what* to show in compact grammars or data; Distil's renderer decides *how it looks* with its own tokens. See §7.5. |
+| Mastery display | **Both, configurable:** named level + percentage by default; Settings can show levels only, percentages only, or both. Decided 2026-10-31. |
+| Gamification | **Off until the user turns it on.** Decided 2026-10-31. |
+| Sibling chats | **Shared by default, compactly** (our recommendation): a new chat in a folder gets a short digest from the folder's ledger and graph (what was taught, mastery, open misconceptions), never sibling transcripts. A per-chat "Independent" switch turns it off. |
+| Practice grading | **First attempt counts; hinted retries allowed** (our recommendation): the first answer sets mastery credit; after that, up to two progressive hints and retries, recorded as "with help" at reduced credit. Mock exams stay strictly one attempt, no hints. |
+| Model suggestions | **Suggested per role** during onboarding and in Settings › Models, picked from the models the user's key actually lists; always overridable. Decided 2026-10-31. |
 
 ---
 
@@ -277,6 +285,54 @@ reliable than generating code every time.
 | F-743 | Natural-language overrides respected for the rest of the session ("no more diagrams") | M |
 | F-744 | Thumbs up/down on any widget feeds a per-user preference note the agent reads | S |
 
+### 7.5 Generated visuals in Distil's design language
+
+**Principle:** the model says *what* to show; Distil decides *how it looks*. Generated output
+never carries colours, fonts, sizes, spacing or CSS. Our components render it with the design
+tokens (DESIGN.md §8.1), so every visual matches the app and re-themes live when the palette,
+light/dark or text font changes. This is also the token-efficient path: styling is the most
+verbose part of any visual, and the model never writes it.
+
+Four layers, cheapest first:
+
+1. **Typed widgets (F-701…F-712)** use small line-based grammars inside fenced blocks
+   (`flow`, `plot`, `chart`, `steps`, `compare`, `timeline`, `quiz`, `formula`). The only styling
+   hooks are semantic: `!` marks the one emphasised element (accent), `~` de-emphasises (muted),
+   `tone=good|warn|bad`, and series `1…6` map to the data-viz palette. Example:
+
+   ````
+   ```flow
+   sig[Signal] -> smp[Sampler]: fs
+   smp -> q{Aliasing?}
+   q -yes-> fix[Raise fs]!
+   ```
+   ````
+
+   That is roughly a third of the tokens of the same diagram as JSON and a tenth of it as SVG.
+2. **Knowledge graph, concept maps, plan map (F-503, F-707, F-921)** are generated as **data only**
+   (propositions, items, relations). Layout and appearance are entirely ours, so they cost no visual tokens.
+3. **Precise SVG visuals (F-725)** use a restricted profile: shapes, paths and text with classes
+   from a fixed set (`ink`, `muted`, `accent`, `fill-1…6`, `label`, `grid`); no `style`, colour
+   attributes or `font-*`. A sanitiser in code removes anything else and maps stray colours to the nearest token.
+4. **Free-form mini-apps (F-721)** run in a sandbox that the host preloads with the **Distil kit**:
+   tokens for the current theme, base CSS, and a few helpers (slider, button, readout, plot canvas,
+   step controls). The model writes markup and logic with kit classes, never CSS. The
+   test-before-show step (F-722) lints for hard-coded colours, fonts and stylesheets that fight
+   the kit, and sends a fix request carrying only the lint errors.
+
+| ID | Feature | Pri |
+|----|---------|-----|
+| F-751 | Widget grammars: compact, line-based, one example each in the prompt; parsed and validated in code | M |
+| F-752 | Semantic styling only (emphasis, muted, tone, series); literal colours, fonts or sizes are never accepted | M |
+| F-753 | SVG sanitiser: allow-listed elements and classes, strips scripts and styles, maps colours to tokens | M |
+| F-754 | Distil kit injected into every sandboxed mini-app, themed by the host and updated live on theme change | M |
+| F-755 | Design lint in the test-before-show loop; violations repaired by a short fix call carrying only the errors | M |
+| F-756 | Live re-theme: palette, light/dark and text-font changes restyle every visual already on screen | M |
+| F-757 | Prompt budget: the grammar reference (about 400 tokens) is sent only when the interactivity dial allows visuals, and sits in the static prompt prefix so provider prompt caching makes repeats cheap | M |
+| F-758 | Repair and fallback: an invalid block gets one repair call with the parser error only; if that fails, it shows as readable text with "Couldn't draw this", never a broken render | M |
+| F-759 | Streaming: a visual shows a quiet placeholder while its block streams and renders when the block closes | S |
+| F-760 | Fidelity tests: every grammar sample rendered in both themes and all palettes; a lint corpus keeps violations out of prompts | S |
+
 ## 8. Mode 3 — Practice & Mock Exams
 
 | ID | Feature | Pri |
@@ -284,7 +340,7 @@ reliable than generating code every time.
 | F-801 | Practice set from: a lesson, a unit, selected ledger items, weak items, or graph nodes | M |
 | F-802 | Difficulty ladder (worked example → completion → direct → composition → open problem) and "distance" (same context → new context → far transfer) | S |
 | F-803 | **Mock exam** generator matching the course's style (from past papers if provided): sections, marks, time limit, instructions | M |
-| F-804 | Timer + exam mode (no hints) vs practice mode (hints allowed) | M |
+| F-804 | Timer + exam mode (one attempt, no hints) vs practice mode: the first attempt sets mastery credit, then up to two progressive hints and retries, recorded as "with help" at reduced credit | M |
 | F-805 | Every problem is generated **with its solution and rubric first**, then shown (prevents grading drift) | M |
 | F-806 | Grading: score, rubric points met/missed, model solution, which item failed to come to mind; handwritten answers via photo | M |
 | F-807 | Results feed mastery + create flashcards for missed items | M |
@@ -310,6 +366,7 @@ reliable than generating code every time.
 | F-911 | Mastery per item derived from checks, practice, card reviews (with decay over time) | M |
 | F-912 | Progress view per folder: coverage bars, mastery heatmap by unit/lesson, weak spots list | M |
 | F-913 | "What should I do now?" recommender (due cards, weak items, next lesson, deadline pressure) | M |
+| F-914 | Mastery display setting: levels (new / shaky / solid / mastered), percentages, or both (default both) | M |
 
 ### 9.3 Knowledge graph (LearnHarness-inspired)
 
@@ -319,7 +376,7 @@ reliable than generating code every time.
 | F-922 | Built by a background extractor → auditor pipeline over sessions (and materials), updating continuously, even from unfinished sessions | S |
 | F-923 | Nodes link to ledger items and to exact source messages | S |
 | F-924 | Clusters by topic, pan/zoom, label fade by zoom, filter by folder | S |
-| F-925 | Graph as context: new sessions on related topics see what you already know | S |
+| F-925 | Graph as context: new sessions on related topics see what you already know. A new chat in a folder gets a short ledger + graph digest of its siblings by default (never their transcripts); a per-chat "Independent" switch turns it off | S |
 | F-926 | Import notes (Markdown/Obsidian vault) into the graph | C |
 | F-927 | Chain/table view for managing nodes (search, select, delete, make practice set) | C |
 
@@ -330,7 +387,7 @@ reliable than generating code every time.
 | F-931 | Daily study streak (lesson, review or practice counts), with freeze days | S |
 | F-932 | XP / levels tied to *verified* learning (checks passed, cards reviewed), never to time spent or messages sent | S |
 | F-933 | Milestone badges (first unit 100 % covered, first mock exam, 30-day streak…) | C |
-| F-934 | Whole system can be turned off in Settings (default: on, subtle) | M |
+| F-934 | Whole system is switched on in Settings; **off by default** | M |
 
 ## 10. Mode 4 — Quick Q&A
 
@@ -365,6 +422,7 @@ reliable than generating code every time.
 | F-1203 | **Sign in with Google (experimental)** — use Gemini models via Google account OAuth, no API key. Off by default; enabling shows a plain warning that this reuses Google's CLI login and Google may restrict or suspend accounts for third-party use | M |
 | F-1204 | Guided 30-second setup for a free Google AI Studio API key (the safe default path) | M |
 | F-1205 | Model picker with capabilities (vision, context size, reasoning, price) | M |
+| F-1210 | Suggested model per role (strong, cheap, vision), matched against the user's own model list and labelled "suggested"; never selected without the user seeing it | M |
 | F-1206 | Keys stored locally, encrypted with the OS credential store where available; never sent anywhere but the provider | M |
 | F-1207 | Graceful capability fallback (e.g. no vision model → images ingested via OCR or flagged) | M |
 | F-1208 | Other subscription logins (ChatGPT, Copilot) — same opt-in/warning pattern | C |
@@ -374,14 +432,15 @@ reliable than generating code every time.
 
 | ID | Feature | Pri |
 |----|---------|-----|
-| F-1301 | First-run onboarding: pick provider → key or Google sign-in → pick models → create first subject | M |
-| F-1302 | Settings: providers, models/roles, interactivity dial, caps, appearance (light/dark/system, palette), keyboard, prompts, gamification, data location | M |
+| F-1301 | First-run onboarding: pick provider → key or Google sign-in → pick models (a suggested model per role, from what the key actually lists) → create first subject | M |
+| F-1302 | Settings: providers, models/roles, interactivity dial, caps, appearance (light/dark/system, palette, text font), keyboard, prompts, gamification, data location | M |
 | F-1303 | Keyboard shortcuts for everything; shortcut sheet (`?`) | S |
 | F-1304 | Data stored in a user-chosen folder; backup/restore | M |
 | F-1305 | Windows installer + auto-update; local web mode for any OS | M |
 | F-1306 | Crash-safe: background jobs resume or report "interrupted" honestly after restart | M |
 | F-1307 | Accessibility: screen-reader labels, focus order, contrast, reduced motion | S |
 | F-1308 | Multilingual: learn in any language the model supports (UI English first) | S |
+| F-1309 | Text font: Satoshi (default), Anthropic Sans (only if installed locally; never bundled), or Custom (installed font name or uploaded .woff2/.woff/.ttf/.otf). Replaces Satoshi everywhere; display and mono unchanged | M |
 
 ---
 
@@ -421,7 +480,7 @@ reliable than generating code every time.
 | — | 🆕 Widget catalog F-701…F-712 + dial F-741 | |
 | — | 🆕 Flashcards + SRS F-901…F-905 | |
 | — | 🆕 Mastery view F-911…F-913 | LearnHarness deliberately has no ratings |
-| — | 🆕 Streaks/XP F-931…F-934 | LearnHarness deliberately rejects; ours is opt-out and tied to verified learning |
+| — | 🆕 Streaks/XP F-931…F-934 | LearnHarness deliberately rejects; ours is opt-in (off by default) and tied to verified learning |
 | — | 🆕 Q&A mode F-1001…F-1003 | |
 
 ---
@@ -436,11 +495,11 @@ Each phase ends with: features working end-to-end, tests green, docs updated (`P
 | 0 | Plan & design | `plan.md` ✅, `DESIGN.md` (UX flows, screens, visual system), architecture notes | Owner approves both |
 | 1 | Foundation | App shell, local data store, settings, BYOK providers + model picker, streaming chat, folders (5 levels) + chats, auto-naming, markdown/math/code rendering, token recording + chat meter + caps (F-1101, F-1102, F-1104, F-1105) | Create folder → chat → talk to a model; usage recorded; cap blocks |
 | 2 | Materials & Ledger | Ingestion (PDF/slides/docs/images/web/YouTube), chunking, extraction, recall audit, dedup, ledger UI, cost pre-flight, material viewer | A 4-unit syllabus PDF yields a ledger the owner judges complete |
-| 3 | Study Plan | Brief Compiler, planner with code-enforced coverage, plan map/outline, deadline schedule, today view | Plan covers 100 % of ledger; schedule re-balances |
+| 3 | Study Plan | Brief Compiler, planner with code-enforced coverage, plan map/outline (data-only rendering, §7.5), deadline schedule, today view | Plan covers 100 % of ledger; schedule re-balances |
 | 4 | Teach | Probe, session plan panel, checks + confidence + thinking, repair loop, item status updates, recap, quick actions | Full lesson from plan click to recap; ledger statuses move |
-| 5 | Interactives | Widget catalog (M items), sandboxed mini-apps with test-before-show, visual maker, interactivity dial | Dial demonstrably changes behaviour; mini-app errors self-heal |
+| 5 | Interactives | Widget grammars + renderer in the design language (§7.5), SVG sanitiser, Distil kit for sandboxed mini-apps with test-before-show and design lint, visual maker, interactivity dial | Dial demonstrably changes behaviour; mini-app errors self-heal; every visual follows the active theme, palette and font with no hard-coded styling |
 | 6 | Practice & Exams | Practice sets, mock exams, timer, grading incl. handwritten, results → mastery/cards | Mock exam generated, taken, graded |
-| 7 | Retention | Flashcards + FSRS, mastery view, recommender, streaks/XP, knowledge graph | Daily loop: today view → lesson → reviews |
+| 7 | Retention | Flashcards + FSRS, mastery view (levels/percent setting), recommender, streaks/XP (off by default), knowledge graph as data rendered by Distil (§7.5), sibling-chat digest | Daily loop: today view → lesson → reviews |
 | 8 | Providers+ & usage | Google sign-in (experimental), usage dashboard + graphs, custom endpoints, researcher/topic-only, web search | Gemini via Google login works behind the warning |
 | 9 | Ship | Windows installer, auto-update, export/import, keyboard pass, accessibility pass, README/credits | Installable build |
 
@@ -470,10 +529,10 @@ Phases 5–8 can be re-ordered on request.
 ## 18. Open questions for the owner
 
 1. ~~**Product name.**~~ **Resolved 2026-10-31:** the app is called **Distil** (see §2).
-2. **License.** Proposed **MIT** (permissive). OK, or prefer AGPL/GPL to keep forks open?
-3. **Mastery display:** numbers (72 %), named levels (new / shaky / solid / mastered), or colour only?
-4. **Gamification default:** on-subtle (proposed) or off until enabled?
-5. **Chats in the same folder** — should a new chat automatically know what was taught in sibling chats (via ledger/graph), or stay independent unless asked?
-6. **Practice grading** — one attempt per problem (LearnHarness) or allow retries with hints?
-7. **Default model suggestions** — should onboarding recommend specific models per role, or leave fully to the user?
+2. ~~**License.**~~ **Resolved:** MIT (§2).
+3. ~~**Mastery display.**~~ **Resolved:** both, configurable (§2, F-914).
+4. ~~**Gamification default.**~~ **Resolved:** off until enabled (F-934).
+5. ~~**Chats in the same folder.**~~ **Resolved:** shared digest by default, "Independent" switch (F-925).
+6. ~~**Practice grading.**~~ **Resolved:** first attempt counts, then hinted retries; exams one attempt (F-804).
+7. ~~**Default model suggestions.**~~ **Resolved:** suggested per role (F-1210).
 8. Anything in §16 Non-goals you actually want in v1?

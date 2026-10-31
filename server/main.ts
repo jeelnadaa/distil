@@ -2,6 +2,7 @@ import { mkdirSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { openDb } from "./db.ts";
+import { createFonts } from "./fonts.ts";
 import { createApp } from "./http.ts";
 import { createLibrary } from "./library.ts";
 import { createMessages } from "./messages.ts";
@@ -26,6 +27,7 @@ export function createServer({ port, dataDir = defaultDataDir() }: { port: numbe
     messages,
     settings,
     usage: createUsage(db),
+    fonts: createFonts(join(dataDir, "fonts")),
     providers: createProviders(settings, createSecrets(join(dataDir, "secrets.json"))),
     log: (msg: string) => console.error(`[distil] ${msg}`),
   };

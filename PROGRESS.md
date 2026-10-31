@@ -51,12 +51,19 @@ Living status log. Update in the same commit as every change.
 - Web app (`web/`): sidebar library tree (create, rename, move by menu or drag, delete with counts, nesting to 5 levels), Ask chat with streaming, stop, retry, inline rename, per-chat model picker, chat token meter with context fill, cap warning banner and cap-reached dialog; home onboarding to a free Google AI Studio key; Settings for providers (test-and-save keys, custom OpenAI-compatible endpoints), model slots, token caps (global and per provider, "200k" style input), theme, palette, motion and data folder. Markdown with KaTeX maths (`$…$`, `\(…\)`, `$$…$$`, `\[…\]`, prices left alone) and highlighted code; raw HTML never rendered.
 - Verified in the browser against a local fake OpenAI-compatible server: folder → chat → streamed reply with maths, table and code; auto-named; usage recorded and shown; stop keeps the partial reply; a 1k daily cap blocks the next send. Checked at 1440 px, 1024 px and phone width. 38 tests.
 
+### 2026-10-31 · Owner decisions and text font
+- Generated visuals must use Distil's design language: specified as plan.md §7.5 (compact widget grammars with semantic styling only, data-only graph and plan map, restricted SVG with a sanitiser, a Distil kit plus design lint for mini-apps; F-751…F-760) and DESIGN.md §8.1 (renderer rules). Lands in Phases 3, 5 and 7.
+- Owner answers recorded in plan.md §2: MIT licence (LICENSE added), mastery shown as level + percent and configurable (F-914), gamification off by default (F-934), sibling chats share a compact ledger/graph digest with an "Independent" switch (F-925), practice grading counts the first attempt then allows hinted retries while exams stay one attempt (F-804), suggested model per role (F-1210).
+- Text font setting (F-1309, DESIGN.md §3): Satoshi, Anthropic Sans (used only if installed; never bundled) or Custom (installed family name, or an uploaded .woff2/.woff/.ttf/.otf kept in the data folder and checked by file signature, 8 MB max). It swaps `--font-text` everywhere; display and mono stay. Verified in the browser with an installed font and an uploaded one.
+- Fixed: delete calls resolved to `undefined`, which `attempt()` read as failure, so removing a key or font skipped its follow-up. Deep links into Settings now jump to the section instead of starting a smooth scroll. 44 tests.
+
 ## Open questions
 
 See `plan.md` §18.
 
 ## Known issues
 
+- Custom installed fonts are found by family name. Chromium (the desktop build) sees user-installed fonts; Safari only exposes system fonts.
 - Only tested against a local fake model; a real-provider smoke test is still owed (needs the owner's key).
 - The web bundle is one 614 kB chunk (KaTeX and highlight.js). Fine when served locally; split it if load time ever matters.
 

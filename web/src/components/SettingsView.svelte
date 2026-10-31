@@ -7,6 +7,7 @@
   import Icon from "./Icon.svelte";
   import ModelSelect from "./ModelSelect.svelte";
   import Segmented from "./Segmented.svelte";
+  import TextFontSetting from "./TextFontSetting.svelte";
 
   let { section }: { section?: string } = $props();
 
@@ -18,9 +19,13 @@
     { id: "data", label: "Data", icon: "database" },
   ];
 
+  // Jump straight to a deep-linked section on open; glide between sections afterwards.
+  let opened = false;
   $effect(() => {
     const target = section;
-    tick().then(() => target && document.getElementById(target)?.scrollIntoView({ block: "start" }));
+    const behavior: ScrollBehavior = opened ? "smooth" : "instant";
+    opened = true;
+    tick().then(() => target && document.getElementById(target)?.scrollIntoView({ block: "start", behavior }));
   });
 
   const settings = $derived(app.settings);
@@ -234,6 +239,7 @@
                 </button>
               {/each}
             </div></div>
+          <TextFontSetting />
           <div class="srow"><div><strong>Motion</strong><span class="caption muted">Reduced replaces movement with quick fades</span></div>
             <Segmented label="Motion" value={motion} options={[{ value: "system", label: "System" }, { value: "full", label: "Full" }, { value: "reduce", label: "Reduced" }]}
               onchange={(v) => { motion = v; setMotion(v); }} /></div>

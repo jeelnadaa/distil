@@ -150,6 +150,65 @@ export function setMotion(value: Motion) {
   write("distil-motion", value);
 }
 
+/* ---------- Text font (F-1309, DESIGN.md §3) ----------
+ * Swaps the face behind --font-text, which every Satoshi use reads. Display serif and mono stay.
+ * Installed fonts are used by family name and never bundled; an uploaded file is served from the data folder. */
+export type TextFont =
+  | { kind: "satoshi" }
+  | { kind: "anthropic" }
+  | { kind: "installed"; family: string }
+  | { kind: "upload"; name: string; version: number };
+
+export const ANTHROPIC_SANS = "Anthropic Sans";
+const UPLOAD_FAMILY = "Distil Custom Text";
+const FALLBACK = `"Satoshi", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif`;
+
+// Family names go into CSS strings, so only plain name characters are kept.
+export const cleanFamily = (name: string) => name.replace(/[^\p{L}\p{N} _.-]/gu, "").replace(/\s+/g, " ").trim().slice(0, 80);
+
+export function fontStack(font: TextFont): string {
+  const family = font.kind === "anthropic" ? ANTHROPIC_SANS
+    : font.kind === "installed" ? cleanFamily(font.family)
+    : font.kind === "upload" ? UPLOAD_FAMILY : "";
+  return family ? `"${family}", ${FALLBACK}` : FALLBACK;
+}
+
+export const textFontPref = (): TextFont => {
+  try {
+    const saved = JSON.parse(read("distil-font") ?? "null") as TextFont | null;
+    if (saved?.kind === "anthropic" || saved?.kind === "satoshi") return saved;
+    if (saved?.kind === "installed" && typeof saved.family === "string" && cleanFamily(saved.family)) return saved;
+    if (saved?.kind === "upload" && typeof saved.name === "string" && typeof saved.version === "number") return saved;
+  } catch { /* fall through to the default */ }
+  return { kind: "satoshi" };
+};
+
+export function setTextFont(font: TextFont) {
+  let face = document.getElementById("distil-text-font");
+  if (font.kind === "upload") {
+    face ??= document.head.appendChild(Object.assign(document.createElement("style"), { id: "distil-text-font" }));
+    face.textContent = `@font-face { font-family: "${UPLOAD_FAMILY}"; src: url("/api/fonts/text?v=${font.version}"); font-weight: 100 900; font-display: swap; }`;
+  } else {
+    face?.remove();
+  }
+  if (font.kind === "satoshi") root().style.removeProperty("--font-text");
+  else root().style.setProperty("--font-text", fontStack(font));
+  write("distil-font", JSON.stringify(font));
+}
+
+// True when the browser can draw the family: text set in it measures differently from the generic fallbacks.
+export function fontAvailable(family: string): boolean {
+  const ctx = document.createElement("canvas").getContext("2d");
+  if (!ctx || !cleanFamily(family)) return false;
+  const sample = "mmmmmmmmmmlli1WQ@#&";
+  return ["monospace", "serif", "sans-serif"].some((generic) => {
+    ctx.font = `72px ${generic}`;
+    const base = ctx.measureText(sample).width;
+    ctx.font = `72px "${cleanFamily(family)}", ${generic}`;
+    return ctx.measureText(sample).width !== base;
+  });
+}
+
 export const resolvedTheme = (): "dark" | "light" =>
   root().dataset.theme === "light" || (!root().dataset.theme && !matchMedia("(prefers-color-scheme: dark)").matches) ? "light" : "dark";
 
@@ -157,4 +216,5 @@ export function applyPrefs() {
   setTheme(themePref());
   setPalette(palettePref());
   setMotion(motionPref());
+  setTextFont(textFontPref());
 }

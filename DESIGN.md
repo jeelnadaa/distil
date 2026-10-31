@@ -74,6 +74,22 @@ CDN at runtime, because the app is local-first and must work offline.
 > files from a repository or public server. So the font files are gitignored and
 > `design/scripts/fetch-fonts.sh` downloads them from Fontshare; the app build will do the same.
 
+### Text font setting (F-1309)
+
+Satoshi is the default **text** face, and Settings › Appearance lets the learner swap it. Every
+`Satoshi` row in the type scale below really means "the text font": the whole UI reads it from one
+token, `--font-text`, so a swap reaches every label, lesson and control at once. The display serif
+and the mono never change. They carry the brand voice and the alignment of numbers.
+
+| Option | Source | Notes |
+|---|---|---|
+| **Satoshi** (default) | Fetched at build time (licence above) | — |
+| **Anthropic Sans** | `local()` only: used when the font is installed on the machine | Never bundled or downloaded by Distil. If it isn't installed, the setting says so and Satoshi stays in use. |
+| **Custom** | An installed font by family name, **or** an uploaded `.woff2` / `.woff` / `.ttf` / `.otf` kept in the data folder | Falls back to Satoshi, then the system UI font, glyph by glyph. A live sample line shows the result before you leave the setting. |
+
+Sizes, weights and tracking stay as specified; a substitute face at weight 400 or 600 is drawn
+from its nearest available weight. Generated visuals (§8.1) inherit the text font automatically.
+
 ### Type scale
 
 UI steps use a 1.2 ratio from a 16px base. Display steps jump harder (about 1.33). Display sizes use
@@ -317,6 +333,31 @@ Under `@media (prefers-reduced-motion: reduce)`, or the in-app "Reduce motion" s
 | **Toast** | Bottom-centre, ink surface (inverted), max 2 visible, auto-dismiss 5s, pauses on hover. |
 | **Dialog** | `--r-lg`, shadow, `heading-lg` title, scrim at `--bg` 70 %. Enter: scale .97 → 1 with `spring-smooth`. **Esc always closes the topmost element.** |
 
+### 8.1 Generated visuals (plan.md §7.5)
+
+Anything a model generates (diagrams, plots, charts, step-throughs, concept maps, the knowledge
+graph, SVG figures, mini-apps) is drawn **by Distil, in Distil's language**. The model supplies
+structure and meaning; the tokens supply the look. Rules for the renderers:
+
+- **Colour only through tokens.** Lines and text use `--text` / `--text-muted`; fills use
+  `--surface-sunken`; the single emphasised element (`!` in a grammar) uses `--accent` and
+  `--accent-wash`; series 1–6 use the data-viz palette (§4.3); tones map to `--success`,
+  `--warning` and `--danger`. There is at most one accent element per visual, the same as one accent button per screen.
+- **Type through the type scale.** Node labels use `body-sm`, edge labels and axes use `caption`,
+  titles use the widget frame's eyebrow, and numbers use `mono-num`. Every visual follows the text font setting.
+- **Shape and line.** 1.5px strokes, `--r-sm` node corners, decision nodes as rounded diamonds,
+  arrowheads small and open, gridlines at `--border` (hairline). No drop shadows, gradients or 3D.
+- **Layout is ours.** Automatic layout (layered for flows and plan maps, force-directed with
+  clustering for the graph) with generous spacing on the 4px grid. Generated coordinates are ignored except in precise SVG figures.
+- **Motion.** Visuals fade in once on `spring-gentle`; step-throughs reveal line by line on
+  `dur-base`; nothing loops. Reduced motion shows the final state.
+- **Mini-apps** get the Distil kit: the current theme's tokens, base type, `.btn`, `.slider`,
+  `.readout`, `.plot` and step controls. A mini-app that passes the design lint is
+  indistinguishable from a native widget.
+- **Live re-theme.** Changing the palette, theme or font restyles every visual already on screen, sandboxed ones included.
+- **Failure looks calm.** A block that can't be drawn shows its readable text inside the widget
+  frame with a quiet "Couldn't draw this" caption and a Retry ghost button.
+
 ---
 
 ## 9. UX flows
@@ -429,7 +470,7 @@ A period switcher (Day · Week · Month), a stacked bar chart (data-viz palette)
 
 ### S9 — Settings
 A two-column list-detail layout: Providers · Models · Learning (interactivity dial, gamification) ·
-Limits · Appearance · Keyboard · Prompts · Data.
+Limits · Appearance (theme, palette, text font, motion) · Keyboard · Prompts · Data.
 
 ---
 

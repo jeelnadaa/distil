@@ -21,6 +21,8 @@ npm run dev     # http://127.0.0.1:5173
 For a production build: `npm run build`, then `npm start` (http://127.0.0.1:4321). Your data lives in
 `~/Distil`; set `DISTIL_DATA_DIR` to put it elsewhere. Add a provider key under Settings › Providers.
 Google AI Studio has a free tier. Keys stay in that folder and are only sent to their own provider.
+Settings › Appearance changes the theme, the colour palette and the text font (Satoshi, Anthropic Sans if
+you have it installed, or any font of your own).
 
 ## Planned highlights
 
@@ -54,4 +56,5 @@ mock exams, flashcards with spaced repetition, mastery tracking, and token caps 
 
 ## License
 
-To be decided (proposed MIT) — see `plan.md` §18.
+[MIT](LICENSE). Fonts keep their own licences: Instrument Serif and JetBrains Mono are SIL OFL;
+Satoshi (ITF Free Font Licence) is downloaded by `npm run fonts`, not shipped in this repository.

@@ -39,6 +39,7 @@ Read this file fully before doing anything in this repo.
 - `npm run dev` · `npm test` · `npm run check` (tsc + svelte-check) · `npm run build` then `npm start` (serves `dist/` and the API on `127.0.0.1:4321`).
 - Data lives in `DISTIL_DATA_DIR` (default `~/Distil`): `distil.db` and `secrets.json`. Point it at a scratch folder when testing by hand.
 - Svelte 5 gotcha: `$state(new Set())` is not reactive; use `SvelteSet`/`SvelteMap` from `svelte/reactivity`.
+- Generated visuals never carry styling: models emit grammars or data, and renderers apply tokens (plan.md §7.5, DESIGN.md §8.1). Don't add a prompt or renderer that accepts colours, fonts or CSS from a model.
 - To test chat without a real key, add a custom endpoint that points at a local fake OpenAI-compatible server.
 
 ## 5. Repository map
@@ -56,6 +57,7 @@ Read this file fully before doing anything in this repo.
 | `design/scripts/fetch-fonts.sh` | Downloads Satoshi (licence forbids committing it) |
 | `server/` | Local API (Node 24 runs the TypeScript directly): SQLite store, library, chat turns, providers, usage and caps |
 | `server/providers/` | Streaming adapters (OpenAI-compatible, Anthropic, Gemini), catalog and key-checked service |
+| `server/fonts.ts` | Uploaded text font (F-1309) in `<data>/fonts/`, validated by file signature |
 | `server/constants.ts` | Limits shared with the browser (no Node imports) |
 | `web/src/components/` | Svelte screens and parts: `App`, `Sidebar`/`Tree`, `ChatView`, `SettingsView`, `Home`, dialogs |
 | `web/src/lib/` | `api.ts` (typed client, SSE), `state.svelte.ts` (app state, routes `#/chat/:id`, `#/settings/:section`), `markdown.ts`, `prefs.ts`, `icons.ts` |

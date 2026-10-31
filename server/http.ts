@@ -2,11 +2,12 @@ import { Hono, type Context } from "hono";
 import { streamSSE } from "hono/streaming";
 import { z } from "zod";
 import { type ChatDeps, meterFor, prepareTurn, streamTurn } from "./chat.ts";
-import { AppError } from "./errors.ts";
+import { AppError, notFound } from "./errors.ts";
+import type { Fonts } from "./fonts.ts";
 import { ProviderError } from "./providers/types.ts";
 import { SettingsPatch } from "./settings.ts";
 
-export type AppDeps = ChatDeps & { dataDir: string; allowedHosts: string[] };
+export type AppDeps = ChatDeps & { dataDir: string; allowedHosts: string[]; fonts: Fonts };
 
 const NullableId = z.string().min(1).nullable();
 const ModelRefBody = z.object({ provider: z.string().min(1), id: z.string().min(1) });
@@ -109,6 +110,22 @@ export function createApp(deps: AppDeps) {
     const s = settings.get();
     const provider = c.req.query("provider") ?? s.models.strong?.provider ?? "";
     return c.json({ ...usage.totals(), cap: usage.capStatus(s.caps, provider) });
+  });
+
+  /* ---------- Text font (F-1309) ---------- */
+  app.get("/fonts/text", (c) => {
+    const font = deps.fonts.read();
+    if (!font) throw notFound("Font");
+    return c.body(new Uint8Array(font.bytes), 200, { "content-type": font.type, "cache-control": "no-cache" });
+  });
+  app.get("/fonts/text/info", (c) => c.json(deps.fonts.info()));
+  app.put("/fonts/text", async (c) => {
+    const { name, data } = await body(c, z.object({ name: z.string().max(200), data: z.base64() }));
+    return c.json(deps.fonts.save(name, data));
+  });
+  app.delete("/fonts/text", (c) => {
+    deps.fonts.remove();
+    return c.body(null, 204);
   });
 
   return app;
