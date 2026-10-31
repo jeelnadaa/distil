@@ -3,9 +3,12 @@
 
 import { initTheme, toggleTheme, currentTheme, observeReveals, initSegmented } from "./motion.js";
 import { injectIcons, icon } from "./icons.js";
+import { initPalette, mountPaletteSwitcher } from "./palette.js";
 import { lockupHTML, markSVG } from "./brand.js";
 
 initTheme();
+initPalette();
+mountPaletteSwitcher();
 injectIcons();
 
 const page = document.body.dataset.page;

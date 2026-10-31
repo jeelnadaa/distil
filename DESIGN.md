@@ -151,7 +151,25 @@ Mastery uses a **sequential copper ramp**, not traffic lights: new → shaky →
 4 % → 30 % → 65 % → 100 % copper on surface. Every state also carries a text label, so colour is
 never the only signal.
 
-### 4.4 Theme switching
+### 4.4 Alternative palettes (under review)
+
+Each alternative swaps paper, ink and the single accent together, in both themes; success, warning and
+danger stay shared. All text pairs pass AA (accent ≥ 5.0:1 on every surface, muted ≥ 6:1, faint ≥ 4.5:1).
+Values live in `design/css/palettes.css`; compare them in `design/palettes.html` or switch live on any
+mock-up with the swatches bottom-right.
+
+| Palette | Mood | Accent light / dark |
+|---|---|---|
+| Copper (current) | Warm paper and ink | `#A8461A` / `#E07A45` |
+| Verdigris | Cool stone, deep teal: copper's patina | `#1C6B62` / `#5CC2B2` |
+| Oxblood | Parchment and wine, bookish | `#862B3A` / `#E8899A` |
+| Cobalt | Lab-glass white, cobalt ink (flat, never a gradient) | `#2A47C9` / `#8FA3FF` |
+| Citron | Neutral graphite, sharp citron; best in dark | `#566600` / `#D2E35A` |
+
+Watch-outs: Oxblood's accent sits near `danger`, so danger UI must keep its icon and label; Verdigris
+sits near `success`.
+
+### 4.5 Theme switching
 
 The theme follows `prefers-color-scheme`, with a System / Light / Dark override in Settings. Themes
 are set on `:root[data-theme]`. Switching crossfades `background-color` and `color` over
@@ -425,6 +443,6 @@ Limits · Appearance · Keyboard · Prompts · Data.
 ## 13. Open design questions
 
 1. **Satoshi licence:** checked. The licence forbids distributing the files from a repo or public server, so (b) is out. Current approach is (a): the build downloads Satoshi from Fontshare. The alternative is (c), switching to a SIL OFL face such as *Outfit* or *Manrope*, which could ship in the repo.
-2. **Copper accent:** OK, or would you prefer a different single accent (deep teal, oxblood, olive)?
+2. **Palette:** copper is liked. Four alternatives are under review (§4.4): Verdigris, Oxblood, Cobalt, Citron. Pick one default; open question whether the others ship as a user setting.
 3. **Learner cards vs bubbles:** the design follows LearnHarness's "document, not chat" idea for Teach mode. Should Ask mode use the same treatment, or a lighter conversational one?
 4. **Default theme on first run:** System (proposed), or always dark/light?

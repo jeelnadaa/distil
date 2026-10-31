@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Palettes — Distil</title>
+  <link rel="icon" href="assets/logo/distil-icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/palettes.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/brand.css">
+  <style>
+    .pals { width: min(1180px, 100% - 32px); margin: 0 auto; padding: var(--s-8) 0 var(--s-9); display: grid; gap: var(--s-7); }
+    .pals__top { display: flex; justify-content: space-between; align-items: center; }
+    .pal { display: grid; grid-template-columns: 240px 1fr 1fr; gap: var(--s-4); padding-top: var(--s-5); border-top: 1px solid var(--border); }
+    .pal__meta { display: grid; gap: var(--s-2); align-content: start; }
+    .pal__meta h2 { font-family: var(--font-display); font-weight: 400; font-size: 34px; line-height: 1; }
+    .pal__meta .btn { justify-self: start; margin-top: var(--s-2); }
+    .pal .pal-scope { border-radius: var(--r-md); border: 1px solid var(--border); padding: var(--s-5); display: grid; gap: var(--s-4); }
+    .sample__head { display: flex; justify-content: space-between; align-items: baseline; }
+    .sample h3 { font-family: var(--font-display); font-weight: 400; font-size: 36px; line-height: 1; }
+    .sample h3 em { color: var(--accent); }
+    .sample__row { display: flex; flex-wrap: wrap; gap: var(--s-2); align-items: center; }
+    .sample .opt { display: flex; gap: var(--s-3); align-items: center; padding: 10px var(--s-3); border: 1px solid var(--accent); background: var(--accent-wash); border-radius: var(--r-sm); font-size: 14px; }
+    .sample .opt b { font-family: var(--font-mono); font-size: 12px; color: var(--accent); }
+    .swatches { display: flex; gap: 6px; }
+    .swatches span { flex: 1; height: 28px; border-radius: 4px; box-shadow: inset 0 0 0 1px rgb(127 127 127 / .2); }
+    .hexes { font-family: var(--font-mono); font-size: 11px; color: var(--text-faint); display: flex; justify-content: space-between; }
+    @media (max-width: 980px) { .pal { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <main class="pals">
+    <div class="pals__top"><a href="index.html" data-slot="lockup" style="text-decoration:none"></a><button class="btn btn--ghost btn--icon btn--sm" data-theme-toggle aria-label="Toggle theme"></button></div>
+    <header style="display:grid;gap:var(--s-3)">
+      <p class="eyebrow">Design review · colour</p>
+      <h1 class="display-xl" data-condense>One accent, <em>five moods.</em></h1>
+      <p class="body-lg muted" style="max-width:var(--measure)">Each palette changes the paper, ink and the single accent together, in both themes. Success, warning and danger stay the same everywhere. Every text pair passes WCAG AA. Press <b>Use everywhere</b> and open any screen to see it in place.</p>
+    </header>
+    <div data-palettes></div>
+  </main>
+  <script type="module">
+    import { initTheme, toggleTheme, currentTheme, observeReveals } from "./js/motion.js";
+    import { injectIcons, icon } from "./js/icons.js";
+    import { lockupHTML } from "./js/brand.js";
+    import { PALETTES, initPalette, setPalette, mountPaletteSwitcher } from "./js/palette.js";
+    initTheme();
+    initPalette();
+    injectIcons();
+    document.querySelector('[data-slot="lockup"]').innerHTML = lockupHTML({ size: 26 });
+    const btn = document.querySelector("[data-theme-toggle]");
+    const paint = () => { btn.innerHTML = icon(currentTheme() === "dark" ? "sun" : "moon", "icon icon--sm"); };
+    paint();
+    btn.addEventListener("click", () => { toggleTheme(); paint(); });
+
+    const sample = (p, theme) => `
+      <div class="pal-scope sample" data-palette="${p.id}" data-theme="${theme}">
+        <div class="sample__head"><p class="eyebrow">${theme}</p><span class="chip chip--accent">Teaching</span></div>
+        <h3>Fourier series, <em>distilled.</em></h3>
+        <p class="body-sm muted">Every formula, definition and worked example, planned and checked. <span class="faint">p.12 · 9 items</span></p>
+        <div class="opt"><b>2</b> The coefficients come from orthogonality</div>
+        <div class="coverage"><div class="coverage__row"><span class="caption muted">Taught</span><div class="coverage__track"><div class="coverage__fill" style="--v:62%"></div></div><span class="num mono">62%</span></div></div>
+        <div class="sample__row"><button class="btn btn--primary btn--sm">Continue lesson</button><button class="btn btn--accent btn--sm">Start exam</button><button class="btn btn--secondary btn--sm">See plan</button><span class="drop"></span></div>
+        <div class="swatches">${p.swatches[theme].map((c) => `<span style="background:${c}"></span>`).join("")}</div>
+        <div class="hexes">${p.swatches[theme].map((c) => `<span>${c}</span>`).join("")}</div>
+      </div>`;
+
+    const list = document.querySelector("[data-palettes]");
+    const render = () => {
+      const active = document.documentElement.dataset.palette ?? "copper";
+      list.innerHTML = PALETTES.map((p) => `
+        <section class="pal">
+          <div class="pal__meta"><h2>${p.name}</h2><p class="body-sm muted">${p.note}</p>
+            <button class="btn ${p.id === active ? "btn--primary" : "btn--secondary"} btn--sm" data-use="${p.id}">${p.id === active ? "In use" : "Use everywhere"}</button></div>
+          ${sample(p, "light")}${sample(p, "dark")}
+        </section>`).join("");
+    };
+    render();
+    list.addEventListener("click", (e) => {
+      const b = e.target.closest("[data-use]");
+      if (!b) return;
+      setPalette(b.dataset.use);
+      document.querySelector(".pal-switch")?.remove();
+      mountPaletteSwitcher();
+      render();
+    });
+    mountPaletteSwitcher();
+    document.addEventListener("distil:theme", render);
+    observeReveals();
+  </script>
+</body>
+</html>
