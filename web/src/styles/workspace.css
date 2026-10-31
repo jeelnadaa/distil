@@ -61,6 +61,9 @@
 .ledger tr.is-marked td { opacity: .55; }
 .ledger tr.is-marked strong { text-decoration: line-through; text-decoration-thickness: 1px; }
 .ledger .anchor + .anchor { margin-left: var(--s-1); }
+/* Long file names end in an ellipsis so the page number never runs into the status column. */
+.ledger td.sources { max-width: 280px; }
+.ledger td.sources .anchor { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
 
 .dropzone { display: flex; align-items: center; gap: var(--s-3); width: 100%; padding: var(--s-5); border: 1px dashed var(--border-control); border-radius: var(--r-md); background: none; color: var(--text-muted); text-align: left; cursor: pointer; transition: background-color var(--dur-fast) linear, border-color var(--dur-fast) linear; }
 .dropzone:hover, .dropzone.is-over { background: var(--accent-wash); border-color: var(--accent); }

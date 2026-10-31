@@ -9,6 +9,12 @@ describe("renderMarkdown", () => {
     expect(renderMarkdown("\\[\nE = mc^2\n\\]")).toContain('class="math-block"');
   });
 
+  it("renders a bare # in maths instead of a KaTeX error", () => {
+    const html = renderMarkdown("$\\text{mean} + (\\text{#ofSTDEV})$");
+    expect(html).not.toContain("katex-error");
+    expect(renderMarkdown("$\\#x$")).not.toContain("katex-error");
+  });
+
   it("leaves prices and escaped dollars alone", () => {
     const html = renderMarkdown("It costs $5 and $6 today, or \\$7.");
     expect(html).not.toContain("katex");

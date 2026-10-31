@@ -3,8 +3,9 @@ import hljs from "highlight.js/lib/common";
 import katex from "katex";
 import MarkdownIt, { type StateBlock, type StateInline } from "markdown-it";
 
+// A bare # is a KaTeX error ("#ofSTDEVs" in a textbook formula), so it is escaped first.
 const tex = (source: string, displayMode: boolean) =>
-  katex.renderToString(source, { displayMode, throwOnError: false, strict: "ignore", trust: false, output: "htmlAndMathml" });
+  katex.renderToString(source.replace(/(^|[^\\])#/g, "$1\\#"), { displayMode, throwOnError: false, strict: "ignore", trust: false, output: "htmlAndMathml" });
 
 // Inline maths: $…$ (not "$5 and $6": the opening $ must be followed by non-space) and \(…\).
 function mathInline(state: StateInline, silent: boolean): boolean {
