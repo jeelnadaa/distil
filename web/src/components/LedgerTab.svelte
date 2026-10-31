@@ -44,6 +44,29 @@
     return [...map.values()].sort((a, b) => a.rank - b.rank);
   });
 
+  // Rows are drawn a page at a time; more load as the end of the list scrolls into view.
+  const PAGE = 200;
+  let shown = $state(PAGE);
+  $effect(() => { void query; void type; void view; shown = PAGE; });
+  const paged = $derived.by(() => {
+    let left = shown;
+    const out: { name: string; total: number; items: Item[] }[] = [];
+    for (const group of groups) {
+      if (left <= 0) break;
+      out.push({ name: group.name, total: group.items.length, items: group.items.slice(0, left) });
+      left -= group.items.length;
+    }
+    return out;
+  });
+  const more = (node: HTMLElement) => {
+    const observer = new IntersectionObserver((entries) => { if (entries[0]?.isIntersecting) shown += PAGE; }, { rootMargin: "600px" });
+    observer.observe(node);
+    return { destroy: () => observer.disconnect() };
+  };
+
+  // A merged item can be found twice on one page (in two chunks); each page is linked once.
+  const anchors = (item: Item) => item.sources.filter((s, i, all) => all.findIndex((o) => o.materialId === s.materialId && o.loc === s.loc) === i);
+
   const where = (s: Item["sources"][number]) => `${s.materialName} · ${locLabel(s.unit, s.loc)}`;
 
   async function patch(item: Item, change: Parameters<typeof api.updateItem>[1]) {
@@ -105,8 +128,8 @@
       <table class="table ledger">
         <thead><tr><th>Type</th><th>Item</th><th>Source</th><th>Status</th><th><span class="sr-only">Actions</span></th></tr></thead>
         <tbody>
-          {#each groups as group (group.name)}
-            <tr class="ledger__group"><td colspan="5"><span class="eyebrow">{group.name}</span><span class="caption faint"> · {group.items.length} {group.items.length === 1 ? "item" : "items"}</span></td></tr>
+          {#each paged as group (group.name)}
+            <tr class="ledger__group"><td colspan="5"><span class="eyebrow">{group.name}</span><span class="caption faint"> · {group.total} {group.total === 1 ? "item" : "items"}</span></td></tr>
             {#each group.items as item (item.id)}
               <tr class:is-marked={!!item.mark}>
                 <td><span class="chip">{item.type}</span></td>
@@ -115,7 +138,7 @@
                   {#if item.statement}<div class="ledger__statement">{@html renderInline(item.statement)}</div>{/if}
                 </td>
                 <td class="sources">
-                  {#each item.sources as s (s.materialId + s.loc)}<a class="anchor" href="#/material/{s.materialId}/{s.loc}/{item.id}" title={s.quote}>{where(s)}</a>{/each}
+                  {#each anchors(item) as s (`${s.materialId}:${s.loc}`)}<a class="anchor" href="#/material/{s.materialId}/{s.loc}/{item.id}" title={s.quote}>{where(s)}</a>{/each}
                 </td>
                 <td><span class="status status--{item.status}"><i></i>{item.mark ? MARKS[item.mark] : STATUS[item.status]}</span></td>
                 <td class="num"><Menu label="Actions for {item.title}" items={actions(item)} /></td>
@@ -124,6 +147,12 @@
           {/each}
         </tbody>
       </table>
+      {#if shown < visible.length}
+        <div class="ledger__more" use:more>
+          <span class="caption faint">Showing {shown} of {visible.length}</span>
+          <button type="button" class="btn btn--ghost btn--sm" onclick={() => (shown += PAGE)}>Show more</button>
+        </div>
+      {/if}
     </div>
   {:else}
     <p class="ws__empty">No items match.</p>
@@ -150,4 +179,5 @@
   .sources { max-width: 260px; }
   .sources .anchor { display: inline-block; margin: 2px 4px 2px 0; white-space: nowrap; }
   .item-form { display: grid; gap: var(--s-4); }
+  .ledger__more { display: flex; gap: var(--s-3); justify-content: center; align-items: center; padding: var(--s-4); }
 </style>

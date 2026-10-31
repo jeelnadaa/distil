@@ -34,11 +34,28 @@
   const counted = $derived(items.filter((i) => !i.mark));
   const latest = $derived([...items].sort((a, b) => b.createdAt - a.createdAt).slice(0, 4));
 
+  // Items are the heavy part (a textbook has 1000+); they're replaced only when they actually changed,
+  // so an unchanged ledger isn't re-rendered on every poll.
+  let itemsJson = "";
+  const setItems = (next: Item[]) => {
+    const json = JSON.stringify(next);
+    if (json !== itemsJson) { itemsJson = json; items = next; }
+  };
   async function refresh() {
     const result = await attempt(() => Promise.all([api.materials(id), api.items(id), api.jobs()]));
     if (!result) return;
-    [materials, items, jobs] = result;
+    [materials, , jobs] = result;
+    setItems(result[1]);
     loaded = true;
+  }
+  // While busy: jobs and materials every 1.5 s, items every 6 s.
+  let ticks = 0;
+  async function poll() {
+    const withItems = ++ticks % 4 === 0;
+    const result = await attempt(() => Promise.all([api.materials(id), api.jobs(), withItems ? api.items(id) : Promise.resolve(null)]));
+    if (!result) return;
+    [materials, jobs] = result;
+    if (result[2]) setItems(result[2]);
   }
 
   // Poll while work is running in this folder; settle with one last refresh when it stops.
@@ -50,7 +67,7 @@
   $effect(() => {
     if (busy) {
       wasBusy = true;
-      const timer = setInterval(refresh, 1500);
+      const timer = setInterval(poll, 1500);
       return () => clearInterval(timer);
     }
     if (wasBusy) {

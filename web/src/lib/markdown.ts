@@ -81,4 +81,14 @@ md.renderer.rules.link_open = (tokens, i, options, env, self) => {
 
 export const renderMarkdown = (source: string) => md.render(source);
 // For one-line fields such as ledger statements: inline Markdown and maths, no block elements.
-export const renderInline = (source: string) => md.renderInline(source);
+// Ledger statements repeat across polls and re-renders; typesetting their maths again is the costly part.
+const inlineCache = new Map<string, string>();
+export const renderInline = (source: string) => {
+  let html = inlineCache.get(source);
+  if (html === undefined) {
+    if (inlineCache.size > 5000) inlineCache.clear();
+    html = md.renderInline(source);
+    inlineCache.set(source, html);
+  }
+  return html;
+};
