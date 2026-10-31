@@ -15,18 +15,18 @@ carry on from that log's "Next steps".
 | 6 Practice & Exams | `phase-6` | `D:/learning-harness-wt/phase-6` | `progress/phase-6.md` | not started |
 | 7 Retention | `phase-7` | `D:/learning-harness-wt/phase-7` | `progress/phase-7.md` | not started |
 | 8 Providers+ & usage | `phase-8` | `D:/learning-harness-wt/phase-8` | `progress/phase-8.md` | not started |
-| Merge | `master` | `D:/learning-harness` | this file | waiting |
+| Merge | `main` | `D:/learning-harness` | this file | waiting |
 
 The coordinator (the session that started the agents) updates this table. Each agent keeps only its own log current.
 
 ## Resuming
 
 1. `git -c safe.directory=* worktree list`: each phase's worktree and branch.
-2. In the phase's worktree, read `progress/phase-N.md`: "Next steps" is where to pick up. `git log --oneline master..` shows what is committed.
+2. In the phase's worktree, read `progress/phase-N.md`: "Next steps" is where to pick up. `git log --oneline main..` shows what is committed.
 3. Uncommitted changes in a worktree are work in progress from the interrupted run: finish or discard them deliberately; never lose them silently.
 4. When every phase's log says **Status: done**, merge in order 3, 4, 5, 6, 7, 8 (see "Merging").
 
-## The shared contract (on `master` before the branches were cut)
+## The shared contract (on `main` before the branches were cut)
 
 - **Schema:** migration 9 in `server/db.ts`: `briefs`, `plans`, `plan_units`, `lessons`, `lesson_items`,
   `lesson_prereqs`, `chats.lesson_id`, `items.provenance`, `item_events`, `cards`. Never edit it on a branch.
@@ -67,7 +67,7 @@ Cross-phase hand-offs, built against the contract and joined at the merge:
 ## Rules for every phase agent
 
 1. Read `AGENTS.md`, `PROGRESS.md`, `plan.md` (your sections and §4.5), `DESIGN.md` (your screens), this file, then your log.
-2. Work only in your worktree, on your branch. Never touch another worktree, `master`, or another phase's files.
+2. Work only in your worktree, on your branch. Never touch another worktree, `main`, or another phase's files.
 3. **Commit after every coherent step**, with your log updated in the same commit (`feat(plan): … (F-501)`). Never push.
 4. **Log as you go** in `progress/phase-N.md`: what is done (with F-ids), what is in progress, the exact next steps,
    decisions needing owner review, packages added, test counts, anything a fresh agent needs to resume.
