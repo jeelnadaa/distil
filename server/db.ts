@@ -308,6 +308,8 @@ const MIGRATIONS = [
     created_at INTEGER NOT NULL
   );
   CREATE INDEX checks_chat ON checks(chat_id, created_at);
+  `,
+  `
   -- The passages a reply was grounded in, numbered as it cites them ([1], [2]).
   ALTER TABLE messages ADD COLUMN sources TEXT;
   `,

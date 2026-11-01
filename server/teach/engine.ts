@@ -69,7 +69,8 @@ const SCORE: Record<Verdict, number> = { right: 1, partly: 0.5, wrong: 0, unknow
 
 // What the next streamed turn is for.
 type Turn = {
-  note: string; passages: Passage[]; check: boolean; userText: string | null;
+  // passages: null on a turn that teaches nothing new (the recap), which then cites nothing.
+  note: string; passages: Passage[] | null; check: boolean; userText: string | null;
   checkStep: number; checkItems: string[];
   // Applied once the reply finished, so a failed reply changes nothing.
   after?: (session: Session, messageId: string) => void;
@@ -159,7 +160,7 @@ export function createTeacher(deps: TeachDeps) {
         next ? `and that the next lesson is "${next.title}".` : "and that this was the last lesson in the plan.",
         "No check.",
       ].join(" "),
-      passages: [], check: false, userText: null, checkStep: s.step, checkItems: [],
+      passages: null, check: false, userText: null, checkStep: s.step, checkItems: [],
       after: (session) => {
         session.phase = "done";
         if (lesson.status !== "done") plans.updateLesson(lesson.id, { status: "done" });
@@ -244,7 +245,7 @@ export function createTeacher(deps: TeachDeps) {
     const user = turn.userText ? messages.add({ chatId: chat.id, role: "user", content: turn.userText, status: "done" }) : null;
     const assistant = messages.add({ chatId: chat.id, role: "assistant", content: "", status: "streaming", provider: refs[0]!.provider, model: refs[0]!.id });
     deps.library.touchChat(chat.id);
-    const sources = sourcesOf(turn.passages);
+    const sources = sourcesOf(turn.passages ?? []);
     if (sources.length) messages.setSources(assistant.id, sources);
     yield { type: "start", user, assistant: { ...assistant, sources: sources.length ? sources : null } };
 
@@ -253,7 +254,7 @@ export function createTeacher(deps: TeachDeps) {
     const prompt = [
       so_far ? `The lesson so far:\n\n${so_far}` : "The lesson is just starting.",
       `Director's note for this turn (not shown to the learner):\n${turn.note}${turn.check ? "" : "\nDo not write a check this turn."}`,
-      sourceBlock(turn.passages),
+      turn.passages ? sourceBlock(turn.passages) : "No sources this turn: cite nothing.",
     ].join("\n\n---\n\n");
 
     let raw = "";

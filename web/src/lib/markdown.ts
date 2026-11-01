@@ -72,11 +72,15 @@ md.block.ruler.after("blockquote", "math_block", mathBlock, { alt: ["paragraph",
 md.renderer.rules.math_inline = (tokens, i) => tex(tokens[i]!.content, false);
 md.renderer.rules.math_block = (tokens, i) => `<div class="math-block">${tex(tokens[i]!.content, true)}</div>`;
 
-// Links open outside the app and never get access to it.
+// Links open outside the app and never get access to it; only the app's own routes (#/…, such as a
+// lesson's citations) stay inside.
 const defaultLink = md.renderer.rules.link_open ?? ((tokens, i, options, _env, self) => self.renderToken(tokens, i, options));
 md.renderer.rules.link_open = (tokens, i, options, env, self) => {
-  tokens[i]!.attrSet("target", "_blank");
-  tokens[i]!.attrSet("rel", "noopener noreferrer");
+  if (String(tokens[i]!.attrGet("href") ?? "").startsWith("#/")) tokens[i]!.attrSet("class", "cite");
+  else {
+    tokens[i]!.attrSet("target", "_blank");
+    tokens[i]!.attrSet("rel", "noopener noreferrer");
+  }
   return defaultLink(tokens, i, options, env, self);
 };
 

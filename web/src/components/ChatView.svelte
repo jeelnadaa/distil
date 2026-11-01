@@ -8,6 +8,7 @@
   import Dialog from "./Dialog.svelte";
   import Icon from "./Icon.svelte";
   import LessonProgress from "./LessonProgress.svelte";
+  import LessonView from "./LessonView.svelte";
   import Markdown from "./Markdown.svelte";
   import ModelSelect from "./ModelSelect.svelte";
 
@@ -25,7 +26,7 @@
   let titleDraft = $state("");
   let scroller = $state<HTMLElement>();
   let pinned = true;
-  // Bumped when a reply moved the lesson's items, so the lesson button reloads.
+  // Bumped when a lesson move changed its items, so the lesson button reloads.
   let progressTick = $state(0);
 
   const fmt = new Intl.NumberFormat(undefined, { notation: "compact", maximumFractionDigits: 1 });
@@ -89,8 +90,6 @@
           capWarn = event.cap.state === "warn" ? event.cap : null;
         } else if (event.type === "error") {
           patch(() => event.message);
-        } else if (event.type === "progress") {
-          progressTick++;
         } else if (event.type === "title" && chat) {
           chat.title = event.title;
           const entry = library.chats.find((c) => c.id === chat!.id);
@@ -164,6 +163,9 @@
   <ActivityDock />
 </header>
 
+{#if chat?.mode === "teach"}
+  <LessonView {chat} bind:messages onprogress={() => progressTick++} oncap={(err) => (capHit = { open: true, status: err.details as CapStatus })} />
+{:else}
 <div class="scroll" bind:this={scroller} {onscroll}>
   <div class="page thread">
     {#if chat && !messages.length}
@@ -208,6 +210,7 @@
     <ModelSelect value={model} onchange={pickModel} label="Model for this chat" compact />
   </Composer>
 </div>
+{/if}
 
 <Dialog bind:open={capHit.open} title="Token cap reached" eyebrow="Limit" danger>
   <p class="body-sm muted">Distil stopped before sending, so nothing was spent. Raise the cap or wait for it to reset.</p>
@@ -236,4 +239,5 @@
   .cap-warn { width: min(var(--content-max), 100%); margin: 0 auto var(--s-2); }
   .link { color: var(--text-muted); text-decoration: underline; text-underline-offset: 3px; }
   .link:hover { color: var(--text); }
+  @media (max-width: 600px) { .meter { display: none; } }
 </style>

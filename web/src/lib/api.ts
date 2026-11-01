@@ -6,7 +6,7 @@ import type { Job } from "../../../server/jobs.ts";
 import type { estimateExtraction, Strategy } from "../../../server/ledger/extract.ts";
 import type { Item, ItemMark, ItemType } from "../../../server/ledger/store.ts";
 import type { Material, StoredChunk } from "../../../server/materials/store.ts";
-import type { Message } from "../../../server/messages.ts";
+import type { Message, Source } from "../../../server/messages.ts";
 import type { ProviderSpec } from "../../../server/providers/catalog.ts";
 import type { ModelInfo } from "../../../server/providers/types.ts";
 import type { Brief } from "../../../server/learning/types.ts";
@@ -16,9 +16,14 @@ import type { TodayLesson, TodayView } from "../../../server/plan/today.ts";
 import type { PlanView } from "../../../server/plan/view.ts";
 import type { ModelRef, Settings } from "../../../server/settings.ts";
 import type { CapStatus } from "../../../server/usage.ts";
+import type { Confidence, PublicCheck, Result } from "../../../server/teach/checks.ts";
+import type { ActionKind, Answer, SessionView, TeachEvent } from "../../../server/teach/engine.ts";
+import type { CheckView, Step } from "../../../server/teach/store.ts";
 
 export type { Brief, Compiled, Lesson, Plan, PlanKind, PlanView, SavedPlan, StoredBrief, TodayLesson, TodayView, Unit };
 export type { CapStatus, Chat, SavedFont, Folder, Item, ItemMark, ItemType, Job, Message, Meter, ModelInfo, ModelRef, Settings, Strategy, TurnEvent };
+export type { ActionKind, Answer, CheckView, Confidence, PublicCheck, Result, SessionView, Source, Step, TeachEvent };
+export type TeachView = { session: SessionView | null; checks: CheckView[] };
 export type FolderMaterial = Material & { inherited: boolean };
 export type { Material, StoredChunk };
 export type Estimate = ReturnType<typeof estimateExtraction> & { materials: number };
@@ -163,21 +168,32 @@ export const api = {
   usage: () => json<{ today: number; month: number; cap: CapStatus }>("GET", "/usage"),
 
   // Sends a message and calls onEvent for each streamed event until the turn ends or is aborted.
-  async send(chatId: string, text: string, model: ModelRef | undefined, onEvent: (e: TurnEvent) => void, signal: AbortSignal) {
-    const res = await call("POST", `/chats/${chatId}/messages`, { text, model }, signal);
-    const reader = res.body!.pipeThrough(new TextDecoderStream()).getReader();
-    let buffer = "";
-    for (;;) {
-      const { value, done } = await reader.read();
-      if (done) break;
-      buffer += value;
-      let end: number;
-      while ((end = buffer.indexOf("\n\n")) !== -1) {
-        const frame = buffer.slice(0, end);
-        buffer = buffer.slice(end + 2);
-        const data = frame.split("\n").filter((l) => l.startsWith("data:")).map((l) => l.slice(5).trimStart()).join("\n");
-        if (data) onEvent(JSON.parse(data));
-      }
-    }
-  },
+  send: (chatId: string, text: string, model: ModelRef | undefined, onEvent: (e: TurnEvent) => void, signal: AbortSignal) =>
+    events(`/chats/${chatId}/messages`, { text, model }, onEvent, signal),
+
+  // A lesson (Phase 4): its session, and each move in it streamed.
+  teach: (chatId: string) => json<TeachView>("GET", `/chats/${chatId}/teach`),
+  teachStart: (chatId: string, onEvent: (e: TeachEvent) => void, signal: AbortSignal) => events(`/chats/${chatId}/teach/start`, {}, onEvent, signal),
+  teachAnswer: (chatId: string, answer: Answer, onEvent: (e: TeachEvent) => void, signal: AbortSignal) => events(`/chats/${chatId}/teach/answer`, answer, onEvent, signal),
+  teachAction: (chatId: string, kind: ActionKind, onEvent: (e: TeachEvent) => void, signal: AbortSignal) => events(`/chats/${chatId}/teach/action`, { kind }, onEvent, signal),
+  teachAsk: (chatId: string, text: string, onEvent: (e: TeachEvent) => void, signal: AbortSignal) => events(`/chats/${chatId}/teach/ask`, { text }, onEvent, signal),
 };
+
+// Posts and calls onEvent for each server-sent event until the stream ends or is aborted.
+async function events<E>(path: string, body: unknown, onEvent: (e: E) => void, signal: AbortSignal) {
+  const res = await call("POST", path, body, signal);
+  const reader = res.body!.pipeThrough(new TextDecoderStream()).getReader();
+  let buffer = "";
+  for (;;) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    buffer += value;
+    let end: number;
+    while ((end = buffer.indexOf("\n\n")) !== -1) {
+      const frame = buffer.slice(0, end);
+      buffer = buffer.slice(end + 2);
+      const data = frame.split("\n").filter((l) => l.startsWith("data:")).map((l) => l.slice(5).trimStart()).join("\n");
+      if (data) onEvent(JSON.parse(data));
+    }
+  }
+}
