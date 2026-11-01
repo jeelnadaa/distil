@@ -1,6 +1,6 @@
 // Builds the Windows release (F-1305): `npm run package [-- --feed <update feed URL>]`.
 //
-// release/Distil-<v>-win-x64/       the install folder: Install.ps1, the Node runtime, launcher, app-<v>/
+// release/Distil-<v>-win-x64/       the install folder: Install Distil.cmd, Install.ps1, the Node runtime, launcher, app-<v>/
 // release/Distil-<v>-win-x64.zip    that folder zipped, to hand out
 // release/app-<v>.zip               the app folder alone: the payload an update downloads
 // release/feed.json                 the update feed entry for this version (url, sha256)
@@ -11,8 +11,10 @@ import { execSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { cpSync, createReadStream, createWriteStream, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { join, relative } from "node:path";
-import { Zip, ZipDeflate } from "fflate";
+import { crc32, inflateRawSync } from "node:zlib";
+import { Zip } from "fflate";
 import sharp from "sharp";
+import { ZipEntry } from "../server/zip.ts";
 
 const repo = join(import.meta.dirname, "..");
 const pkg = JSON.parse(readFileSync(join(repo, "package.json"), "utf8")) as { version: string; dependencies: Record<string, string> };
@@ -71,7 +73,7 @@ writeFileSync(join(app, "CREDITS.md"), `${header}\n## Bundled packages\n\n| Pack
 step("adding the runtime, launcher and installer");
 mkdirSync(join(out, "runtime"));
 cpSync(process.execPath, join(out, "runtime", "node.exe"));
-for (const f of ["launcher.mjs", "Install.ps1", "Uninstall.ps1"]) cpSync(join(repo, "desktop", f), join(out, f));
+for (const f of ["launcher.mjs", "Install Distil.cmd", "Install.ps1", "Uninstall.ps1"]) cpSync(join(repo, "desktop", f), join(out, f));
 cpSync(join(app, "CREDITS.md"), join(out, "CREDITS.md"));
 cpSync(join(repo, "LICENSE"), join(out, "LICENSE"));
 writeFileSync(join(out, "current.txt"), appName);
@@ -112,7 +114,7 @@ async function zipFolder(dir: string, file: string, prefix = "") {
   });
   for (const path of filesIn(dir)) {
     const level = /\.(png|jpe?g|webp|woff2?|gz|zip|onnx|node|dll|exe)$/i.test(path) ? 0 : 6;
-    const entry = new ZipDeflate(prefix + relative(dir, path).split("\\").join("/"), { level });
+    const entry = new ZipEntry(prefix + relative(dir, path).split("\\").join("/"), level);
     zip.add(entry);
     for await (const chunk of createReadStream(path)) entry.push(chunk as Uint8Array);
     entry.push(new Uint8Array(0), true);
@@ -123,14 +125,37 @@ async function zipFolder(dir: string, file: string, prefix = "") {
   return { sha256: hash.digest("hex"), size: statSync(file).size };
 }
 
+// Reads every entry back and checks its CRC, so a damaged zip stops the build instead of reaching anyone.
+function verifyZip(file: string) {
+  const zip = readFileSync(file);
+  const end = zip.lastIndexOf(Buffer.from([0x50, 0x4b, 0x05, 0x06]));
+  if (end < 0) throw new Error(`${file} has no end record.`);
+  let at = zip.readUInt32LE(end + 16);
+  const count = zip.readUInt16LE(end + 10);
+  for (let i = 0; i < count; i++) {
+    const nameLength = zip.readUInt16LE(at + 28);
+    const name = zip.toString("utf8", at + 46, at + 46 + nameLength);
+    const local = zip.readUInt32LE(at + 42);
+    const start = local + 30 + zip.readUInt16LE(local + 26) + zip.readUInt16LE(local + 28);
+    const data = inflateRawSync(zip.subarray(start, start + zip.readUInt32LE(at + 20)));
+    if (data.length !== zip.readUInt32LE(at + 24) || crc32(data) !== zip.readUInt32LE(at + 16)) throw new Error(`${file} is damaged at ${name}.`);
+    at += 46 + nameLength + zip.readUInt16LE(at + 30) + zip.readUInt16LE(at + 32);
+  }
+  return count;
+}
+
+// The installer compares this with what it finds, to catch a zip that didn't fully extract.
+writeFileSync(join(out, "app-files.txt"), String(filesIn(app).length));
+
 step("zipping the update payload");
 const update = await zipFolder(app, join(release, `${appName}.zip`));
-writeFileSync(join(release, "feed.json"), `${JSON.stringify({ version: pkg.version, url: `${appName}.zip`, sha256: update.sha256, notes: "", minRuntime: process.versions.node }, null, 2)}\n`);
+writeFileSync(join(release, "feed.json"), `${JSON.stringify({ version: pkg.version, url: `${appName}.zip`, sha256: update.sha256, notes: "", minRuntime: `${process.versions.node.split(".")[0]}.0.0` }, null, 2)}\n`);
 step("zipping the install folder");
 const bundle = await zipFolder(out, join(release, `${name}.zip`), `${name}/`);
+step(`checked ${verifyZip(join(release, `${appName}.zip`)) + verifyZip(join(release, `${name}.zip`))} zip entries`);
 
 const mb = (n: number) => `${(n / 1024 / 1024).toFixed(0)} MB`;
 console.log(`\nRelease ${pkg.version} in ${relative(repo, release)}:`);
-console.log(`  ${name}.zip   ${mb(bundle.size)}  (unzip, then run Install.ps1)`);
+console.log(`  ${name}.zip   ${mb(bundle.size)}  (unzip, then double-click Install Distil.cmd)`);
 console.log(`  ${appName}.zip   ${mb(update.size)}  (update payload; sha256 in feed.json)`);
 if (!feed) console.log("  No --feed given: this build won't check for updates.");

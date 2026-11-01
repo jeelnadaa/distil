@@ -222,6 +222,12 @@ Living status log. Update in the same commit as every change.
 - Measured on the textbook with `scripts/eval-ledger.ts` and `scripts/eval-retrieval.ts`, counts only, in `evals/` (no textbook text): quotes matched 92.18 % with the old matching to 96.72 % (34 of 1,036 unmatched); repeated titles 28 to 1; extra copies 36 to 1; items 997 to 944; near-duplicate groups 126 to 102. Retrieval, keyword only, hit@6 searching by title and statement 89.06 % to 91.09 %, by title alone 67.17 % to 74.66 %; hit@1 74.40 % to 75.72 %.
 - Limits of these numbers: the 34 quotes left are mostly LaTeX the model rewrote, paraphrases and table titles, which can't honestly match. The retrieval set searches for an item's own words, so it shows search can find a known passage, not that answers are good. Embeddings were off. The model merge step wasn't re-run (no tokens spent), so the 102 near-duplicate groups are what code alone leaves. All measured on a copy of the test data, not in the running app. 14 items went back to the merge step on that copy.
 
+
+### 2026-11-02 · Release fixes
+- The zips were damaged: fflate's streaming deflate writes invalid data for some files (6 font files in release 0.1.1), so unzipping gave checksum errors and an update using that payload would fail. Backups used the same code, so a backup made before this fix may not restore. Zips now use `ZipEntry` (`server/zip.ts`), compressed by zlib, and `npm run package` reads every entry back and checks its CRC.
+- Installing failed silently: Windows blocks scripts by default and the window closed before the error could be read. The zip now has `Install Distil.cmd`, which runs the installer past that policy and keeps the window open. The installer also refuses a partly extracted zip.
+- The feed's `minRuntime` was the exact Node version, so a Node patch on the build machine would have told every installed copy to reinstall by hand. It's now the major version.
+- Tested on a release zip: extracted with Windows' own zip engine from a file marked as downloaded, installed through the .cmd to a temporary folder, ran the app, made a backup, and updated from 0.1.0 to a test 0.1.9 through a local feed. The Start menu and desktop shortcuts weren't exercised, and the real feed is first proven by the next release.
 ## Open questions
 
 See `plan.md` §18.
@@ -248,10 +254,9 @@ See `plan.md` §18.
 - Web search (Tavily, Brave) is checked only against fakes; no real search key has been tried.
 - A cap is checked before each request, so one reply already in flight can finish past 100 %.
 - Keys are in a user-only file, not the OS credential store (F-1206); the Windows build keeps them there too.
-- The release isn't code-signed, so Windows SmartScreen may warn when Install.ps1 or the shortcut first runs; signing needs a certificate.
+- The release isn't code-signed, so Windows SmartScreen may warn when `Install Distil.cmd` first runs; signing needs a certificate.
 - The Windows zip bundles Satoshi inside the built UI. Its licence (ITF FFL) allows embedding in an app; only the repository must not hold the font files, so CI fetches them and the website loads Satoshi from Fontshare.
 - The Windows app and its installer script aren't code-signed, so Windows may warn on first run.
-- No update feed is published yet, so builds don't check for updates until one is built with `--feed`.
 - Inline maths (KaTeX) doesn't wrap, so a long formula in a chat reply widens the column on a phone.
 - The fake model's plans are mechanical (one unit per heading); judge plan quality only with a real model.
 - After Phase 10 about 3 % of the textbook's quotes still don't match their text (rewritten LaTeX, paraphrases, table titles); those items anchor to the start of their chunk.

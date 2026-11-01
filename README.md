@@ -24,8 +24,8 @@ token is on the record. See [PROGRESS.md](PROGRESS.md) for where the project sta
 ## Install on Windows
 
 1. Download [Distil-win-x64.zip](https://github.com/jeelnadaa/distil/releases/latest/download/Distil-win-x64.zip) and unzip it.
-2. Right-click `Install.ps1` and choose *Run with PowerShell*. It installs for your user only, without admin rights.
-   The app isn't code-signed yet, so Windows may warn you first.
+2. Double-click `Install Distil.cmd`. It installs for your user only, without admin rights, and the window stays open to show the result.
+   The app isn't code-signed yet, so Windows may warn you first: choose *More info*, then *Run anyway*.
 3. Open Distil from the Start menu and add a provider key under Settings › Providers. Google AI Studio has a free tier.
 
 New versions install from inside the app, under Settings › About.

@@ -3,11 +3,11 @@ import { join } from "node:path";
 import { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
 import { DatabaseSync } from "node:sqlite";
-import { Zip, ZipDeflate } from "fflate";
+import { Zip } from "fflate";
 import { type Db, SCHEMA_VERSION } from "./db.ts";
 import { AppError } from "./errors.ts";
 import { APP_VERSION } from "./version.ts";
-import { safePath, unzipTo } from "./zip.ts";
+import { safePath, unzipTo, ZipEntry } from "./zip.ts";
 
 // Backup and restore (F-1304). A backup is a zip of a consistent copy of the database, the materials
 // and the added fonts. Keys (secrets.json) and downloaded models stay out: keys don't belong in a file
@@ -55,13 +55,13 @@ export function createBackup({ db, dataDir, now = () => Date.now() }: { db: Db; 
       const zip = new Zip((err, chunk) => { if (err) throw err; out.push(chunk); });
       const drain = function* () { yield* out.splice(0); };
       const manifest: BackupManifest = { app: "distil", version: APP_VERSION, schema: SCHEMA_VERSION, createdAt: now(), ...counts(db) };
-      const head = new ZipDeflate("manifest.json", { level: 6 });
+      const head = new ZipEntry("manifest.json", 6);
       zip.add(head);
       head.push(new TextEncoder().encode(JSON.stringify(manifest, null, 2)), true);
       for (const f of [{ path: snapshot, name: "distil.db" }, ...files]) {
         // The database compresses well; materials are mostly compressed already, so they're stored in
         // level-0 deflate blocks, which (unlike plain stored entries) a streaming unzip can find the end of.
-        const entry = new ZipDeflate(f.name, { level: f.name === "distil.db" ? 6 : 0 });
+        const entry = new ZipEntry(f.name, f.name === "distil.db" ? 6 : 0);
         zip.add(entry);
         for await (const chunk of createReadStream(f.path)) {
           entry.push(chunk as Uint8Array);
