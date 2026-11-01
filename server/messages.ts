@@ -2,6 +2,8 @@ import { randomUUID } from "node:crypto";
 import type { Db } from "./db.ts";
 
 export type MessageStatus = "streaming" | "done" | "aborted" | "error";
+// A passage a reply cites as [n], where n is its place in the list.
+export type Source = { materialId: string; materialName: string; loc: number; locTo: number; headings: string[] };
 export type Message = {
   id: string;
   chatId: string;
@@ -11,17 +13,18 @@ export type Message = {
   error: string | null;
   provider: string | null;
   model: string | null;
+  sources: Source[] | null;
   createdAt: number;
 };
 
 type Row = {
   id: string; chat_id: string; role: Message["role"]; content: string; status: MessageStatus;
-  error: string | null; provider: string | null; model: string | null; created_at: number;
+  error: string | null; provider: string | null; model: string | null; sources: string | null; created_at: number;
 };
 
 const toMessage = (r: Row): Message => ({
   id: r.id, chatId: r.chat_id, role: r.role, content: r.content, status: r.status, error: r.error,
-  provider: r.provider, model: r.model, createdAt: r.created_at,
+  provider: r.provider, model: r.model, sources: r.sources ? JSON.parse(r.sources) : null, createdAt: r.created_at,
 });
 
 export function createMessages(db: Db, now = () => Date.now()) {
@@ -32,7 +35,7 @@ export function createMessages(db: Db, now = () => Date.now()) {
 
     add(m: Pick<Message, "chatId" | "role" | "content" | "status"> & Partial<Pick<Message, "provider" | "model">>): Message {
       const message: Message = {
-        id: randomUUID(), error: null, provider: null, model: null, createdAt: now(), ...m,
+        id: randomUUID(), error: null, provider: null, model: null, sources: null, createdAt: now(), ...m,
       };
       db.prepare(`INSERT INTO messages (id, chat_id, role, content, status, error, provider, model, created_at)
                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`)
@@ -44,6 +47,10 @@ export function createMessages(db: Db, now = () => Date.now()) {
     // A reply answered by a fallback model is credited to that model.
     setModel(id: string, provider: string, model: string) {
       db.prepare("UPDATE messages SET provider = ?, model = ? WHERE id = ?").run(provider, model, id);
+    },
+
+    setSources(id: string, sources: Source[]) {
+      db.prepare("UPDATE messages SET sources = ? WHERE id = ?").run(JSON.stringify(sources), id);
     },
 
     finish(id: string, content: string, status: Exclude<MessageStatus, "streaming">, error: string | null = null) {

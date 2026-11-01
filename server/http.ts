@@ -24,9 +24,11 @@ import { queueIndexing, type Retrieval } from "./retrieval/retrieve.ts";
 import { registerRetrievalRoutes } from "./retrieval/routes.ts";
 import type { Vectors } from "./retrieval/vectors.ts";
 import type { Plans } from "./plan/store.ts";
+import type { Teacher } from "./teach/engine.ts";
+import { registerTeachRoutes } from "./teach/routes.ts";
 
 export type AppDeps = ChatDeps & { dataDir: string; allowedHosts: string[]; fonts: Fonts; materials: Materials; search: Search; ledger: Ledger; jobs: Jobs; fetch?: FetchFn }
-  & { db: Db; learner: Learner; plans: Plans; briefs: Briefs; local: LocalModels; vectors: Vectors; retrieval: Retrieval };
+  & { db: Db; learner: Learner; plans: Plans; briefs: Briefs; local: LocalModels; vectors: Vectors; retrieval: Retrieval; teacher: Teacher };
 
 const NullableId = z.string().min(1).nullable();
 const ModelRefBody = z.object({ provider: z.string().min(1), id: z.string().min(1), key: z.string().min(1).optional() });
@@ -305,5 +307,6 @@ export function createApp(deps: AppDeps) {
 
   registerPlanRoutes(app, deps);
   registerRetrievalRoutes(app, deps);
+  registerTeachRoutes(app, deps);
   return app;
 }

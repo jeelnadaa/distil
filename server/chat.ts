@@ -13,10 +13,8 @@ export type ChatDeps = {
   providers: Providers;
   settings: SettingsStore;
   usage: UsageStore;
-  // Extra system context for a chat: its study brief and, in a lesson chat, the lesson's items (F-105).
+  // Extra system context for a chat: its study brief (F-105).
   context?: (chat: Chat) => string;
-  // After each reply in a lesson chat: records which items the exchange taught or checked; true when any moved.
-  progress?: (chat: Chat, exchange: ChatMessage[], messageId: string) => Promise<boolean>;
   log?: (msg: string) => void;
 };
 
@@ -28,8 +26,7 @@ export type TurnEvent =
   | { type: "model"; provider: string; model: string }
   | { type: "done"; message: Message; meter: Meter; cap: CapStatus }
   | { type: "error"; message: Message; error: string }
-  | { type: "title"; title: string }
-  | { type: "progress" };
+  | { type: "title"; title: string };
 
 const NAMER_EXCERPT = 1500;
 
@@ -45,6 +42,7 @@ const sameRef = (a: ModelRef, b: ModelRef) => a.provider === b.provider && a.id 
 // leaving out providers that are capped.
 export function prepareTurn(deps: ChatDeps, chatId: string, text: string, model?: ModelRef) {
   const chat = deps.library.getChat(chatId);
+  if (chat.mode === "teach") throw new AppError(400, "lesson_chat", "A lesson is taught through its own controls.");
   const content = text.trim();
   if (!content) throw new AppError(400, "empty_message", "Type a message first.");
   const { models, fallbacks, caps } = deps.settings.get();
@@ -137,14 +135,6 @@ export async function* streamTurn(
     meter: meterFor(deps, current),
     cap: usage.capStatus(deps.settings.get().caps, answering.provider),
   };
-
-  if (chat.lessonId && deps.progress) {
-    const moved = await deps.progress(chat, [...history.slice(-2), { role: "assistant", content: reply }], assistant.id).catch((err) => {
-      deps.log?.(`Lesson progress failed: ${err instanceof Error ? err.message : err}`);
-      return false;
-    });
-    if (moved) yield { type: "progress" };
-  }
 
   if (chat.titleSource === "default") {
     const title = await nameChat(deps, chat, content, reply, answering).catch((err) => {

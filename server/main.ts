@@ -14,7 +14,6 @@ import { createMaterials } from "./materials/store.ts";
 import { createMessages } from "./messages.ts";
 import { createBriefs } from "./plan/brief.ts";
 import { chatContext } from "./plan/context.ts";
-import { lessonProgress } from "./plan/progress.ts";
 import { registerPlanner } from "./plan/planner.ts";
 import { createLocalModels } from "./retrieval/local.ts";
 import { createRetrieval, queueIndexing, registerIndexing } from "./retrieval/retrieve.ts";
@@ -22,6 +21,8 @@ import { registerModelDownload } from "./retrieval/routes.ts";
 import { createVectors } from "./retrieval/vectors.ts";
 import { createSearch } from "./materials/search.ts";
 import { createPlans } from "./plan/store.ts";
+import { createTeacher } from "./teach/engine.ts";
+import { createTeachStore } from "./teach/store.ts";
 import { createProviders } from "./providers/service.ts";
 import { createSecrets } from "./secrets.ts";
 import { createSettings } from "./settings.ts";
@@ -61,6 +62,7 @@ export function createServer({ port, dataDir = defaultDataDir(), fetch }: { port
   const plans = createPlans(db);
   const briefs = createBriefs(db);
   registerPlanner(jobs, { providers, settings, usage, db, plans, briefs, learner });
+  const teacher = createTeacher({ providers, settings, usage, db, library, messages, plans, ledger, learner, retrieval, teach: createTeachStore(db), log });
   const deps = {
     dataDir,
     allowedHosts: [`localhost:${port}`, `127.0.0.1:${port}`, `[::1]:${port}`],
@@ -81,8 +83,8 @@ export function createServer({ port, dataDir = defaultDataDir(), fetch }: { port
     briefs,
     jobs,
     providers,
-    context: chatContext(db, plans, ledger),
-    progress: lessonProgress({ providers, settings, usage, plans, ledger, learner }),
+    teacher,
+    context: chatContext(db),
     log,
     fetch,
   };

@@ -280,6 +280,37 @@ const MIGRATIONS = [
   );
   CREATE INDEX chunk_vectors_model ON chunk_vectors(model);
   `,
+  `
+  -- Teach (Phase 4): one session per lesson chat. steps is JSON: [{title, kind, items, status}] where kind is
+  -- orientation or teach and status upcoming, current, done or shaky. repairs counts re-explanations of the
+  -- current step; probe holds the probe's questions and verdicts.
+  CREATE TABLE teach_sessions (
+    chat_id    TEXT PRIMARY KEY REFERENCES chats(id) ON DELETE CASCADE,
+    lesson_id  TEXT NOT NULL REFERENCES lessons(id) ON DELETE CASCADE,
+    phase      TEXT NOT NULL CHECK (phase IN ('probe', 'teach', 'recap', 'done')),
+    steps      TEXT NOT NULL,
+    step       INTEGER NOT NULL DEFAULT 0,
+    repairs    INTEGER NOT NULL DEFAULT 0,
+    probe      TEXT NOT NULL DEFAULT '[]',
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL
+  );
+  -- A check question in a lesson (F-604): the spec with its answer (never sent before answering), the step
+  -- it checks (-1 in the probe), its items, and the learner's result once answered.
+  CREATE TABLE checks (
+    id         TEXT PRIMARY KEY,
+    chat_id    TEXT NOT NULL REFERENCES chats(id) ON DELETE CASCADE,
+    message_id TEXT NOT NULL REFERENCES messages(id) ON DELETE CASCADE,
+    step       INTEGER NOT NULL,
+    items      TEXT NOT NULL,
+    spec       TEXT NOT NULL,
+    result     TEXT,
+    created_at INTEGER NOT NULL
+  );
+  CREATE INDEX checks_chat ON checks(chat_id, created_at);
+  -- The passages a reply was grounded in, numbered as it cites them ([1], [2]).
+  ALTER TABLE messages ADD COLUMN sources TEXT;
+  `,
 ];
 
 export function openDb(file: string): Db {

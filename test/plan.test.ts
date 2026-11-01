@@ -12,7 +12,6 @@ import { Brief } from "../server/learning/types.ts";
 import { createBriefs } from "../server/plan/brief.ts";
 import { chatContext } from "../server/plan/context.ts";
 import { registerPlanner } from "../server/plan/planner.ts";
-import { lessonProgress } from "../server/plan/progress.ts";
 import { createPlans } from "../server/plan/store.ts";
 import type { Providers } from "../server/providers/service.ts";
 import { createSettings } from "../server/settings.ts";
@@ -51,31 +50,10 @@ function setup(reply: (prompt: string) => unknown) {
     jobs.enqueue("plan", "Planning", { folderId: folder.id, params: { planId, mode } });
     await jobs.idle();
   };
-  const progress = lessonProgress({ providers, settings, usage, plans, ledger, learner });
-  return { db, library, ledger, plans, briefs, folder, add, plan, prompts, progress };
+  return { db, library, ledger, plans, briefs, folder, add, plan, prompts };
 }
 
 const lesson = (key: string, items: string[], after: string[] = []) => ({ key, title: `Lesson ${key}`, summary: "", kind: "lesson", minutes: 30, weight: 1, aids: [], items, after });
-
-describe("lesson progress", () => {
-  it("records what a lesson chat taught and checked, and finishes the lesson once every item is checked", async () => {
-    const t = setup((prompt) => !prompt.includes("Latest exchange") ? { units: [{ title: "Basics", lessons: [lesson("a", ["i1", "i2"])] }] }
-      : prompt.includes("Right") ? { taught: [], checked: [1, 2, 7] } : { taught: [1, 2], checked: [] });
-    const items = ["Mean", "Median"].map(t.add);
-    await t.plan();
-    const first = t.plans.active(t.folder.id)!.lessons[0]!;
-    const chat = t.library.createChat(t.folder.id, first);
-    const status = () => items.map((i) => t.ledger.get(i.id).status);
-
-    expect(await t.progress(chat, [{ role: "user", content: "Start" }, { role: "assistant", content: "The mean is..." }], "m1")).toBe(true);
-    expect(status()).toEqual(["taught", "taught"]);
-    expect(await t.progress(chat, [{ role: "user", content: "Start" }, { role: "assistant", content: "The mean is..." }], "m2")).toBe(false);
-    expect(t.plans.lesson(first.id).status).not.toBe("done");
-    expect(await t.progress(chat, [{ role: "user", content: "3" }, { role: "assistant", content: "Right." }], "m3")).toBe(true);
-    expect(status()).toEqual(["checked", "checked"]);
-    expect(t.plans.lesson(first.id).status).toBe("done");
-  });
-});
 
 describe("planner", () => {
   it("plans every item even when the model keeps leaving one out", async () => {
@@ -106,7 +84,7 @@ describe("planner", () => {
     expect(t.ledger.list(t.folder.id).find((i) => i.id === added.id)!.status).toBe("planned");
   });
 
-  it("gives lesson chats the brief and the lesson's items", async () => {
+  it("gives chats the brief, and makes a lesson's chat a teach chat", async () => {
     const t = setup(() => ({ units: [{ title: "Basics", lessons: [lesson("a", ["i1"])] }] }));
     t.add("Standard deviation");
     t.briefs.save(t.folder.id, { goal: "Pass the midterm", scope: "", level: "", depth: "exam_ready", deadline: null, hoursPerDay: null, daysOff: [], assessment: "", language: "English" }, "course");
@@ -114,10 +92,8 @@ describe("planner", () => {
     const first = t.plans.active(t.folder.id)!.lessons[0]!;
     const chat = t.library.createChat(t.folder.id, first);
 
-    const context = chatContext(t.db, t.plans, t.ledger)(chat);
     expect(chat).toMatchObject({ mode: "teach", lessonId: first.id, title: first.title, titleSource: "manual" });
-    expect(context).toContain("Pass the midterm");
-    expect(context).toContain("Standard deviation, stated.");
+    expect(chatContext(t.db)(chat)).toContain("Pass the midterm");
   });
 });
 
