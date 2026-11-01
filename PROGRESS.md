@@ -4,11 +4,12 @@ Living status log. Update in the same commit as every change.
 
 ## Current phase
 
-**Phase 4 — Teach** is next, on `main`.
+**Phase 5 — Interactives** is next, on `main`.
 
 ## Next up
 
-1. Phase 4 — Teach: retrieval (keyword index, optional embeddings), probe, session plan panel, checks with confidence, repair loop, item statuses moving, recap. It replaces the lesson-chat prompt Phase 3 put in (`server/plan/context.ts`).
+1. Phase 5 — Interactives: visuals and quiz widgets inside lessons (F-618's second half, F-708).
+2. Still open from Phase 4 (should/could): opening recall questions from the previous lesson (F-614), predict-before-reveal prompts (F-608), dictation (F-615). Downloading a local embedding model has only been checked up to the consent dialog; the download itself waits for the owner's go-ahead.
 
 ## Phase checklist
 
@@ -20,7 +21,7 @@ Living status log. Update in the same commit as every change.
 - [x] Phase 1 — Foundation
 - [x] Phase 2 — Materials & Coverage Ledger
 - [x] Phase 3 — Study Plan
-- [ ] Phase 4 — Teach
+- [x] Phase 4 — Teach
 - [ ] Phase 5 — Interactives
 - [ ] Phase 6 — Practice & Exams
 - [ ] Phase 7 — Retention
@@ -146,6 +147,13 @@ Living status log. Update in the same commit as every change.
 - Search by meaning (F-1005): Settings › Models offers Off, a provider embedding model (Gemini and OpenAI-compatible keys list theirs) or a model on this computer (Small, Medium, High through `@huggingface/transformers` — added this phase; its blocked install scripts only fetch CUDA builds and image tools, which Distil doesn't use). A local model downloads only after a dialog shows its exact size from Hugging Face, and can be removed. Chunks are embedded by a background job (migration 12, `chunk_vectors`) that runs when the model changes and after a file is read, and waits out per-minute quota limits instead of failing.
 - Retrieval (F-1004): keyword and meaning rankings merged by reciprocal rank fusion, falling back to keyword search when embeddings are off or failing; for lesson items it gathers each item's own source passages plus what every other file in the folder says about it (F-617).
 - Checked live on Gemini `gemini-embedding-001`: the free tier's 30k tokens a minute limit is waited out while the textbook folder indexes. 147 tests.
+
+### 2026-11-01 · Phase 4 — Teach
+- Teaching engine (`server/teach/`, migrations 13–14): each lesson chat runs as a session of steps. The strong model splits the lesson's items into steps, with course admin as an orientation that is mentioned, never quizzed; if its split misses an item, one item per step is used. A probe question runs first only when the lesson builds on earlier ones or the brief says the learner knows some of it (F-601).
+- Each step is taught from the item's own passages plus what the rest of the folder says about it, with numbered citations stored on the reply (F-617), in a form that fits the content (F-618), and ends with a check: multiple choice, number, short answer, ordering or explain (F-604). The answer never reaches the browser before the learner answers; ordering steps are shown shuffled. Code grades choice, number and order; the cheap model grades written answers.
+- After an answer: right moves on (a right answer marked "guess" gets one follow-up first); wrong, partly or "I don't know" gets a repair, at most two, then the step is marked shaky and the lesson moves on; a recap names what was learned, what is shaky and the next lesson, and finishes the lesson (F-605–F-607, F-610, F-613). Probe answers are recorded as evidence without moving statuses.
+- Lesson screen: a lesson document with citations that open the material viewer, note cards for the learner, check cards (folded until opened, keys 1–6 and Ctrl+Enter), Probe / Teaching / Recap dividers, quick actions (explain differently, simpler, deeper, example), an ask box for questions mid-lesson, and a session plan panel (F-602, F-603, F-609, F-611, F-612, F-616). Replaces the Phase 3 lesson prompt and the tracker (`server/plan/progress.ts` removed); lesson chats no longer take plain messages.
+- Checked live on Gemini 3.5 Flash Lite through a whole lesson (probe, four steps, a repair, a guess follow-up, a quick action, a question, two shaky steps, recap): statuses moved, the lesson was marked done. 153 tests.
 
 ## Open questions
 

@@ -1,6 +1,6 @@
 # Distil
 
-> Status: **early development** — folders, chats, streaming Ask mode, your own keys and token caps work, and so does the coverage ledger: add PDFs, slides, docs, photos, web pages or YouTube videos and Distil lists every learnable item with a link back to where it is. Study plans work too: a brief from one sentence, a plan that covers 100 % of the ledger, a deadline schedule that re-balances, and a Today view. Teaching comes next. See [PROGRESS.md](PROGRESS.md).
+> Status: **early development** — folders, chats, streaming Ask mode, your own keys and token caps work, and so does the coverage ledger: add PDFs, slides, docs, photos, web pages or YouTube videos and Distil lists every learnable item with a link back to where it is. Study plans work too: a brief from one sentence, a plan that covers 100 % of the ledger, a deadline schedule that re-balances, and a Today view. Lessons are taught step by step from your own material, with citations, a check after every step and repairs when an answer misses. Interactive visuals come next. See [PROGRESS.md](PROGRESS.md).
 
 A local-first, open-source study app. Bring your material (PDFs, slides, notes, photos, links,
 YouTube) or just a goal, and get a study plan that provably covers everything in it. Then learn it
