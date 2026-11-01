@@ -143,9 +143,8 @@ Living status log. Update in the same commit as every change.
 See `plan.md` §18.
 
 ## Known issues
+
 - Owner test of a lesson chat (before Phase 4): the stopgap prompt quizzes front-matter items (fields that need statistics, what Chapter 1 covers) and moves on after a wrong answer instead of re-teaching. Phase 4's teacher must skip or summarise administrative items and re-check after a miss.
-
-
 - Custom installed fonts are found by family name. Chromium (the desktop build) sees user-installed fonts; Safari only exposes system fonts.
 - On Google's free tier the strong model's daily request quota is very small; a textbook-sized audit needs several days or a paid key.
 - Adding a link (and transcribing a video) runs inside the request; a long video keeps the dialog waiting for minutes. Move to a background job if that becomes a problem.
