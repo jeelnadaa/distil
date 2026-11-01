@@ -5,7 +5,7 @@
   import Dialog from "./Dialog.svelte";
   import Icon from "./Icon.svelte";
 
-  // A lesson chat's progress: a ring button in the top bar, and a dialog with the lesson's items.
+  // A lesson chat's progress: a segmented ring button in the top bar, and a dialog with the lesson's items.
   // tick: bumped by the chat whenever a reply moved an item, to reload and pulse the ring.
   let { lessonId, tick = 0 }: { lessonId: string; tick?: number } = $props();
 
@@ -33,9 +33,16 @@
   const checked = $derived(lesson?.items.filter((i) => stateOf(i) === "checked").length ?? 0);
   const taught = $derived(lesson?.items.filter((i) => stateOf(i) !== "todo").length ?? 0);
 
-  // The ring: understood items in full copper, taught ones in a lighter band behind them.
-  const R = 9, C = 2 * Math.PI * R;
-  const arc = (n: number) => `${total ? (n / total) * C : 0} ${C}`;
+  // The ring: one segment per item, in the theme's accent once understood and a lighter tone once taught.
+  const R = 8.5, GAP = 0.32;
+  const point = (a: number) => `${(11 + R * Math.sin(a)).toFixed(2)} ${(11 - R * Math.cos(a)).toFixed(2)}`;
+  const segments = $derived.by(() => {
+    const n = Math.max(1, total), span = (2 * Math.PI) / n, gap = n > 1 ? Math.min(GAP, span / 3) : 0;
+    return Array.from({ length: n }, (_, i) => {
+      const from = i * span + gap / 2, to = (i + 1) * span - gap / 2;
+      return n > 1 ? `M${point(from)} A${R} ${R} 0 ${to - from > Math.PI ? 1 : 0} 1 ${point(to)}` : `M${point(0)} A${R} ${R} 0 1 1 ${point(Math.PI)} A${R} ${R} 0 1 1 ${point(0)}`;
+    });
+  });
 
   async function finish() {
     if (lesson && (await attempt(() => api.updateLesson(lesson!.lesson.id, { status: "done" })))) await load(lessonId);
@@ -46,9 +53,7 @@
   <button type="button" class="lesson-btn" class:is-pulse={pulse} onclick={() => (open = true)}
     aria-label="Lesson progress: {taught} of {total} items taught, {checked} understood" data-tip="Lesson progress">
     <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true">
-      <circle class="ring__track" cx="11" cy="11" r={R} />
-      <circle class="ring__taught" cx="11" cy="11" r={R} stroke-dasharray={arc(taught)} />
-      <circle class="ring__checked" cx="11" cy="11" r={R} stroke-dasharray={arc(checked)} />
+      {#each segments as d, i (i)}<path {d} class="seg is-{lesson.items[i] ? stateOf(lesson.items[i]) : 'todo'}" />{/each}
     </svg>
     <span class="lesson-btn__label">Lesson {lesson.index}</span>
     <span class="mono lesson-btn__count">{taught}/{total}</span>
@@ -94,15 +99,14 @@
 <style>
   .lesson-btn {
     display: inline-flex; align-items: center; gap: var(--s-2); height: 32px; padding: 0 var(--s-3) 0 6px;
-    border: 1px solid var(--border); border-radius: var(--r-full); color: var(--text); font-size: var(--t-body-sm);
+    border: 1px solid var(--border); border-radius: var(--r-sm); color: var(--text); font-size: var(--t-body-sm); white-space: nowrap;
     transition: border-color var(--dur-fast, .15s), background var(--dur-fast, .15s);
   }
   .lesson-btn:hover { border-color: var(--border-control); background: var(--surface-sunken); }
-  .lesson-btn svg { transform: rotate(-90deg); flex: none; }
-  .lesson-btn circle { fill: none; stroke-width: 3; stroke-linecap: round; transition: stroke-dasharray .6s var(--ease-out, ease); }
-  .ring__track { stroke: var(--border); }
-  .ring__taught { stroke: color-mix(in oklab, var(--accent) 40%, transparent); }
-  .ring__checked { stroke: var(--accent); }
+  .lesson-btn svg { flex: none; }
+  .seg { fill: none; stroke-width: 3.5; stroke: var(--border-control); transition: stroke .4s var(--ease-out); }
+  .seg.is-taught { stroke: color-mix(in oklab, var(--accent) 45%, transparent); }
+  .seg.is-checked { stroke: var(--accent); }
   .lesson-btn__count { color: var(--text-muted); font-size: 11.5px; }
   .is-pulse { animation: lp-pulse .9s var(--ease-out, ease); }
   @keyframes lp-pulse { 0% { box-shadow: 0 0 0 0 color-mix(in oklab, var(--accent) 55%, transparent); } 100% { box-shadow: 0 0 0 10px transparent; } }
@@ -110,10 +114,10 @@
 
   .lp__unit { margin-top: calc(-1 * var(--s-2)); }
   .lp__stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--s-3); }
-  .lp__stats > div { display: grid; gap: 2px; padding: var(--s-3) var(--s-4); border: 1px solid var(--border); border-radius: var(--r-md); }
+  .lp__stats > div { display: grid; gap: 2px; padding: var(--s-3) var(--s-4); border: 1px solid var(--border); border-radius: var(--r-sm); }
   .lp__stats small { font-size: .5em; color: var(--text-faint); margin-left: 2px; }
   .lp__bar { display: flex; gap: 3px; }
-  .lp__bar i { flex: 1; height: 6px; border-radius: 3px; background: var(--surface-sunken); border: 1px solid var(--border); }
+  .lp__bar i { flex: 1; height: 6px; border-radius: var(--r-xs); background: var(--surface-sunken); border: 1px solid var(--border); }
   .lp__bar .is-taught { background: color-mix(in oklab, var(--accent) 40%, transparent); border-color: color-mix(in oklab, var(--accent) 60%, transparent); }
   .lp__bar .is-checked { background: var(--accent); border-color: var(--accent); }
   .lp__items { display: grid; list-style: none; padding: 0; margin: 0; border-top: 1px solid var(--border); }
