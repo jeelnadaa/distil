@@ -21,11 +21,15 @@ import type { ActionKind, Answer, SessionView, TeachEvent } from "../../../serve
 import type { CheckView, Step } from "../../../server/teach/store.ts";
 import type { Visual } from "../../../server/visuals/builder.ts";
 import type { Dial } from "../../../server/visuals/reference.ts";
+import type { NewPaper, PaperSummary, PaperView } from "../../../server/practice/engine.ts";
+import type { AnswerValue, Grade, Level } from "../../../server/practice/questions.ts";
+import type { Paper, QuestionView, Report, Scope } from "../../../server/practice/store.ts";
 
 export type { Brief, Compiled, Lesson, Plan, PlanKind, PlanView, SavedPlan, StoredBrief, TodayLesson, TodayView, Unit };
 export type { CapStatus, Chat, SavedFont, Folder, Item, ItemMark, ItemType, Job, Message, Meter, ModelInfo, ModelRef, Settings, Strategy, TurnEvent };
 export type { ActionKind, Answer, CheckView, Confidence, PublicCheck, Result, SessionView, Source, Step, TeachEvent };
 export type { Dial, Visual };
+export type { AnswerValue, Grade, Level, NewPaper, Paper, PaperSummary, PaperView, QuestionView, Report, Scope };
 export type TeachView = { session: SessionView | null; checks: CheckView[] };
 export type FolderMaterial = Material & { inherited: boolean };
 export type { Material, StoredChunk };
@@ -182,6 +186,18 @@ export const api = {
   buildVisual: (messageId: string, block: number, rebuild = false) => json<Visual>("POST", `/messages/${messageId}/visuals`, { block, rebuild }),
   fixVisual: (id: string, errors: string[]) => json<Visual>("POST", `/visuals/${id}/fix`, { errors }),
   repairMessage: (messageId: string) => json<Message>("POST", `/messages/${messageId}/repair`, {}),
+  papers: (folderId: string) => json<{ papers: PaperSummary[]; weak: number }>("GET", `/folders/${folderId}/papers`),
+  createPaper: (folderId: string, body: NewPaper) => json<{ chat: Chat; paper: Paper }>("POST", `/folders/${folderId}/papers`, body),
+  paper: (chatId: string) => json<PaperView>("GET", `/chats/${chatId}/paper`),
+  startPaper: (chatId: string) => json<PaperView>("POST", `/chats/${chatId}/paper/start`, {}),
+  saveProgress: (chatId: string, body: { questionId?: string; answer?: AnswerValue; timeMs?: number; elapsedMs: number }) =>
+    json<{ ok: true }>("PUT", `/chats/${chatId}/paper/progress`, body),
+  answerQuestion: (chatId: string, questionId: string, answer: AnswerValue, timeMs: number) =>
+    json<PaperView>("POST", `/chats/${chatId}/paper/questions/${questionId}/answer`, { answer, timeMs }),
+  hint: (chatId: string, questionId: string) => json<PaperView>("POST", `/chats/${chatId}/paper/questions/${questionId}/hint`, {}),
+  reveal: (chatId: string, questionId: string) => json<PaperView>("POST", `/chats/${chatId}/paper/questions/${questionId}/reveal`, {}),
+  submitPaper: (chatId: string, elapsedMs: number) => json<PaperView>("POST", `/chats/${chatId}/paper/submit`, { elapsedMs }),
+  retryPaper: (chatId: string) => json<PaperView>("POST", `/chats/${chatId}/paper/retry`, {}),
   teachStart: (chatId: string, onEvent: (e: TeachEvent) => void, signal: AbortSignal) => events(`/chats/${chatId}/teach/start`, {}, onEvent, signal),
   teachAnswer: (chatId: string, answer: Answer, onEvent: (e: TeachEvent) => void, signal: AbortSignal) => events(`/chats/${chatId}/teach/answer`, answer, onEvent, signal),
   teachAction: (chatId: string, kind: ActionKind, onEvent: (e: TeachEvent) => void, signal: AbortSignal) => events(`/chats/${chatId}/teach/action`, { kind }, onEvent, signal),

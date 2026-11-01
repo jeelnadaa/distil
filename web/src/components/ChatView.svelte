@@ -10,6 +10,7 @@
   import LessonProgress from "./LessonProgress.svelte";
   import DialSelect, { inheritedDial } from "./DialSelect.svelte";
   import LessonView from "./LessonView.svelte";
+  import PaperView from "./practice/PaperView.svelte";
   import Markdown from "./Markdown.svelte";
   import ModelSelect from "./ModelSelect.svelte";
 
@@ -166,7 +167,7 @@
   </nav>
   <span class="topbar__spacer"></span>
   {#if chat?.lessonId}<LessonProgress lessonId={chat.lessonId} tick={progressTick} />{/if}
-  {#if meter}
+  {#if meter && chat?.mode !== "practice" && chat?.mode !== "exam"}
     <span class="meter" data-tip="Tokens used in this chat{contextPct !== null ? ` · last prompt filled ${contextPct.toFixed(0)} % of the model's context` : ''}">
       {fmt.format(meter.input + meter.output)} tokens
       {#if contextPct !== null}<span class="meter__track"><span style:--v="{contextPct}%"></span></span>{/if}
@@ -178,6 +179,8 @@
 
 {#if chat?.mode === "teach"}
   <LessonView {chat} bind:messages {model} onmodel={pickModel} ondial={pickDial} onprogress={() => progressTick++} oncap={(err) => (capHit = { open: true, status: err.details as CapStatus })} />
+{:else if chat?.mode === "practice" || chat?.mode === "exam"}
+  <PaperView {chat} />
 {:else}
 <div class="scroll" bind:this={scroller} {onscroll}>
   <div class="page thread">

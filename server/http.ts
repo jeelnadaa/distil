@@ -29,9 +29,11 @@ import type { Teacher } from "./teach/engine.ts";
 import { registerTeachRoutes } from "./teach/routes.ts";
 import type { Visuals } from "./visuals/builder.ts";
 import { registerVisualRoutes } from "./visuals/routes.ts";
+import type { Practice } from "./practice/engine.ts";
+import { registerPracticeRoutes } from "./practice/routes.ts";
 
 export type AppDeps = ChatDeps & { dataDir: string; allowedHosts: string[]; fonts: Fonts; materials: Materials; search: Search; ledger: Ledger; jobs: Jobs; fetch?: FetchFn }
-  & { db: Db; learner: Learner; plans: Plans; briefs: Briefs; local: LocalModels; vectors: Vectors; retrieval: Retrieval; teacher: Teacher; visuals: Visuals };
+  & { db: Db; learner: Learner; plans: Plans; briefs: Briefs; local: LocalModels; vectors: Vectors; retrieval: Retrieval; teacher: Teacher; visuals: Visuals; practice: Practice };
 
 const NullableId = z.string().min(1).nullable();
 const ModelRefBody = z.object({ provider: z.string().min(1), id: z.string().min(1), key: z.string().min(1).optional() });
@@ -312,5 +314,6 @@ export function createApp(deps: AppDeps) {
   registerRetrievalRoutes(app, deps);
   registerTeachRoutes(app, deps);
   registerVisualRoutes(app, deps);
+  registerPracticeRoutes(app, deps);
   return app;
 }

@@ -52,11 +52,14 @@
     const focus = (e: Event) => (e.target as HTMLElement).matches?.(":focus-visible") && enter(e, 0);
     const out = (e: PointerEvent) => { if (target && !target.contains(e.relatedTarget as Node)) hide(); };
     const key = (e: KeyboardEvent) => e.key === "Escape" && hide();
+    // Removing a focused element (a view torn down mid-update) fires focusout while Svelte is updating,
+    // when state can't change: hide just after.
+    const blur = () => queueMicrotask(hide);
     document.addEventListener("pointerover", over);
     document.addEventListener("pointerout", out);
     document.addEventListener("pointerdown", hide, true);
     document.addEventListener("focusin", focus);
-    document.addEventListener("focusout", hide);
+    document.addEventListener("focusout", blur);
     document.addEventListener("keydown", key);
     addEventListener("scroll", hide, true);
     return () => {
@@ -64,7 +67,7 @@
       document.removeEventListener("pointerout", out);
       document.removeEventListener("pointerdown", hide, true);
       document.removeEventListener("focusin", focus);
-      document.removeEventListener("focusout", hide);
+      document.removeEventListener("focusout", blur);
       document.removeEventListener("keydown", key);
       removeEventListener("scroll", hide, true);
     };

@@ -24,6 +24,8 @@ import { createPlans } from "./plan/store.ts";
 import { createTeacher } from "./teach/engine.ts";
 import { createTeachStore } from "./teach/store.ts";
 import { createVisuals } from "./visuals/builder.ts";
+import { createPractice } from "./practice/engine.ts";
+import { createPapers } from "./practice/store.ts";
 import { createProviders } from "./providers/service.ts";
 import { createSecrets } from "./secrets.ts";
 import { createSettings } from "./settings.ts";
@@ -67,6 +69,7 @@ export function createServer({ port, dataDir = defaultDataDir(), fetch }: { port
   registerPlanner(jobs, { providers, settings, usage, db, plans, briefs, learner });
   const teacher = createTeacher({ providers, settings, usage, db, library, messages, plans, ledger, learner, retrieval, teach: createTeachStore(db), log });
   const visuals = createVisuals({ providers, settings, usage, db, library, messages, log });
+  const practice = createPractice({ providers, settings, usage, db, jobs, library, ledger, plans, learner, retrieval, papers: createPapers(db) });
   const deps = {
     dataDir,
     allowedHosts: [`localhost:${port}`, `127.0.0.1:${port}`, `[::1]:${port}`],
@@ -89,6 +92,7 @@ export function createServer({ port, dataDir = defaultDataDir(), fetch }: { port
     providers,
     teacher,
     visuals,
+    practice,
     context: chatContext(db),
     log,
     fetch,

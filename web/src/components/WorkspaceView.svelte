@@ -10,6 +10,7 @@
   import LedgerTab from "./LedgerTab.svelte";
   import MaterialsTab from "./MaterialsTab.svelte";
   import PlanTab from "./PlanTab.svelte";
+  import PracticeTab from "./practice/PracticeTab.svelte";
 
   let { id, tab }: { id: string; tab: FolderTab } = $props();
 
@@ -127,6 +128,7 @@
         <a href="#/folder/{id}/materials" aria-current={tab === "materials" ? "page" : undefined}>Materials</a>
         <a href="#/folder/{id}/ledger" aria-current={tab === "ledger" ? "page" : undefined}>Ledger</a>
         <a href="#/folder/{id}/plan" aria-current={tab === "plan" ? "page" : undefined}>Plan</a>
+        <a href="#/folder/{id}/practice" aria-current={tab === "practice" ? "page" : undefined}>Practice</a>
       </nav>
 
       {#if current || (items.length && plan)}
@@ -166,6 +168,8 @@
       {#if loaded}
         {#if tab === "materials"}
           <MaterialsTab folderId={id} {materials} {jobs} onchange={refresh} ondistil={(m) => (distil = { mode: "extract", material: m })} />
+        {:else if tab === "practice"}
+          <PracticeTab folderId={id} {plan} items={counted.length} />
         {:else if tab === "plan"}
           {#if plan}<PlanTab folderId={id} folderName={folder.name} view={plan} {items} onview={(v) => (plan = v)} onchange={refresh} />{/if}
         {:else}

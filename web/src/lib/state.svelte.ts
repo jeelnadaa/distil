@@ -1,8 +1,8 @@
 // App-wide state: route, library tree, providers and models, settings and toasts.
-import { api, ApiError, type Chat, type Folder, type ModelInfo, type ModelRef, type Provider, type SettingsView } from "./api.ts";
+import { api, ApiError, type Chat, type Folder, type ModelInfo, type ModelRef, type NewPaper, type Provider, type SettingsView } from "./api.ts";
 
-export type FolderTab = "materials" | "ledger" | "plan";
-const TABS: FolderTab[] = ["materials", "ledger", "plan"];
+export type FolderTab = "materials" | "ledger" | "plan" | "practice";
+const TABS: FolderTab[] = ["materials", "ledger", "plan", "practice"];
 // home: the one place a chat starts (logo and New chat); folderId when it was started from a folder.
 export type Route = { name: "home"; folderId?: string } | { name: "chat"; id: string } | { name: "today" } | { name: "folder"; id: string; tab: FolderTab }
   | { name: "material"; id: string; loc: number | null; item: string | null } | { name: "settings"; section?: string };
@@ -110,4 +110,12 @@ export async function startLesson(id: string) {
   if (chat.createdAt === chat.updatedAt) Object.assign(pending, { chatId: chat.id, text: "Let's start the lesson.", model: null });
   await attempt(refreshLibrary);
   go(`#/chat/${chat.id}`);
+}
+
+// Starts writing a practice set or mock exam (F-801, F-803) and opens its chat, which shows the progress.
+export async function newPaper(folderId: string, body: NewPaper) {
+  const made = await attempt(() => api.createPaper(folderId, body));
+  if (!made) return;
+  await attempt(refreshLibrary);
+  go(`#/chat/${made.chat.id}`);
 }

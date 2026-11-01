@@ -2,7 +2,7 @@
   import { tick, untrack } from "svelte";
   import { api, ApiError, type ActionKind, type Answer, type Chat, type CheckView, type Dial, type Message, type ModelRef, type SessionView, type Source, type TeachEvent } from "../lib/api.ts";
   import { fencedBlocks } from "../../../server/visuals/blocks.ts";
-  import { attempt, refreshLibrary, toast } from "../lib/state.svelte.ts";
+  import { attempt, newPaper, refreshLibrary, toast } from "../lib/state.svelte.ts";
   import CheckCard from "./CheckCard.svelte";
   import DialSelect, { inheritedDial } from "./DialSelect.svelte";
   import Composer from "./Composer.svelte";
@@ -202,6 +202,9 @@
       {/if}
       {#if session?.phase === "done"}
         <p class="caption muted end">Lesson finished. Steps marked shaky come back in review.</p>
+        {#if chat.folderId && chat.lessonId}
+          <div class="end"><button type="button" class="btn btn--secondary btn--sm" onclick={() => newPaper(chat.folderId!, { kind: "practice", scope: { kind: "lesson", id: chat.lessonId! }, count: 4 })}><Icon name="target" size="sm" />Practise this lesson</button></div>
+        {/if}
       {/if}
     </div>
   </div>

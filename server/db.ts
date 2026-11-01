@@ -330,6 +330,40 @@ const MIGRATIONS = [
     UNIQUE (message_id, block, version)
   );
   `,
+  `
+  -- Phase 6: a practice set or mock exam is a chat (mode practice or exam) with one paper (F-801, F-803).
+  -- Questions are written with their solution, rubric and hints before any is shown (F-805); answer holds
+  -- the learner's latest answer, attempts each graded try (practice), result the final grade.
+  CREATE TABLE papers (
+    chat_id    TEXT PRIMARY KEY REFERENCES chats(id) ON DELETE CASCADE,
+    folder_id  TEXT NOT NULL REFERENCES folders(id) ON DELETE CASCADE,
+    kind       TEXT NOT NULL CHECK (kind IN ('practice', 'exam')),
+    config     TEXT NOT NULL,
+    status     TEXT NOT NULL CHECK (status IN ('writing', 'ready', 'taking', 'grading', 'done', 'failed')),
+    error      TEXT,
+    title      TEXT NOT NULL DEFAULT '',
+    instructions TEXT NOT NULL DEFAULT '',
+    elapsed_ms INTEGER NOT NULL DEFAULT 0,
+    report     TEXT,
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL
+  );
+  CREATE INDEX papers_folder ON papers(folder_id, created_at);
+  CREATE TABLE questions (
+    id       TEXT PRIMARY KEY,
+    chat_id  TEXT NOT NULL REFERENCES papers(chat_id) ON DELETE CASCADE,
+    ord      INTEGER NOT NULL,
+    section  TEXT NOT NULL DEFAULT '',
+    items    TEXT NOT NULL,
+    spec     TEXT NOT NULL,
+    answer   TEXT,
+    time_ms  INTEGER NOT NULL DEFAULT 0,
+    attempts TEXT NOT NULL DEFAULT '[]',
+    hints    INTEGER NOT NULL DEFAULT 0,
+    result   TEXT
+  );
+  CREATE INDEX questions_paper ON questions(chat_id, ord);
+  `,
 ];
 
 export function openDb(file: string): Db {

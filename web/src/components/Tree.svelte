@@ -85,7 +85,7 @@
       <div class="tree__item" style:--depth={depth} draggable="true" ondragstart={(e) => drag(e, "chat", chat.id)} role="presentation">
         <a class="tree__row" class:is-active={active} href="#/chat/{chat.id}" aria-current={active ? "page" : undefined}>
           <span class="tree__chev"></span>
-          <Icon name="chat" size="sm" />
+          <Icon name={chat.mode === "exam" ? "clock" : chat.mode === "practice" ? "target" : chat.mode === "teach" ? "book" : "chat"} size="sm" />
           <span class="tree__label">{chat.title}</span>
         </a>
         <span class="tree__actions">

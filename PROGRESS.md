@@ -4,11 +4,11 @@ Living status log. Update in the same commit as every change.
 
 ## Current phase
 
-**Phase 6 — Practice & Exams** is next, on `main`.
+**Phase 7 — Retention** is next, on `main`.
 
 ## Next up
 
-1. Phase 6 — Practice & Exams (plan.md §8, F-801…F-809).
+1. Phase 7 — Retention (plan.md §9): flashcards with FSRS (practice already creates cards for missed items), mastery view, recommender, knowledge graph.
 2. Still open from Phase 4 (should/could): opening recall questions from the previous lesson (F-614), predict-before-reveal prompts (F-608), dictation (F-615).
 
 ## Phase checklist
@@ -23,7 +23,7 @@ Living status log. Update in the same commit as every change.
 - [x] Phase 3 — Study Plan
 - [x] Phase 4 — Teach
 - [x] Phase 5 — Interactives
-- [ ] Phase 6 — Practice & Exams
+- [x] Phase 6 — Practice & Exams
 - [ ] Phase 7 — Retention
 - [ ] Phase 8 — Providers+ & usage dashboard
 - [ ] Phase 9 — Ship
@@ -170,6 +170,13 @@ Living status log. Update in the same commit as every change.
 - Theme, palette and text font changes reach every widget and running mini-app live (F-756).
 - Checked live on Gemini 3.5 Flash Lite: Balanced drew a flow diagram unprompted; Visual-heavy drew all nine grammar kinds, all valid; plot sliders, quiz checking and the code runner work; a central-limit mini-app built in about 8 s and ran; a figure was sanitised and themed; switching to light theme and another palette restyled widgets and the mini-app. 223 tests.
 
+### 2026-11-01 · Phase 6 — Practice & Exams
+- Papers (`server/practice/`, migration 16): a practice set or mock exam is a chat (mode practice or exam) with one paper and its questions. A background job on the strong model writes every question with its worked solution, mark scheme and two hints before any is shown (F-805), from the ledger items in scope and their source passages, avoiding questions already asked on those items (F-808). Scope: everything, weak items, a plan unit or lesson, or chosen items (F-801). Practice sets rise from a worked example to an open problem and vary the context (F-802); mock exams run about a mark a minute, sectioned by unit, in the style of any past papers in the folder (F-803).
+- Marking (F-804, F-806): choices, numbers and orderings in code; written answers and photos of handwritten working by the strong model against the rubric, point by point, naming the items that didn't come to mind. Practice marks each answer at once: the first attempt sets the credit, then up to two hints and retries count half. A mock exam is one attempt, no hints, timed (pauses when the learner leaves, submits at zero), and marked as a whole by a job.
+- Results (F-807, F-809): every answer is learner evidence (a right unaided answer moves an item to checked); missed items become flashcards; the report shows the score, a bar per unit, time and marks per question, what didn't come to mind, a short debrief, every question with its mark scheme and worked solution, and "Fix these" for a practice set on the weak items.
+- Screens: a Practice tab in each folder (past papers with scores, new practice set or mock exam), the paper chat (start page, practice run, marking, report), a full-screen exam surface with a question index by section, flags, autosave and a timer, and "Practise this lesson" when a lesson ends. Fixed: a tooltip changed state while a view was torn down (focus left a removed element).
+- Checked live on Gemini 3.5 Flash Lite: a 4-question practice set on weak items (wrong answer, hint, right retry at half credit, written answer marked 2/2 by rubric, report with a card); a 15-minute mock exam (3 questions over 3 units, paused and resumed, submitted, marked 12/15 with a fair partial mark). 229 tests.
+
 ## Open questions
 
 See `plan.md` §18.
@@ -181,6 +188,8 @@ See `plan.md` §18.
 - Adding a link (and transcribing a video) runs inside the request; a long video keeps the dialog waiting for minutes. Move to a background job if that becomes a problem.
 - Only Google AI Studio has been tested for real; Anthropic, OpenAI and the other providers are still checked only against fakes.
 - Mini-apps and figures are built with the strong model, about 3–8k tokens each, on first view; a figure the model draws badly (e.g. heavy fills) still shows, use Rebuild.
+- Handwriting photos are marked by the strong model; tested with the fake model and the image path only, not yet with a real photo on a real model.
+- Paper photos are kept in the database as data URLs (downscaled to 1600 px in the browser); move them to files if databases grow large.
 - The web bundle is one 614 kB chunk (KaTeX and highlight.js). Fine when served locally; split it if load time ever matters.
 
 - Caps are in tokens only. Cost caps need per-model prices; planned with the usage dashboard (Phase 8).

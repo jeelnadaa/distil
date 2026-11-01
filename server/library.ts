@@ -154,13 +154,15 @@ export function createLibrary(db: Db, now = () => Date.now()) {
       return row ? toChat(row) : null;
     },
 
-    // A lesson chat (F-504) is named after its lesson, so it never gets an automatic title.
-    createChat(folderId: string | null, lesson?: { id: string; title: string }): Chat {
+    // A lesson chat (F-504) is named after its lesson, and a practice set or exam (F-801) after itself, so
+    // neither gets an automatic title.
+    createChat(folderId: string | null, lesson?: { id: string; title: string }, paper?: { mode: "practice" | "exam"; title: string }): Chat {
       if (folderId) requireFolder(folderId);
       const at = now();
+      const named = lesson?.title ?? paper?.title;
       const chat: Chat = {
-        id: randomUUID(), folderId, title: lesson ? cleanName(lesson.title, "Chat") : DEFAULT_CHAT_TITLE,
-        titleSource: lesson ? "manual" : "default", mode: lesson ? "teach" : "ask", lessonId: lesson?.id ?? null,
+        id: randomUUID(), folderId, title: named ? cleanName(named, "Chat") : DEFAULT_CHAT_TITLE,
+        titleSource: named ? "manual" : "default", mode: lesson ? "teach" : paper?.mode ?? "ask", lessonId: lesson?.id ?? null,
         model: null, dial: null, createdAt: at, updatedAt: at,
       };
       db.prepare(`INSERT INTO chats (id, folder_id, title, title_source, mode, lesson_id, created_at, updated_at)
@@ -200,8 +202,6 @@ export function createLibrary(db: Db, now = () => Date.now()) {
       db.prepare("DELETE FROM chats WHERE id = ?").run(id);
     },
 
-    // Chats are created when their first message is sent; any left without one (from before that,
-    // or a send that never reached the server) would only clutter the library, so startup drops them.
     // The dial that applies to a chat: its own, else the nearest folder's up the tree, else Settings'.
     dialFor(chat: Chat, fallback: Dial): Dial {
       if (chat.dial) return chat.dial;
@@ -214,8 +214,12 @@ export function createLibrary(db: Db, now = () => Date.now()) {
       return row?.dial ?? fallback;
     },
 
+    // Chats are created when their first message is sent; any left without one (from before that,
+    // or a send that never reached the server) would only clutter the library, so startup drops them.
+    // A practice set or exam has no messages: its paper holds it.
     removeEmptyChats(): number {
-      return Number(db.prepare("DELETE FROM chats WHERE NOT EXISTS (SELECT 1 FROM messages WHERE chat_id = chats.id)").run().changes);
+      return Number(db.prepare(`DELETE FROM chats WHERE NOT EXISTS (SELECT 1 FROM messages WHERE chat_id = chats.id)
+        AND NOT EXISTS (SELECT 1 FROM papers WHERE chat_id = chats.id)`).run().changes);
     },
   };
 }
