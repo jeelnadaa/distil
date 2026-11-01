@@ -11,7 +11,7 @@ Read this file fully before doing anything in this repo.
 
 ## 2. Workflow rules
 
-- **Work in phases** as defined in `plan.md` §15. One phase at a time, except the parallel build of Phases 3–8 (owner, 2026-11-01): each runs on its own `phase-N` branch and worktree under the rules in `progress/README.md`, and keeps its own log in `progress/phase-N.md` instead of editing `PROGRESS.md`.
+- **Work in phases** as defined in `plan.md` §15. One phase at a time, on `main` (owner, 2026-11-01).
 - **Ask, don't assume.** If a product decision is not covered by `plan.md` / `DESIGN.md`, ask the owner. Record the answer in `plan.md` §2 (Decisions) before acting on it.
 - **Commit, never push.** Commit each finished feature or coherent step locally with a clear message referencing feature IDs (e.g. `feat(ledger): recall audit loop (F-302)`). Never `git push`.
 - **Docs move with code.** In the same commit as the feature, update:
@@ -40,7 +40,7 @@ Read this file fully before doing anything in this repo.
 - Data lives in `DISTIL_DATA_DIR` (default `~/Distil`): `distil.db` and `secrets.json`. Point it at a scratch folder when testing by hand.
 - Svelte 5 gotcha: `$state(new Set())` is not reactive; use `SvelteSet`/`SvelteMap` from `svelte/reactivity`.
 - Generated visuals never carry styling: models emit grammars or data, and renderers apply tokens (plan.md §7.5, DESIGN.md §8.1). Don't add a prompt or renderer that accepts colours, fonts or CSS from a model.
-- To test chat without a real key, add a custom endpoint that points at a local fake OpenAI-compatible server.
+- To test chat without a real key, run `node scripts/fake-llm.mjs` and add `http://127.0.0.1:11999/v1` as a custom endpoint in Settings › Providers.
 
 ## 5. Repository map
 
@@ -62,7 +62,7 @@ Read this file fully before doing anything in this repo.
 | `server/materials/` | Phase 2 ingest: `store` (copies in `<data>/materials/`, re-import keeps unchanged chunks), `parse` (PDF, DOCX, PPTX, Markdown, text, images; flags visual pages), `chunk`, `ingest` (parse job), `render` (PDF pages to JPEG for vision), `web` (links → article Markdown or file), `youtube` (transcripts: Gemini or pasted), `search` (FTS5 keyword index, anchored hits) |
 | `server/ledger/` | Coverage Ledger: `store` (items, sources, merge candidates) and `extract` (extract → audit → merge job, estimate) |
 | `server/learning/` | Shared by every learning mode: `types.ts` (Study Brief schema, item statuses, evidence kinds, chat modes) and `learner.ts` (evidence per item; statuses only move forward) |
-| `progress/` | Parallel build of Phases 3–8: `README.md` (ownership, ports, resume and merge steps), one log per phase, `fake-llm.mjs` |
+| `scripts/fake-llm.mjs` | Fake OpenAI-compatible model for checking screens by hand without a real key |
 | `server/jobs.ts` | Background job runner backed by SQLite (resumes after restart) |
 | `server/llm.ts` | One-shot model calls for agents: walks the slot's fallback list (rate limit, outage, quota, cap → next entry; waits only when all are busy), usage by role, images and videos, validated JSON with one retry |
 | `server/constants.ts` | Limits shared with the browser (no Node imports) |

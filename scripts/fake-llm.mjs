@@ -1,5 +1,5 @@
 // A stand-in OpenAI-compatible server for manual testing: streams a canned reply slowly, then reports usage.
-// Usage: node progress/fake-llm.mjs <port>  (copy and adapt the replies for your own agents).
+// Usage: node scripts/fake-llm.mjs [port]  (default 11999); add it as a custom provider in Settings › Providers.
 import { createServer } from "node:http";
 
 const REPLY = [
