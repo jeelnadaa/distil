@@ -2,12 +2,13 @@
   import ActivityDock from "./ActivityDock.svelte";
   import SoundButton from "./SoundButton.svelte";
   import { tick, untrack } from "svelte";
-  import { api, ApiError, type CapStatus, type Chat, type Message, type Meter, type ModelRef } from "../lib/api.ts";
+  import { api, ApiError, type CapStatus, type Chat, type Dial, type Message, type Meter, type ModelRef } from "../lib/api.ts";
   import { app, attempt, folderPath, library, loadModels, nav, pending, refreshLibrary, toast } from "../lib/state.svelte.ts";
   import Composer from "./Composer.svelte";
   import Dialog from "./Dialog.svelte";
   import Icon from "./Icon.svelte";
   import LessonProgress from "./LessonProgress.svelte";
+  import DialSelect, { inheritedDial } from "./DialSelect.svelte";
   import LessonView from "./LessonView.svelte";
   import Markdown from "./Markdown.svelte";
   import ModelSelect from "./ModelSelect.svelte";
@@ -113,6 +114,18 @@
     }
   }
 
+  // Retry on a widget that couldn't be drawn: the server repairs the reply's broken blocks once more.
+  async function redraw(id: string) {
+    const repaired = await attempt(() => api.repairMessage(id));
+    if (repaired) messages = messages.map((m) => (m.id === id ? { ...m, content: repaired.content } : m));
+  }
+
+  async function pickDial(dial: Dial | null) {
+    if (!chat) return;
+    const updated = await attempt(() => api.updateChat(chat!.id, { dial }));
+    if (updated) chat.dial = updated.dial;
+  }
+
   async function pickModel(ref: ModelRef) {
     model = ref;
     if (chat) await attempt(() => api.updateChat(chat!.id, { model: ref }));
@@ -164,7 +177,7 @@
 </header>
 
 {#if chat?.mode === "teach"}
-  <LessonView {chat} bind:messages {model} onmodel={pickModel} onprogress={() => progressTick++} oncap={(err) => (capHit = { open: true, status: err.details as CapStatus })} />
+  <LessonView {chat} bind:messages {model} onmodel={pickModel} ondial={pickDial} onprogress={() => progressTick++} oncap={(err) => (capHit = { open: true, status: err.details as CapStatus })} />
 {:else}
 <div class="scroll" bind:this={scroller} {onscroll}>
   <div class="page thread">
@@ -181,7 +194,7 @@
       {:else}
         <article class="turn turn--assistant" aria-busy={message.status === "streaming"}>
           {#if message.content}
-            <Markdown source={message.content} streaming={message.status === "streaming"} />
+            <Markdown source={message.content} streaming={message.status === "streaming"} messageId={message.id} onretry={() => redraw(message.id)} />
           {:else if message.status === "streaming"}
             <span class="drop drop--pulse" aria-label="Thinking"></span>
           {/if}
@@ -208,6 +221,7 @@
   {/if}
   <Composer bind:value={draft} busy={controller !== null} onsend={send} onstop={() => controller?.abort()}>
     <ModelSelect value={model} onchange={pickModel} label="Model for this chat" compact />
+    {#if chat}<DialSelect value={chat.dial} inherited={inheritedDial(chat.folderId)} label="Visuals in this chat" onchange={pickDial} />{/if}
   </Composer>
 </div>
 {/if}

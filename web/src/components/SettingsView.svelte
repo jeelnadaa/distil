@@ -2,10 +2,11 @@
   import ActivityDock from "./ActivityDock.svelte";
   import SoundButton from "./SoundButton.svelte";
   import { tick } from "svelte";
-  import { api, type ModelRef, type Provider, type ProviderKey, type Settings } from "../lib/api.ts";
+  import { api, type Dial, type ModelRef, type Provider, type ProviderKey, type Settings } from "../lib/api.ts";
   import { motionPref, palettePref, PALETTES, setMotion, setPalette, setTheme, themePref, type Motion, type PaletteId, type Theme } from "../lib/prefs.ts";
   import { app, attempt, loadModels, nav, refreshProviders, refreshSettings, toast } from "../lib/state.svelte.ts";
   import Dialog from "./Dialog.svelte";
+  import { DIAL_LABEL, DIAL_TIP } from "./DialSelect.svelte";
   import EmbeddingsSetting from "./EmbeddingsSetting.svelte";
   import Icon from "./Icon.svelte";
   import ModelSelect from "./ModelSelect.svelte";
@@ -18,6 +19,7 @@
     { id: "providers", label: "Providers", icon: "key" },
     { id: "models", label: "Models", icon: "layers" },
     { id: "limits", label: "Limits", icon: "chart" },
+    { id: "learning", label: "Learning", icon: "graph" },
     { id: "appearance", label: "Appearance", icon: "type" },
     { id: "data", label: "Data", icon: "database" },
   ];
@@ -243,6 +245,15 @@
               {/each}
             {/each}
           </div>
+        </section>
+
+        <section id="learning" class="sset">
+          <header><h2 class="display-md">Learning</h2></header>
+          {#if settings}
+            <div class="srow"><div><strong>Visuals</strong><span class="caption muted">How often replies draw diagrams, plots and simulations. Folders and chats can set their own.</span></div>
+              <Segmented label="Visuals" value={settings.dial} options={(Object.keys(DIAL_LABEL) as Dial[]).map((d) => ({ value: d, label: DIAL_LABEL[d], tip: DIAL_TIP[d] }))}
+                onchange={(dial) => save({ dial })} /></div>
+          {/if}
         </section>
 
         <section id="appearance" class="sset">

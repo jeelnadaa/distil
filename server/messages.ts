@@ -33,6 +33,11 @@ export function createMessages(db: Db, now = () => Date.now()) {
       return (db.prepare("SELECT * FROM messages WHERE chat_id = ? ORDER BY created_at, rowid").all(chatId) as Row[]).map(toMessage);
     },
 
+    get(id: string): Message | null {
+      const row = db.prepare("SELECT * FROM messages WHERE id = ?").get(id) as Row | undefined;
+      return row ? toMessage(row) : null;
+    },
+
     add(m: Pick<Message, "chatId" | "role" | "content" | "status"> & Partial<Pick<Message, "provider" | "model">>): Message {
       const message: Message = {
         id: randomUUID(), error: null, provider: null, model: null, sources: null, createdAt: now(), ...m,

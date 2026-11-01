@@ -1,8 +1,10 @@
 <script lang="ts">
   import { tick, untrack } from "svelte";
-  import { api, ApiError, type ActionKind, type Answer, type Chat, type CheckView, type Message, type ModelRef, type SessionView, type Source, type TeachEvent } from "../lib/api.ts";
+  import { api, ApiError, type ActionKind, type Answer, type Chat, type CheckView, type Dial, type Message, type ModelRef, type SessionView, type Source, type TeachEvent } from "../lib/api.ts";
+  import { fencedBlocks } from "../../../server/visuals/blocks.ts";
   import { attempt, refreshLibrary, toast } from "../lib/state.svelte.ts";
   import CheckCard from "./CheckCard.svelte";
+  import DialSelect, { inheritedDial } from "./DialSelect.svelte";
   import Composer from "./Composer.svelte";
   import Icon from "./Icon.svelte";
   import Markdown from "./Markdown.svelte";
@@ -11,8 +13,8 @@
   // A lesson (Phase 4, §6): the teacher writes a lesson document (F-612), the learner's words are note
   // cards, each step ends in a check card, and a session plan sits on the right (F-603).
   // model: the chat's model, picked in the ask box like any chat's; the teacher answers with it first.
-  let { chat, messages = $bindable(), model, onmodel, onprogress, oncap }: {
-    chat: Chat; messages: Message[]; model: ModelRef | null; onmodel: (ref: ModelRef) => void; onprogress: () => void; oncap: (err: ApiError) => void;
+  let { chat, messages = $bindable(), model, onmodel, ondial, onprogress, oncap }: {
+    chat: Chat; messages: Message[]; model: ModelRef | null; onmodel: (ref: ModelRef) => void; ondial: (dial: Dial | null) => void; onprogress: () => void; oncap: (err: ApiError) => void;
   } = $props();
 
   let session = $state<SessionView | null>(null);
@@ -106,18 +108,33 @@
 
   // [n] (or [1, 3]) in a reply links to the passages it cites, in the material viewer.
   const locLabel = (s: Source) => (s.loc === s.locTo ? `${s.loc}` : `${s.loc}–${s.locTo}`);
-  const cited = (content: string, sources: Source[] | null) => !sources?.length ? content
-    : content.replace(/\[(\d{1,2}(?:\s*,\s*\d{1,2})*)\](?!\()/g, (all, list: string) => {
-      const ns = list.split(",").map((n) => Number(n.trim()));
-      if (!ns.every((n) => sources[n - 1])) return all;
-      return ns.map((n) => {
-        const s = sources[n - 1]!;
-        return `[\\[${n}\\]](#/material/${s.materialId}/${s.loc} "${s.materialName.replace(/"/g, "'")} · ${locLabel(s)}")`;
-      }).join("");
-    });
+  const link = (text: string, sources: Source[]) => text.replace(/\[(\d{1,2}(?:\s*,\s*\d{1,2})*)\](?!\()/g, (all, list: string) => {
+    const ns = list.split(",").map((n) => Number(n.trim()));
+    if (!ns.every((n) => sources[n - 1])) return all;
+    return ns.map((n) => {
+      const s = sources[n - 1]!;
+      return `[\\[${n}\\]](#/material/${s.materialId}/${s.loc} "${s.materialName.replace(/"/g, "'")} · ${locLabel(s)}")`;
+    }).join("");
+  });
+  // Text inside fenced blocks (code, widgets) is left alone.
+  function cited(content: string, sources: Source[] | null) {
+    if (!sources?.length) return content;
+    let out = "", at = 0;
+    for (const b of fencedBlocks(content)) {
+      out += link(content.slice(at, b.start), sources) + content.slice(b.start, b.end);
+      at = b.end;
+    }
+    return out + link(content.slice(at), sources);
+  }
+
+  // Retry on a widget that couldn't be drawn: the server repairs the reply's broken blocks once more.
+  async function redraw(id: string) {
+    const repaired = await attempt(() => api.repairMessage(id));
+    if (repaired) messages = messages.map((m) => (m.id === id ? { ...m, content: repaired.content } : m));
+  }
 
   // Quick actions on the step being taught (F-611).
-  const ACTIONS: Record<ActionKind, string> = { differently: "Explain differently", simpler: "Simpler", deeper: "Deeper", example: "Show an example" };
+  const ACTIONS: Record<ActionKind, string> = { differently: "Explain differently", simpler: "Simpler", deeper: "Deeper", example: "Show an example", visual: "Show it visually" };
   const STEP_ICON = { done: "check", shaky: "warning", current: "dots", upcoming: "" } as const;
 </script>
 
@@ -144,7 +161,7 @@
           {@const check = byMessage.get(message.id)}
           <article class="block" aria-busy={message.status === "streaming"}>
             {#if message.content}
-              <Markdown source={cited(message.content, message.sources)} streaming={message.status === "streaming"} />
+              <Markdown source={cited(message.content, message.sources)} streaming={message.status === "streaming"} messageId={message.id} onretry={() => redraw(message.id)} />
             {:else if message.status === "streaming"}
               <span class="drop drop--pulse" aria-label="Writing"></span>
             {/if}
@@ -192,6 +209,7 @@
     <div class="composer-wrap">
       <Composer bind:value={draft} {busy} onsend={ask} onstop={() => controller?.abort()} placeholder="Ask about this lesson…">
         <ModelSelect value={model} onchange={onmodel} label="Model for this lesson" compact />
+        <DialSelect value={chat.dial} inherited={inheritedDial(chat.folderId)} label="Visuals in this lesson" onchange={ondial} />
       </Composer>
     </div>
   {/if}

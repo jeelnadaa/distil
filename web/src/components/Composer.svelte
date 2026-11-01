@@ -8,12 +8,22 @@
 
   let field = $state<HTMLTextAreaElement>();
 
-  // Grow with the text up to the CSS max-height (40 % of the viewport).
-  $effect(() => {
-    void value;
+  // Grow with the text up to the CSS max-height (40 % of the viewport), measured again when the width changes.
+  const fit = () => {
     if (!field) return;
     field.style.height = "auto";
     field.style.height = `${field.scrollHeight}px`;
+  };
+  $effect(() => {
+    void value;
+    fit();
+  });
+  $effect(() => {
+    if (!field) return;
+    let width = field.clientWidth;
+    const observer = new ResizeObserver(() => { if (field && field.clientWidth !== width) { width = field.clientWidth; fit(); } });
+    observer.observe(field);
+    return () => observer.disconnect();
   });
 
   $effect(() => { if (!busy) field?.focus(); });

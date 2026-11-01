@@ -15,6 +15,7 @@ import { MAX_PASTED_CHARS, pastedTranscript, transcribeVideo, videoTitle, watchU
 import { ProviderError } from "./providers/types.ts";
 import { ITEM_TYPES } from "./prompts.ts";
 import { SettingsPatch } from "./settings.ts";
+import { DIALS } from "./visuals/reference.ts";
 import type { Db } from "./db.ts";
 import type { Learner } from "./learning/learner.ts";
 import type { Briefs } from "./plan/brief.ts";
@@ -26,9 +27,11 @@ import type { Vectors } from "./retrieval/vectors.ts";
 import type { Plans } from "./plan/store.ts";
 import type { Teacher } from "./teach/engine.ts";
 import { registerTeachRoutes } from "./teach/routes.ts";
+import type { Visuals } from "./visuals/builder.ts";
+import { registerVisualRoutes } from "./visuals/routes.ts";
 
 export type AppDeps = ChatDeps & { dataDir: string; allowedHosts: string[]; fonts: Fonts; materials: Materials; search: Search; ledger: Ledger; jobs: Jobs; fetch?: FetchFn }
-  & { db: Db; learner: Learner; plans: Plans; briefs: Briefs; local: LocalModels; vectors: Vectors; retrieval: Retrieval; teacher: Teacher };
+  & { db: Db; learner: Learner; plans: Plans; briefs: Briefs; local: LocalModels; vectors: Vectors; retrieval: Retrieval; teacher: Teacher; visuals: Visuals };
 
 const NullableId = z.string().min(1).nullable();
 const ModelRefBody = z.object({ provider: z.string().min(1), id: z.string().min(1), key: z.string().min(1).optional() });
@@ -85,7 +88,7 @@ export function createApp(deps: AppDeps) {
     return c.json(library.createFolder(name, parentId), 201);
   });
   app.patch("/folders/:id", async (c) => {
-    const patch = await body(c, z.object({ name: z.string().optional(), parentId: NullableId.optional() }));
+    const patch = await body(c, z.object({ name: z.string().optional(), parentId: NullableId.optional(), dial: z.enum(DIALS).nullable().optional() }));
     return c.json(library.updateFolder(c.req.param("id"), patch));
   });
   app.get("/folders/:id/contents", (c) => c.json(library.folderContents(c.req.param("id"))));
@@ -106,7 +109,7 @@ export function createApp(deps: AppDeps) {
     return c.json({ chat, messages: messages.list(chat.id), meter: meterFor(deps, chat) });
   });
   app.patch("/chats/:id", async (c) => {
-    const patch = await body(c, z.object({ title: z.string().optional(), folderId: NullableId.optional(), model: ModelRefBody.nullable().optional() }));
+    const patch = await body(c, z.object({ title: z.string().optional(), folderId: NullableId.optional(), model: ModelRefBody.nullable().optional(), dial: z.enum(DIALS).nullable().optional() }));
     return c.json(library.updateChat(c.req.param("id"), patch));
   });
   app.delete("/chats/:id", (c) => {
@@ -308,5 +311,6 @@ export function createApp(deps: AppDeps) {
   registerPlanRoutes(app, deps);
   registerRetrievalRoutes(app, deps);
   registerTeachRoutes(app, deps);
+  registerVisualRoutes(app, deps);
   return app;
 }

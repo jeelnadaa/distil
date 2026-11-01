@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { Db } from "./db.ts";
+import { DIALS } from "./visuals/reference.ts";
 
 // key: which of the provider's saved keys to use; its default key when absent.
 const ModelRef = z.object({ provider: z.string().min(1), id: z.string().min(1), key: z.string().min(1).optional() });
@@ -25,6 +26,8 @@ export const SettingsSchema = z.object({
     perProvider: z.record(z.string(), CapPair),
   }),
   embeddings: Embeddings,
+  // The interactivity dial's global default (F-741); folders and chats can override it.
+  dial: z.enum(DIALS),
   customEndpoints: z.array(z.object({
     id: z.string().regex(/^custom-[a-z0-9-]+$/),
     name: z.string().trim().min(1).max(60),
@@ -42,6 +45,7 @@ export const DEFAULT_SETTINGS: Settings = {
   fallbacks: { strong: [], cheap: [] },
   caps: { warnAt: 0.8, global: { daily: null, monthly: null }, perProvider: {} },
   embeddings: { mode: "off" },
+  dial: "balanced",
   customEndpoints: [],
 };
 

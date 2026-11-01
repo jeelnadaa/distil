@@ -6,6 +6,8 @@ import type { Providers } from "./providers/service.ts";
 import { ProviderError, type ChatMessage, type Usage } from "./providers/types.ts";
 import type { ModelRef, SettingsStore } from "./settings.ts";
 import { type CapStatus, estimateTokens, type UsageStore } from "./usage.ts";
+import { widgetPromptReference } from "./visuals/reference.ts";
+import { repairVisuals } from "./visuals/repair.ts";
 
 export type ChatDeps = {
   library: Library;
@@ -71,7 +73,9 @@ export async function* streamTurn(
     .filter((m, i) => m.status === "done" && m.content && !(m.role === "user" && earlier[i + 1] && earlier[i + 1]!.status !== "done"))
     .map((m) => ({ role: m.role, content: m.content }));
   history.push({ role: "user", content });
-  const system = [ASK_SYSTEM, deps.context?.(chat)].filter(Boolean).join("\n\n");
+  // The visuals reference follows the fixed instructions, so the cacheable prefix stays the same turn to turn.
+  const dial = library.dialFor(chat, deps.settings.get().dial);
+  const system = [ASK_SYSTEM, widgetPromptReference(dial, content), deps.context?.(chat)].filter(Boolean).join("\n\n");
 
   const user = messages.add({ chatId: chat.id, role: "user", content, status: "done" });
   const assistant = messages.add({ chatId: chat.id, role: "assistant", content: "", status: "streaming", provider: chain[0]!.provider, model: chain[0]!.id });
@@ -127,8 +131,10 @@ export async function* streamTurn(
     return;
   }
 
-  messages.finish(assistant.id, reply, "done");
   record();
+  // A broken widget block gets one repair before the reply is saved; the done event carries the result.
+  reply = await repairVisuals(deps, reply, chat.folderId, signal).catch(() => reply);
+  messages.finish(assistant.id, reply, "done");
   yield {
     type: "done",
     message: { ...assistant, provider: answering.provider, model: answering.id, content: reply, status: "done" },

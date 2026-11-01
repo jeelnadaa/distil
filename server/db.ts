@@ -313,6 +313,23 @@ const MIGRATIONS = [
   -- The passages a reply was grounded in, numbered as it cites them ([1], [2]).
   ALTER TABLE messages ADD COLUMN sources TEXT;
   `,
+  `
+  -- Interactivity dial (F-741): text, balanced or visual; NULL follows the parent folder, then Settings.
+  ALTER TABLE folders ADD COLUMN dial TEXT;
+  ALTER TABLE chats ADD COLUMN dial TEXT;
+  -- Built visuals (F-721, F-725): the mini-app or figure for one app or figure block of a reply,
+  -- by its position in the reply; rebuilding adds a version (F-723).
+  CREATE TABLE visuals (
+    id         TEXT PRIMARY KEY,
+    message_id TEXT NOT NULL REFERENCES messages(id) ON DELETE CASCADE,
+    block      INTEGER NOT NULL,
+    version    INTEGER NOT NULL,
+    kind       TEXT NOT NULL CHECK (kind IN ('app', 'figure')),
+    content    TEXT NOT NULL,
+    created_at INTEGER NOT NULL,
+    UNIQUE (message_id, block, version)
+  );
+  `,
 ];
 
 export function openDb(file: string): Db {

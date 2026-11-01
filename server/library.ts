@@ -2,10 +2,12 @@ import { randomUUID } from "node:crypto";
 import type { Db } from "./db.ts";
 import { DEFAULT_CHAT_TITLE, MAX_FOLDER_DEPTH } from "./constants.ts";
 import { AppError, notFound } from "./errors.ts";
+import type { Dial } from "./visuals/reference.ts";
 
 export { MAX_FOLDER_DEPTH };
 
-export type Folder = { id: string; parentId: string | null; name: string; createdAt: number };
+// dial: the folder's interactivity dial (F-741); null follows its parent folder, then Settings.
+export type Folder = { id: string; parentId: string | null; name: string; dial: Dial | null; createdAt: number };
 export type Chat = {
   id: string;
   folderId: string | null;
@@ -14,20 +16,21 @@ export type Chat = {
   mode: string;
   lessonId: string | null;
   model: { provider: string; id: string } | null;
+  dial: Dial | null;
   createdAt: number;
   updatedAt: number;
 };
 
-type FolderRow = { id: string; parent_id: string | null; name: string; created_at: number };
+type FolderRow = { id: string; parent_id: string | null; name: string; dial: Dial | null; created_at: number };
 type ChatRow = {
   id: string; folder_id: string | null; title: string; title_source: Chat["titleSource"]; mode: string; lesson_id: string | null;
-  model_provider: string | null; model_id: string | null; created_at: number; updated_at: number;
+  model_provider: string | null; model_id: string | null; dial: Dial | null; created_at: number; updated_at: number;
 };
 
-const toFolder = (r: FolderRow): Folder => ({ id: r.id, parentId: r.parent_id, name: r.name, createdAt: r.created_at });
+const toFolder = (r: FolderRow): Folder => ({ id: r.id, parentId: r.parent_id, name: r.name, dial: r.dial ?? null, createdAt: r.created_at });
 const toChat = (r: ChatRow): Chat => ({
   id: r.id, folderId: r.folder_id, title: r.title, titleSource: r.title_source, mode: r.mode, lessonId: r.lesson_id,
-  model: r.model_provider && r.model_id ? { provider: r.model_provider, id: r.model_id } : null,
+  model: r.model_provider && r.model_id ? { provider: r.model_provider, id: r.model_id } : null, dial: r.dial ?? null,
   createdAt: r.created_at, updatedAt: r.updated_at,
 });
 
@@ -99,13 +102,13 @@ export function createLibrary(db: Db, now = () => Date.now()) {
           throw new AppError(400, "too_deep", `Folders can nest ${MAX_FOLDER_DEPTH} levels deep at most.`);
         }
       }
-      const folder = { id: randomUUID(), parentId, name: cleanName(name, "Folder"), createdAt: now() };
+      const folder: Folder = { id: randomUUID(), parentId, name: cleanName(name, "Folder"), dial: null, createdAt: now() };
       db.prepare("INSERT INTO folders (id, parent_id, name, created_at) VALUES (?, ?, ?, ?)")
         .run(folder.id, folder.parentId, folder.name, folder.createdAt);
       return folder;
     },
 
-    updateFolder(id: string, patch: { name?: string; parentId?: string | null }): Folder {
+    updateFolder(id: string, patch: { name?: string; parentId?: string | null; dial?: Dial | null }): Folder {
       const row = requireFolder(id);
       const name = patch.name === undefined ? row.name : cleanName(patch.name, "Folder");
       let parentId = row.parent_id;
@@ -121,8 +124,9 @@ export function createLibrary(db: Db, now = () => Date.now()) {
           }
         }
       }
-      db.prepare("UPDATE folders SET name = ?, parent_id = ? WHERE id = ?").run(name, parentId, id);
-      return toFolder({ ...row, name, parent_id: parentId });
+      const dial = patch.dial === undefined ? row.dial : patch.dial;
+      db.prepare("UPDATE folders SET name = ?, parent_id = ?, dial = ? WHERE id = ?").run(name, parentId, dial, id);
+      return toFolder({ ...row, name, parent_id: parentId, dial });
     },
 
     // Deletes the folder, its subfolders and every chat inside them (foreign keys cascade).
@@ -157,7 +161,7 @@ export function createLibrary(db: Db, now = () => Date.now()) {
       const chat: Chat = {
         id: randomUUID(), folderId, title: lesson ? cleanName(lesson.title, "Chat") : DEFAULT_CHAT_TITLE,
         titleSource: lesson ? "manual" : "default", mode: lesson ? "teach" : "ask", lessonId: lesson?.id ?? null,
-        model: null, createdAt: at, updatedAt: at,
+        model: null, dial: null, createdAt: at, updatedAt: at,
       };
       db.prepare(`INSERT INTO chats (id, folder_id, title, title_source, mode, lesson_id, created_at, updated_at)
                   VALUES (?, ?, ?, ?, ?, ?, ?, ?)`)
@@ -165,7 +169,7 @@ export function createLibrary(db: Db, now = () => Date.now()) {
       return chat;
     },
 
-    updateChat(id: string, patch: { title?: string; folderId?: string | null; model?: Chat["model"] }): Chat {
+    updateChat(id: string, patch: { title?: string; folderId?: string | null; model?: Chat["model"]; dial?: Dial | null }): Chat {
       const chat = getChat(id);
       if (patch.folderId) requireFolder(patch.folderId);
       const next: Chat = {
@@ -173,9 +177,10 @@ export function createLibrary(db: Db, now = () => Date.now()) {
         ...(patch.title !== undefined && { title: cleanName(patch.title, "Chat"), titleSource: "manual" as const }),
         ...(patch.folderId !== undefined && { folderId: patch.folderId }),
         ...(patch.model !== undefined && { model: patch.model }),
+        ...(patch.dial !== undefined && { dial: patch.dial }),
       };
-      db.prepare("UPDATE chats SET title = ?, title_source = ?, folder_id = ?, model_provider = ?, model_id = ? WHERE id = ?")
-        .run(next.title, next.titleSource, next.folderId, next.model?.provider ?? null, next.model?.id ?? null, id);
+      db.prepare("UPDATE chats SET title = ?, title_source = ?, folder_id = ?, model_provider = ?, model_id = ?, dial = ? WHERE id = ?")
+        .run(next.title, next.titleSource, next.folderId, next.model?.provider ?? null, next.model?.id ?? null, next.dial, id);
       return next;
     },
 
@@ -197,6 +202,18 @@ export function createLibrary(db: Db, now = () => Date.now()) {
 
     // Chats are created when their first message is sent; any left without one (from before that,
     // or a send that never reached the server) would only clutter the library, so startup drops them.
+    // The dial that applies to a chat: its own, else the nearest folder's up the tree, else Settings'.
+    dialFor(chat: Chat, fallback: Dial): Dial {
+      if (chat.dial) return chat.dial;
+      if (!chat.folderId) return fallback;
+      const row = db.prepare(`
+        WITH RECURSIVE up(id, parent_id, dial, depth) AS (
+          SELECT id, parent_id, dial, 0 FROM folders WHERE id = ?
+          UNION ALL SELECT f.id, f.parent_id, f.dial, up.depth + 1 FROM folders f JOIN up ON f.id = up.parent_id
+        ) SELECT dial FROM up WHERE dial IS NOT NULL ORDER BY depth LIMIT 1`).get(chat.folderId) as { dial: Dial } | undefined;
+      return row?.dial ?? fallback;
+    },
+
     removeEmptyChats(): number {
       return Number(db.prepare("DELETE FROM chats WHERE NOT EXISTS (SELECT 1 FROM messages WHERE chat_id = chats.id)").run().changes);
     },

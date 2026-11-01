@@ -11,6 +11,8 @@ import type { Lesson, Plans } from "../plan/store.ts";
 import { ProviderError, type Usage } from "../providers/types.ts";
 import type { Passage, Retrieval } from "../retrieval/retrieve.ts";
 import { estimateTokens } from "../usage.ts";
+import { widgetPromptReference } from "../visuals/reference.ts";
+import { repairVisuals } from "../visuals/repair.ts";
 import { answerText, CheckSpec, type Confidence, gradeExact, gradeWithModel, responseText, type Result, type Verdict } from "./checks.ts";
 import { itemLines, PLANNER, planPrompt, sourceBlock, TEACHER } from "./prompts.ts";
 import { type Check, checkView, type CheckView, type Session, type Step, type TeachStore } from "./store.ts";
@@ -42,6 +44,7 @@ export const ACTIONS = {
   simpler: { label: "Simpler, please", ask: "explain the current step more simply: plainer words, smaller pieces, an everyday example" },
   deeper: { label: "Go deeper", ask: "go deeper on the current step: the reasoning behind it, an edge case, how it connects to what came before" },
   example: { label: "Show an example", ask: "show a fully worked example of the current step, step by step" },
+  visual: { label: "Show it visually", ask: "show the current step as a visual: the diagram, plot, chart or interactive that makes it click, with a short explanation" },
 } as const;
 export type ActionKind = keyof typeof ACTIONS;
 
@@ -203,11 +206,13 @@ export function createTeacher(deps: TeachDeps) {
     return text.length > TRANSCRIPT_CHARS ? `…${text.slice(-TRANSCRIPT_CHARS)}` : text;
   }
 
-  function system(chat: Chat, s: Session): string {
+  // request: what this turn was asked for, so Text-only still draws a visual the learner asked for.
+  function system(chat: Chat, s: Session, request: string): string {
     const lesson = plans.lesson(s.lessonId);
     const mark = (x: Step, i: number) => (i === s.step && s.phase === "teach" ? "current" : x.status);
     return [
       TEACHER,
+      widgetPromptReference(deps.library.dialFor(chat, deps.settings.get().dial), request),
       chat.folderId ? briefContext(deps.db, chat.folderId) : "",
       `This lesson: "${lesson.title}". ${lesson.summary}`.trim(),
       "Its steps:",
@@ -250,7 +255,7 @@ export function createTeacher(deps: TeachDeps) {
     if (sources.length) messages.setSources(assistant.id, sources);
     yield { type: "start", user, assistant: { ...assistant, sources: sources.length ? sources : null } };
 
-    const sys = system(chat, s);
+    const sys = system(chat, s, `${turn.userText ?? ""} ${turn.note}`);
     const so_far = transcript(chat.id);
     const prompt = [
       so_far ? `The lesson so far:\n\n${so_far}` : "The lesson is just starting.",
@@ -320,14 +325,16 @@ export function createTeacher(deps: TeachDeps) {
         return;
       }
     }
-    messages.finish(assistant.id, body, "done");
+    // A broken widget block gets one repair before the reply is saved; the done event carries the result.
+    const final = await repairVisuals(deps, body, chat.folderId, signal).catch(() => body);
+    messages.finish(assistant.id, final, "done");
     turn.after?.(s, assistant.id);
     teach.save(s);
     if (check) yield { type: "check", check: checkView(check) };
     if (turn.after) yield { type: "progress" };
     yield {
       type: "done",
-      message: { ...assistant, provider: answering.provider, model: answering.id, content: body, status: "done", sources: sources.length ? sources : null },
+      message: { ...assistant, provider: answering.provider, model: answering.id, content: final, status: "done", sources: sources.length ? sources : null },
       session: view(s),
     };
   }

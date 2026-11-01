@@ -4,11 +4,11 @@ Living status log. Update in the same commit as every change.
 
 ## Current phase
 
-**Phase 5 — Interactives** is next, on `main`.
+**Phase 6 — Practice & Exams** is next, on `main`.
 
 ## Next up
 
-1. Phase 5 — Interactives: visuals and quiz widgets inside lessons (F-618's second half, F-708).
+1. Phase 6 — Practice & Exams (plan.md §8, F-801…F-809).
 2. Still open from Phase 4 (should/could): opening recall questions from the previous lesson (F-614), predict-before-reveal prompts (F-608), dictation (F-615).
 
 ## Phase checklist
@@ -22,7 +22,7 @@ Living status log. Update in the same commit as every change.
 - [x] Phase 2 — Materials & Coverage Ledger
 - [x] Phase 3 — Study Plan
 - [x] Phase 4 — Teach
-- [ ] Phase 5 — Interactives
+- [x] Phase 5 — Interactives
 - [ ] Phase 6 — Practice & Exams
 - [ ] Phase 7 — Retention
 - [ ] Phase 8 — Providers+ & usage dashboard
@@ -163,6 +163,13 @@ Living status log. Update in the same commit as every change.
 - Graphics adapter choice: DirectML's adapter 0 on this laptop is the Intel integrated graphics, where High took 70 s for 32 passages. On first use Distil now opens the model on each adapter, times a short sample, keeps the fastest and remembers it (`models/gpu.json`), testing again if it stops working; the processor stays the last fallback. High on the RTX 3070 Ti: 1.1 s for the same 32 passages; the one-time test adds about 19 s to the first load. High was swapped to its graphics-card version (1.1 GB).
 - Lesson layout: the lesson text, its checks and the ask box share one 720 px reading width, centred in the lesson column (the text used to sit at the left of a wider column).
 
+### 2026-11-01 · Phase 5 — Interactives
+- Widget grammars (`server/visuals/grammar/`, plan.md §7.5): `flow`, `map`, `plot`, `chart`, `steps`, `compare`, `timeline`, `quiz` and `formula` blocks in a reply render as widgets drawn only with Distil's tokens (F-701–F-710, F-751–F-753). A lint and an SVG sanitiser keep models from styling anything themselves. A block that doesn't parse gets one repair call on the cheap model after the reply; a block still broken shows its source, the parser's reason and Retry (F-758). Unfinished blocks show a placeholder while they stream (F-759).
+- Mini-apps and figures (`server/visuals/builder.ts`, `kit.ts`): an `app` or `figure` block holds a brief; the strong model builds it the first time it's viewed. Mini-apps run in a sandboxed frame (no network, scripts only) with the Distil kit (classes, tokens, `distil.color`/`fit` for canvases); they're test-run hidden first and errors go back for up to two fixes before the learner sees them, with a "Ran with errors" chip if any remain (F-721, F-722, F-754, F-755). Rebuild adds a version; versions can be switched (F-723). Figures are sanitised SVG drawn with tokens, redrawn once if the sanitiser had to strip parts (F-725). `js run` blocks are editable JavaScript that runs in a sandbox (F-709; no Python runner yet).
+- Interactivity dial (F-741–F-743): Text-only, Balanced, Visual-heavy, set per chat (composer), per folder (workspace header) or in Settings › Learning; a chat uses the nearest one set. Text-only leaves the grammar out of the prompt unless the learner asks for a picture. Lessons have a "Show it visually" action.
+- Theme, palette and text font changes reach every widget and running mini-app live (F-756).
+- Checked live on Gemini 3.5 Flash Lite: Balanced drew a flow diagram unprompted; Visual-heavy drew all nine grammar kinds, all valid; plot sliders, quiz checking and the code runner work; a central-limit mini-app built in about 8 s and ran; a figure was sanitised and themed; switching to light theme and another palette restyled widgets and the mini-app. 223 tests.
+
 ## Open questions
 
 See `plan.md` §18.
@@ -173,6 +180,7 @@ See `plan.md` §18.
 - On Google's free tier the strong model's daily request quota is very small; a textbook-sized audit needs several days or a paid key.
 - Adding a link (and transcribing a video) runs inside the request; a long video keeps the dialog waiting for minutes. Move to a background job if that becomes a problem.
 - Only Google AI Studio has been tested for real; Anthropic, OpenAI and the other providers are still checked only against fakes.
+- Mini-apps and figures are built with the strong model, about 3–8k tokens each, on first view; a figure the model draws badly (e.g. heavy fills) still shows, use Rebuild.
 - The web bundle is one 614 kB chunk (KaTeX and highlight.js). Fine when served locally; split it if load time ever matters.
 
 - Caps are in tokens only. Cost caps need per-model prices; planned with the usage dashboard (Phase 8).

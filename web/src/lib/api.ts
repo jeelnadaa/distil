@@ -19,10 +19,13 @@ import type { CapStatus } from "../../../server/usage.ts";
 import type { Confidence, PublicCheck, Result } from "../../../server/teach/checks.ts";
 import type { ActionKind, Answer, SessionView, TeachEvent } from "../../../server/teach/engine.ts";
 import type { CheckView, Step } from "../../../server/teach/store.ts";
+import type { Visual } from "../../../server/visuals/builder.ts";
+import type { Dial } from "../../../server/visuals/reference.ts";
 
 export type { Brief, Compiled, Lesson, Plan, PlanKind, PlanView, SavedPlan, StoredBrief, TodayLesson, TodayView, Unit };
 export type { CapStatus, Chat, SavedFont, Folder, Item, ItemMark, ItemType, Job, Message, Meter, ModelInfo, ModelRef, Settings, Strategy, TurnEvent };
 export type { ActionKind, Answer, CheckView, Confidence, PublicCheck, Result, SessionView, Source, Step, TeachEvent };
+export type { Dial, Visual };
 export type TeachView = { session: SessionView | null; checks: CheckView[] };
 export type FolderMaterial = Material & { inherited: boolean };
 export type { Material, StoredChunk };
@@ -93,13 +96,13 @@ const done = async (method: string, path: string): Promise<true> => {
 export const api = {
   library: () => json<{ folders: Folder[]; chats: Chat[] }>("GET", "/library"),
   createFolder: (name: string, parentId: string | null) => json<Folder>("POST", "/folders", { name, parentId }),
-  updateFolder: (id: string, patch: { name?: string; parentId?: string | null }) => json<Folder>("PATCH", `/folders/${id}`, patch),
+  updateFolder: (id: string, patch: { name?: string; parentId?: string | null; dial?: Dial | null }) => json<Folder>("PATCH", `/folders/${id}`, patch),
   folderContents: (id: string) => json<{ folders: number; chats: number }>("GET", `/folders/${id}/contents`),
   deleteFolder: (id: string) => done("DELETE", `/folders/${id}`),
 
   createChat: (folderId: string | null) => json<Chat>("POST", "/chats", { folderId }),
   chat: (id: string) => json<{ chat: Chat; messages: Message[]; meter: Meter }>("GET", `/chats/${id}`),
-  updateChat: (id: string, patch: { title?: string; folderId?: string | null; model?: ModelRef | null }) => json<Chat>("PATCH", `/chats/${id}`, patch),
+  updateChat: (id: string, patch: { title?: string; folderId?: string | null; model?: ModelRef | null; dial?: Dial | null }) => json<Chat>("PATCH", `/chats/${id}`, patch),
   deleteChat: (id: string) => done("DELETE", `/chats/${id}`),
 
   providers: () => json<Provider[]>("GET", "/providers"),
@@ -175,6 +178,10 @@ export const api = {
 
   // A lesson (Phase 4): its session, and each move in it streamed.
   teach: (chatId: string) => json<TeachView>("GET", `/chats/${chatId}/teach`),
+  visuals: (messageId: string) => json<Visual[]>("GET", `/messages/${messageId}/visuals`),
+  buildVisual: (messageId: string, block: number, rebuild = false) => json<Visual>("POST", `/messages/${messageId}/visuals`, { block, rebuild }),
+  fixVisual: (id: string, errors: string[]) => json<Visual>("POST", `/visuals/${id}/fix`, { errors }),
+  repairMessage: (messageId: string) => json<Message>("POST", `/messages/${messageId}/repair`, {}),
   teachStart: (chatId: string, onEvent: (e: TeachEvent) => void, signal: AbortSignal) => events(`/chats/${chatId}/teach/start`, {}, onEvent, signal),
   teachAnswer: (chatId: string, answer: Answer, onEvent: (e: TeachEvent) => void, signal: AbortSignal) => events(`/chats/${chatId}/teach/answer`, answer, onEvent, signal),
   teachAction: (chatId: string, kind: ActionKind, onEvent: (e: TeachEvent) => void, signal: AbortSignal) => events(`/chats/${chatId}/teach/action`, { kind }, onEvent, signal),

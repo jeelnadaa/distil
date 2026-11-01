@@ -1,8 +1,9 @@
 <script lang="ts">
   import ActivityDock from "./ActivityDock.svelte";
   import SoundButton from "./SoundButton.svelte";
-  import { api, type FolderMaterial, type Item, type Job, type Material, type PlanView } from "../lib/api.ts";
-  import { attempt, folderPath, type FolderTab, go, library, nav } from "../lib/state.svelte.ts";
+  import { api, type Dial, type FolderMaterial, type Item, type Job, type Material, type PlanView } from "../lib/api.ts";
+  import { attempt, folderPath, type FolderTab, go, library, nav, refreshLibrary } from "../lib/state.svelte.ts";
+  import DialSelect, { inheritedDial } from "./DialSelect.svelte";
   import DistilDialog from "./DistilDialog.svelte";
   import Icon from "./Icon.svelte";
   import CoverageBars from "./CoverageBars.svelte";
@@ -88,6 +89,11 @@
     `${items.length} ${items.length === 1 ? "item" : "items"}`,
     ...(materials.length > own.length ? [`${materials.length - own.length} from parent folders`] : []),
   ].join(" · "));
+
+  // The folder's interactivity dial (F-741), which its chats and subfolders follow unless they set their own.
+  async function setDial(dial: Dial | null) {
+    if (await attempt(() => api.updateFolder(id, { dial }))) await refreshLibrary();
+  }
 </script>
 
 <header class="topbar">
@@ -111,7 +117,10 @@
     {:else}
       <header class="ws__head">
         <h1 class="display-lg">{folder.name}</h1>
-        <p class="muted">{summary}</p>
+        <div class="ws__meta">
+          <p class="muted">{summary}</p>
+          <DialSelect value={folder.dial} inherited={inheritedDial(folder.parentId)} label="Visuals in this folder's chats" onchange={setDial} />
+        </div>
       </header>
 
       <nav class="subtabs" aria-label="Workspace">
