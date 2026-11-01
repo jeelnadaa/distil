@@ -64,7 +64,7 @@ export function videoSlot(settings: SettingsStore): Slot | null {
 
 export async function complete(deps: LlmDeps, o: CallOptions, history: ChatMessage[] = []): Promise<string> {
   const wait = deps.wait ?? sleep;
-  const all = chainFor(deps.settings, o.slot);
+  const all = deps.providers.withKeys(chainFor(deps.settings, o.slot));
   const chain = o.videos?.length ? all.filter((r) => r.provider === "google") : all;
   if (!chain.length) throw new AppError(400, "needs_gemini", "Only Gemini models can watch videos. Pick a Gemini model in Settings › Models, or paste the transcript.");
   // Models out of quota for hours, or capped, sit out the rest of this call.

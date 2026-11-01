@@ -73,6 +73,20 @@ export function createProviders(settings: SettingsStore, secrets: Secrets, fetch
       return keys.length > 1 ? `${ref.id} (${secrets.get(ref.provider, ref.key)?.label})` : ref.id;
     },
 
+    // A fallback chain with every key spelled out: each model on its own key (the default when none is
+    // named), then on the provider's other keys, before the next model in the chain. No repeats.
+    withKeys(chain: ModelRef[]): ModelRef[] {
+      const out: ModelRef[] = [];
+      const add = (ref: ModelRef) => { if (!out.some((o) => o.provider === ref.provider && o.id === ref.id && o.key === ref.key)) out.push(ref); };
+      for (const ref of chain) {
+        const keys = secrets.list(ref.provider);
+        if (!keys.length) { add(ref); continue; }
+        const own = secrets.get(ref.provider, ref.key)!;
+        for (const k of [own, ...keys.filter((k) => k.id !== own.id)]) add({ provider: ref.provider, id: ref.id, key: k.id });
+      }
+      return out;
+    },
+
     contextWindow: (ref: ModelRef) => cache.get(ref.provider)?.models.find((m) => m.id === ref.id)?.contextWindow ?? null,
 
     stream(ref: ModelRef, request: Omit<ChatRequest, "model">): AsyncIterable<StreamEvent> {

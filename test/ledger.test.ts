@@ -40,6 +40,7 @@ function setup(replies: { extract: Reply; audit?: Reply; merge?: Reply }) {
       yield { type: "text" as const, text: reply };
       yield { type: "usage" as const, usage: { input: 100, output: 20, cached: 0, reasoning: 0 } };
     },
+    withKeys: (chain: unknown[]) => chain,
   } as unknown as Providers;
   settings.update({ models: { strong: { provider: "google", id: "strong" }, cheap: { provider: "google", id: "cheap" } } });
   registerIngest(jobs, materials, ledger);

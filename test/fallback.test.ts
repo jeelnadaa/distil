@@ -34,6 +34,7 @@ function setup(failures: Record<string, ProviderError[]>) {
       if (failure) throw failure;
       yield { type: "text" as const, text: name(ref) };
     },
+    withKeys: (chain: ModelRef[]) => chain.filter((r, i) => chain.findIndex((o) => name(o) === name(r)) === i),
   } as unknown as Providers;
   const answered: [string, boolean][] = [];
   const deps: LlmDeps = {
@@ -123,5 +124,15 @@ describe("provider keys", () => {
     providers.removeKey("google");
     expect(settings.get().models.strong).toBeNull();
     expect(settings.get().fallbacks.strong).toEqual([C]);
+  });
+
+  it("tries each model on every key of its provider before the next model", () => {
+    const secrets = createSecrets(join(dir(), "secrets.json"));
+    const personal = secrets.add("google", "AIza-personal-000000");
+    const work = secrets.add("google", "AIza-work-0000000000", "Work");
+    const providers = createProviders(createSettings(openDb(":memory:")), secrets);
+    const keyed = (ref: ModelRef, key: string) => ({ ...ref, key });
+    expect(providers.withKeys([A, C])).toEqual([keyed(A, personal.id), keyed(A, work.id), C]);
+    expect(providers.withKeys([keyed(A, work.id), A, C])).toEqual([keyed(A, work.id), keyed(A, personal.id), C]);
   });
 });

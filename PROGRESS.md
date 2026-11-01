@@ -137,6 +137,8 @@ Living status log. Update in the same commit as every change.
 - Plan view filters: search, unit and day (the schedule strip's days also pick a day); the map dims what's filtered out and scrolls to the first match. Units on the map are shaded bands with their number and title.
 - The mouse wheel scrolls horizontal strips (map, Today's week) sideways while hovering anywhere over them (`web/src/lib/wheel.ts`). Fixed: the brief dialog's footer wrapping, and an expanded outline lesson repeating its title and actions. 138 tests.
 - Lesson chats show their lesson in a bar under the top bar: unit and lesson number, one mark per item (taught, checked), the unit's lessons done, Mark done and a link to the plan; it refreshes after each reply. Item marks move once Phase 4 records teaching. Fixed: a provider error with a long URL widened the chat on phones.
+- Keys: a rate-limited or out-of-quota model is tried on the provider's other saved keys before the next fallback model (owner).
+- Lesson chats (owner test): the stopgap teaching prompt quizzed course admin (what a chapter covers, which fields use statistics) and moved on after a wrong answer. It now only mentions admin, explains with an example, asks questions that need thinking, and re-explains and re-asks after a wrong answer. A question whose reply failed is left out of the history, so retries don't repeat it. Phase 4's teacher takes these rules over. 140 tests.
 
 ## Open questions
 
@@ -144,7 +146,6 @@ See `plan.md` §18.
 
 ## Known issues
 
-- Owner test of a lesson chat (before Phase 4): the stopgap prompt quizzes front-matter items (fields that need statistics, what Chapter 1 covers) and moves on after a wrong answer instead of re-teaching. Phase 4's teacher must skip or summarise administrative items and re-check after a miss.
 - Custom installed fonts are found by family name. Chromium (the desktop build) sees user-installed fonts; Safari only exposes system fonts.
 - On Google's free tier the strong model's daily request quota is very small; a textbook-sized audit needs several days or a paid key.
 - Adding a link (and transcribing a video) runs inside the request; a long video keeps the dialog waiting for minutes. Move to a background job if that becomes a problem.

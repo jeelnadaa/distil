@@ -14,6 +14,7 @@ function setup(replies: (string | Error)[]) {
   const providers = {
     stream: (ref: { id: string }, req: object) => adapter.stream({ baseUrl: "", apiKey: null }, { ...req, model: ref.id } as never),
     contextWindow: () => 1000,
+    withKeys: (chain: unknown[]) => chain,
   } as unknown as Providers;
   const deps: ChatDeps = {
     library: createLibrary(db), messages: createMessages(db), settings: createSettings(db), usage: createUsage(db), providers,
@@ -55,6 +56,16 @@ describe("a chat turn", () => {
     const last = adapter.requests.at(-1) as { messages: { content: string }[] };
     expect(last.messages.map((m) => m.content)).toEqual(["First?", "One.", "Second?"]);
     expect(adapter.requests).toHaveLength(3);
+  });
+
+  it("leaves a question whose reply failed out of the history", async () => {
+    const { deps, adapter } = setup([new Error("busy"), "One.", "Title", "Two."]);
+    const chat = deps.library.createChat(null);
+    await run(deps, chat.id, "First?");
+    await run(deps, chat.id, "First?");
+    await run(deps, chat.id, "Second?");
+    const last = adapter.requests.at(-1) as { messages: { content: string }[] };
+    expect(last.messages.map((m) => m.content)).toEqual(["First?", "One.", "Second?"]);
   });
 
   it("is refused before streaming when a cap is reached", async () => {

@@ -22,6 +22,7 @@ function setup(failures: ProviderError[]) {
       yield { type: "text" as const, text: "ok" };
       yield { type: "usage" as const, usage: { input: 5, output: 1, cached: 0, reasoning: 0 } };
     },
+    withKeys: (chain: unknown[]) => chain,
   } as unknown as Providers;
   const deps: LlmDeps = { providers, settings, usage: createUsage(db), wait: async (ms) => { waits.push(ms); } };
   const call = () => complete(deps, { slot: "strong", role: "extractor", folderId: null, system: "s", prompt: "p" });

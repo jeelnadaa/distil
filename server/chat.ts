@@ -38,7 +38,8 @@ export const meterFor = (deps: ChatDeps, chat: Chat): Meter => ({
 const sameRef = (a: ModelRef, b: ModelRef) => a.provider === b.provider && a.id === b.id && (a.key ?? "") === (b.key ?? "");
 
 // Validates a turn before any streaming starts, so problems surface as plain HTTP errors.
-// The chat's model comes first, then the strong slot's chain, leaving out providers that are capped.
+// The chat's model comes first, then the strong slot's chain, each model tried on every key of its provider,
+// leaving out providers that are capped.
 export function prepareTurn(deps: ChatDeps, chatId: string, text: string, model?: ModelRef) {
   const chat = deps.library.getChat(chatId);
   const content = text.trim();
@@ -46,8 +47,7 @@ export function prepareTurn(deps: ChatDeps, chatId: string, text: string, model?
   const { models, fallbacks, caps } = deps.settings.get();
   const ref = model ?? chat.model ?? models.strong;
   if (!ref) throw new AppError(400, "no_model", "Pick a model in Settings first.");
-  const all = [ref, ...(models.strong ? [models.strong, ...fallbacks.strong] : [])];
-  const chain = all.filter((r, i) => all.findIndex((o) => sameRef(o, r)) === i)
+  const chain = deps.providers.withKeys([ref, ...(models.strong ? [models.strong, ...fallbacks.strong] : [])])
     .filter((r) => deps.usage.capStatus(caps, r.provider).state !== "blocked");
   if (!chain.length) {
     throw new AppError(429, "cap_reached", "You've reached a token cap. Raise it in Settings or wait for it to reset.", deps.usage.capStatus(caps, ref.provider));
@@ -64,8 +64,10 @@ export async function* streamTurn(
   signal: AbortSignal,
 ): AsyncGenerator<TurnEvent> {
   const { library, messages, providers, usage } = deps;
-  const history: ChatMessage[] = messages.list(chat.id)
-    .filter((m) => m.status === "done" && m.content)
+  // Finished turns only: a question whose reply failed was asked again, so it's left out too.
+  const earlier = messages.list(chat.id);
+  const history: ChatMessage[] = earlier
+    .filter((m, i) => m.status === "done" && m.content && !(m.role === "user" && earlier[i + 1] && earlier[i + 1]!.status !== "done"))
     .map((m) => ({ role: m.role, content: m.content }));
   history.push({ role: "user", content });
   const system = [ASK_SYSTEM, deps.context?.(chat)].filter(Boolean).join("\n\n");

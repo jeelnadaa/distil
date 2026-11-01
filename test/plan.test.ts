@@ -38,6 +38,7 @@ function setup(reply: (prompt: string) => unknown) {
       yield { type: "usage" as const, usage: { input: 100, output: 20, cached: 0, reasoning: 0 } };
     },
     describe: () => "fake",
+    withKeys: (chain: unknown[]) => chain,
   } as unknown as Providers;
   settings.update({ models: { strong: { provider: "google", id: "strong" }, cheap: { provider: "google", id: "cheap" } } });
   registerPlanner(jobs, { providers, settings, usage: createUsage(db), db, plans, briefs, learner });

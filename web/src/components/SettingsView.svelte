@@ -193,7 +193,7 @@
                 </span>
                 <span class="prov__actions">
                   <button type="button" class="btn btn--sm" class:btn--secondary={!p.configured} class:btn--ghost={p.configured} onclick={() => openKey(p)}
-                    data-tip={p.keys.length ? "Save another key for this provider, to use in fallback lists" : undefined}>{p.keys.length ? "Add another key" : "Add key"}</button>
+                    data-tip={p.keys.length ? "Save another key for this provider; a rate-limited model tries it before the next fallback" : undefined}>{p.keys.length ? "Add another key" : "Add key"}</button>
                   {#if p.custom}<button type="button" class="btn btn--ghost btn--sm" onclick={() => removeEndpoint(p)}>Remove</button>{/if}
                 </span>
               </li>
@@ -206,7 +206,7 @@
 
         <section id="models" class="sset">
           <header><h2 class="display-md">Models</h2><p class="muted">Two slots cover every job. Each chat can also pick its own model from the composer.
-            When a model is rate-limited, out of quota or capped, the next one in its slot's fallback list takes over, and the chat or the activity panel says which one answered.</p></header>
+            When a model is rate-limited or out of quota, it tries your other keys for that provider, then the next model in its slot's fallback list takes over, and the chat or the activity panel says which one answered.</p></header>
           {#if configured.length}
             <div class="slots">
               <div class="field"><span class="field__label">Strong <span class="faint caption">chat and teaching</span></span>

@@ -39,6 +39,7 @@ describe("YouTube links", () => {
         seen.push({ model: ref.id, request });
         yield { type: "text" as const, text: "[00:00] Hello.\n\nOn screen: $a^2$" };
       },
+      withKeys: (chain: unknown[]) => chain,
     } as unknown as Providers;
     const deps = { providers, settings, usage: createUsage(db) };
     const md = text((await transcribeVideo(deps, ID, "Intro", "f1")).bytes);
