@@ -26,6 +26,8 @@ import { createTeachStore } from "./teach/store.ts";
 import { createVisuals } from "./visuals/builder.ts";
 import { createPractice } from "./practice/engine.ts";
 import { createPapers } from "./practice/store.ts";
+import { createCards } from "./retention/cards.ts";
+import { createRetention } from "./retention/engine.ts";
 import { createProviders } from "./providers/service.ts";
 import { createSecrets } from "./secrets.ts";
 import { createSettings } from "./settings.ts";
@@ -67,7 +69,9 @@ export function createServer({ port, dataDir = defaultDataDir(), fetch }: { port
   const plans = createPlans(db);
   const briefs = createBriefs(db);
   registerPlanner(jobs, { providers, settings, usage, db, plans, briefs, learner });
-  const teacher = createTeacher({ providers, settings, usage, db, library, messages, plans, ledger, learner, retrieval, teach: createTeachStore(db), log });
+  const cards = createCards(db);
+  const retention = createRetention({ providers, settings, usage, db, jobs, ledger, plans, learner, retrieval, cards });
+  const teacher = createTeacher({ providers, settings, usage, db, library, messages, plans, ledger, learner, retrieval, teach: createTeachStore(db), log, onLessonDone: retention.lessonDone });
   const visuals = createVisuals({ providers, settings, usage, db, library, messages, log });
   const practice = createPractice({ providers, settings, usage, db, jobs, library, ledger, plans, learner, retrieval, papers: createPapers(db) });
   const deps = {
@@ -93,7 +97,9 @@ export function createServer({ port, dataDir = defaultDataDir(), fetch }: { port
     teacher,
     visuals,
     practice,
-    context: chatContext(db),
+    retention,
+    cards,
+    context: chatContext(db, retention.digest),
     log,
     fetch,
   };

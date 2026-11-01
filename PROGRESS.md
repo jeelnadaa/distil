@@ -4,12 +4,13 @@ Living status log. Update in the same commit as every change.
 
 ## Current phase
 
-**Phase 7 — Retention** is next, on `main`.
+**Phase 8 — Providers+ & usage dashboard** is next, on `main`.
 
 ## Next up
 
-1. Phase 7 — Retention (plan.md §9): flashcards with FSRS (practice already creates cards for missed items), mastery view, recommender, knowledge graph.
-2. Still open from Phase 4 (should/could): opening recall questions from the previous lesson (F-614), predict-before-reveal prompts (F-608), dictation (F-615).
+1. Phase 8 — Providers+ & usage dashboard (plan.md §10, §11).
+2. Still open from Phase 7 (should/could): image-occlusion cards (F-901), graph nodes linked to exact source messages (F-923), clusters and a whole-folder graph across units (F-924), notes import and a table of nodes (F-926, F-927), badges (F-933).
+3. Still open from Phase 4 (should/could): opening recall questions from the previous lesson (F-614), predict-before-reveal prompts (F-608), dictation (F-615).
 
 ## Phase checklist
 
@@ -24,7 +25,7 @@ Living status log. Update in the same commit as every change.
 - [x] Phase 4 — Teach
 - [x] Phase 5 — Interactives
 - [x] Phase 6 — Practice & Exams
-- [ ] Phase 7 — Retention
+- [x] Phase 7 — Retention
 - [ ] Phase 8 — Providers+ & usage dashboard
 - [ ] Phase 9 — Ship
 - [ ] Phase 10 — Tune (ledger and answer quality)
@@ -176,6 +177,16 @@ Living status log. Update in the same commit as every change.
 - Results (F-807, F-809): every answer is learner evidence (a right unaided answer moves an item to checked); missed items become flashcards; the report shows the score, a bar per unit, time and marks per question, what didn't come to mind, a short debrief, every question with its mark scheme and worked solution, and "Fix these" for a practice set on the weak items.
 - Screens: a Practice tab in each folder (past papers with scores, new practice set or mock exam), the paper chat (start page, practice run, marking, report), a full-screen exam surface with a question index by section, flags, autosave and a timer, and "Practise this lesson" when a lesson ends. Fixed: a tooltip changed state while a view was torn down (focus left a removed element).
 - Checked live on Gemini 3.5 Flash Lite: a 4-question practice set on weak items (wrong answer, hint, right retry at half credit, written answer marked 2/2 by rubric, report with a card); a 15-minute mock exam (3 questions over 3 units, paused and resumed, submitted, marked 12/15 with a fair partial mark). 229 tests.
+
+### 2026-11-01 · Phase 7 — Retention
+- Flashcards (`server/retention/`, migration 17): FSRS-5 with its published weights, written in code (no dependency), with 1 and 10 minute learning steps and a 10 minute relearning step (F-902). A finished lesson queues a cheap-model job that writes one or two cards per taught item: question and answer, both ways, fill-the-gap (cloze) or formula (F-901); an item the model skips still gets a plain card. Cards can be added, edited and deleted by hand, and imported from or exported to Anki as tab-separated text (F-903, F-904). Review shows due cards first, then up to 20 new cards a day, per folder or across everything.
+- Review screen (S7, `#/review`, `#/review/:folderId`): one centred card, a progress hairline, Space to show the answer, 1–4 to grade with each grade's next interval shown; a card in a short learning step comes back in the same session; "Explain this" on the cheap model with the item's source passages (F-905), and a link to the source.
+- Mastery (F-911, F-914): per item from checks, practice, exams, reviews and probes, weighted by recency, help counted at half, and decaying with the card's recall probability (or an estimate when there is no card). Levels: new, shaky, solid (≥ 50 %), mastered (≥ 85 %), shown as levels, percentages or both (Settings › Learning). A card review is evidence and can lift an item to mastered.
+- Progress tab per folder (F-912): counts per level, a heatmap of every lesson by unit, weak spots with "Practise these", and the knowledge graph (F-921): one unit at a time (up to 60 items), links drawn by the cheap model (*follows* / *supports*, cycles dropped), nodes coloured by mastery that open the material where the item was found; pan, zoom and a whole-graph view.
+- Today (F-913): "Up next" and the list after it now come from a recommender (today's lessons, due cards, a practice set when 3+ items are weak, the next lesson), each with its reason; an exam within a week puts lessons first, 15+ due cards put review first. Due counts include only today's allowance of new cards.
+- Folder digest (F-925): every Ask chat in a folder gets a short summary of what was studied there (mastered, solid and shaky items, from the learning record, never transcripts); an "Independent" switch in the composer turns it off.
+- Streaks and XP (F-931, F-932, F-934), off by default: a streak counts days with verified learning or a finished lesson and forgives one missed day a week; XP only for unaided right answers (10) and good reviews (2). Shown as one quiet line on Today.
+- Checked live on Gemini 3.5 Flash Lite: 14 cards written for taught statistics items (all four kinds), a full review session by keyboard (cloze hiding, a learning card coming back, "Explain this"), 8 items lifted to solid by the reviews, a 60-item unit mapped into 63 links, Anki export, the settings and the Independent switch, phone layouts. Fixed during testing: a fast second key press could grade a card twice; large graphs were scaled down until unreadable. 237 tests.
 
 ## Open questions
 

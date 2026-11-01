@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { api, localDay, type TodayLesson, type TodayView } from "../lib/api.ts";
-  import { attempt, nav, startLesson } from "../lib/state.svelte.ts";
+  import { api, localDay, type Next, type Stats, type TodayLesson, type TodayView } from "../lib/api.ts";
+  import { attempt, nav, newPaper, startLesson } from "../lib/state.svelte.ts";
   import ActivityDock from "./ActivityDock.svelte";
   import CoverageBars from "./CoverageBars.svelte";
   import Icon from "./Icon.svelte";
@@ -10,13 +10,22 @@
   // Today (S1, F-506): today's lessons from every subject with a plan, cards due, where practice would help
   // most, each subject's coverage and the week ahead of the nearest exam.
   let today = $state<TodayView | null>(null);
-  $effect(() => { attempt(api.today).then((v) => { if (v) today = v; }); });
+  // Streak and XP, only when switched on in Settings (F-934).
+  let stats = $state<Stats | null>(null);
+  $effect(() => {
+    attempt(api.today).then((v) => { if (v) today = v; });
+    attempt(api.stats).then((v) => { stats = v ?? null; });
+  });
 
   const date = (d: string, o: Intl.DateTimeFormatOptions) => new Date(`${d}T00:00:00`).toLocaleDateString(undefined, o);
   const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
 
+  // "What should I do now?" (F-913): the first recommendation is up next, the rest follow with their reasons.
+  const primary = $derived<Next | null>(today?.next[0] ?? null);
   const first = $derived(today?.lessons[0] ?? today?.later[0] ?? null);
-  const after = $derived(today ? [...today.lessons, ...today.later].filter((l) => l !== first).slice(0, 3) : []);
+  const after = $derived(today?.next.slice(1) ?? []);
+  const practise = (folderId: string) => newPaper(folderId, { kind: "practice", scope: { kind: "weak" } });
+  const label = (n: Next) => (n.kind === "lesson" ? n.lesson.title : n.kind === "review" ? plural(n.cards, "flashcard") : `Practise ${plural(n.items, "weak item")}`);
   const minutes = $derived(today?.lessons.reduce((n, l) => n + l.minutes, 0) ?? 0);
   const where = (l: TodayLesson) => `${l.folderName} · ${l.unit}`;
 </script>
@@ -38,34 +47,53 @@
           {#if today.exam && today.exam.daysLeft === 0}The deadline for <em>{today.exam.name}</em> is today.
           {:else if today.exam && today.exam.daysLeft < 7}{today.exam.daysLeft === 1 ? "Tomorrow" : date(today.exam.date, { weekday: "long" })} is the deadline for <em>{today.exam.name}</em>.
           {:else if today.exam}<em>{today.exam.name}</em>: {today.exam.daysLeft} days to go.
-          {:else if first}Pick up where you left off.
+          {:else if primary}Pick up where you left off.
           {:else}Nothing planned yet.{/if}
         </h1>
         <p class="body-lg muted">
-          {#if today.lessons.length}{plural(today.lessons.length, "lesson")} today, about {minutes} min{today.exam ? ", keeps you on schedule" : ""}.{:else if first}Nothing is scheduled for today. Start the next lesson if you have time.{:else}Open a folder, distil its materials, then build a plan in its Plan tab.{/if}
+          {#if today.lessons.length}{plural(today.lessons.length, "lesson")} today, about {minutes} min{today.exam ? ", keeps you on schedule" : ""}.{:else if first}Nothing is scheduled for today. Start the next lesson if you have time.{:else if primary}Nothing is scheduled for today.{:else}Open a folder, distil its materials, then build a plan in its Plan tab.{/if}
           {#if today.cards.due}{plural(today.cards.due, "card")} due for review.{/if}
         </p>
+        {#if stats}
+          <p class="caption muted streak"><Icon name="flame" size="sm" />{plural(stats.streak, "day")} in a row{stats.today ? "" : " · study today to keep it"} · {stats.xp} XP · level {stats.level}{stats.freezes ? ` · ${plural(stats.freezes, "missed day")} forgiven` : ""}</p>
+        {/if}
       </header>
 
-      {#if first}
+      {#if primary}
         <section class="upnext">
           <div class="upnext__main">
             <span class="eyebrow">Up next</span>
-            <h2 class="display-md">{first.title}</h2>
-            <p class="muted">{where(first)} · Lesson {first.index} of {first.total} · ~{first.minutes} min · {plural(first.items, "item")}</p>
+            {#if primary.kind === "lesson"}
+              <h2 class="display-md">{primary.lesson.title}</h2>
+              <p class="muted">{where(primary.lesson)} · Lesson {primary.lesson.index} of {primary.lesson.total} · ~{primary.lesson.minutes} min · {plural(primary.lesson.items, "item")}</p>
+            {:else}
+              <h2 class="display-md">{label(primary)}</h2>
+              <p class="muted">{primary.kind === "practice" ? `${primary.name} · ` : ""}{primary.reason}</p>
+            {/if}
             <div class="upnext__actions">
-              <button type="button" class="btn btn--accent btn--lg" onclick={() => startLesson(first.id)}><Icon name="play" size="sm" />{first.status === "in_progress" ? "Continue lesson" : "Start lesson"}</button>
-              <a class="btn btn--ghost btn--lg" href="#/folder/{first.folderId}/plan">See the plan</a>
+              {#if primary.kind === "lesson"}
+                <button type="button" class="btn btn--accent btn--lg" onclick={() => startLesson(primary.lesson.id)}><Icon name="play" size="sm" />{primary.lesson.status === "in_progress" ? "Continue lesson" : "Start lesson"}</button>
+                <a class="btn btn--ghost btn--lg" href="#/folder/{primary.lesson.folderId}/plan">See the plan</a>
+              {:else if primary.kind === "review"}
+                <a class="btn btn--accent btn--lg" href="#/review"><Icon name="cards" size="sm" />Start review</a>
+              {:else}
+                <button type="button" class="btn btn--accent btn--lg" onclick={() => practise(primary.folderId)}><Icon name="target" size="sm" />Start practice</button>
+              {/if}
             </div>
           </div>
-          {#if after.length || today.cards.due}
+          {#if after.length}
             <ol class="upnext__later">
-              {#each after as lesson, i (lesson.id)}
-                <li><span class="num mono faint">{i + 2}</span><div><strong>{lesson.title}</strong><span class="caption muted">{where(lesson)} · ~{lesson.minutes} min</span></div></li>
+              {#each after as n, i (i)}
+                <li>
+                  <span class="num mono faint">{i + 2}</span>
+                  <div>
+                    {#if n.kind === "lesson"}<button type="button" class="linkish" onclick={() => startLesson(n.lesson.id)}><strong>{label(n)}</strong></button>
+                    {:else if n.kind === "review"}<a class="linkish" href="#/review"><strong>{label(n)}</strong></a>
+                    {:else}<button type="button" class="linkish" onclick={() => practise(n.folderId)}><strong>{label(n)}</strong></button>{/if}
+                    <span class="caption muted">{n.kind === "lesson" ? `${where(n.lesson)} · ~${n.lesson.minutes} min · ` : ""}{n.reason}</span>
+                  </div>
+                </li>
               {/each}
-              {#if today.cards.due}
-                <li><span class="num mono faint">{after.length + 2}</span><div><strong>{plural(today.cards.due, "flashcard")}</strong><span class="caption muted">Review</span></div></li>
-              {/if}
             </ol>
           {/if}
         </section>
@@ -74,7 +102,7 @@
       {#if today.subjects.length}
         <div class="today__grid">
           <section class="tcard">
-            <header><span class="eyebrow">Review</span></header>
+            <header><span class="eyebrow">Review</span>{#if today.cards.due}<a class="btn btn--ghost btn--sm" href="#/review">Start</a>{/if}</header>
             <p class="display-md">{today.cards.due}</p>
             <p class="caption muted">{today.cards.due ? today.cards.folders.map((f) => `${f.name} ${f.due}`).join(" · ") : "No cards due. Cards come from what you've been taught."}</p>
           </section>
@@ -82,7 +110,7 @@
             <header><span class="eyebrow">Practice</span></header>
             {#if today.practice}
               <p class="display-md">{today.practice.items}</p>
-              <p class="caption muted">items in {today.practice.name} taught but not checked yet</p>
+              <p class="caption muted">items in {today.practice.name} taught but not holding yet</p>
             {:else}
               <p class="caption muted">Nothing waiting. Items you're taught show up here until a check confirms them.</p>
             {/if}
@@ -120,3 +148,10 @@
     </div>
   {/if}
 </div>
+
+<style>
+  .streak { display: flex; align-items: center; gap: var(--s-2); }
+  .linkish { all: unset; cursor: pointer; color: var(--text); text-decoration: none; }
+  .linkish:hover strong, .linkish:focus-visible strong { text-decoration: underline; text-underline-offset: 3px; }
+  .linkish:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
+</style>

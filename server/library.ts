@@ -17,6 +17,8 @@ export type Chat = {
   lessonId: string | null;
   model: { provider: string; id: string } | null;
   dial: Dial | null;
+  // Leaves the folder digest out of this chat's context (F-925).
+  independent: boolean;
   createdAt: number;
   updatedAt: number;
 };
@@ -24,13 +26,13 @@ export type Chat = {
 type FolderRow = { id: string; parent_id: string | null; name: string; dial: Dial | null; created_at: number };
 type ChatRow = {
   id: string; folder_id: string | null; title: string; title_source: Chat["titleSource"]; mode: string; lesson_id: string | null;
-  model_provider: string | null; model_id: string | null; dial: Dial | null; created_at: number; updated_at: number;
+  model_provider: string | null; model_id: string | null; dial: Dial | null; independent: number; created_at: number; updated_at: number;
 };
 
 const toFolder = (r: FolderRow): Folder => ({ id: r.id, parentId: r.parent_id, name: r.name, dial: r.dial ?? null, createdAt: r.created_at });
 const toChat = (r: ChatRow): Chat => ({
   id: r.id, folderId: r.folder_id, title: r.title, titleSource: r.title_source, mode: r.mode, lessonId: r.lesson_id,
-  model: r.model_provider && r.model_id ? { provider: r.model_provider, id: r.model_id } : null, dial: r.dial ?? null,
+  model: r.model_provider && r.model_id ? { provider: r.model_provider, id: r.model_id } : null, dial: r.dial ?? null, independent: r.independent === 1,
   createdAt: r.created_at, updatedAt: r.updated_at,
 });
 
@@ -163,7 +165,7 @@ export function createLibrary(db: Db, now = () => Date.now()) {
       const chat: Chat = {
         id: randomUUID(), folderId, title: named ? cleanName(named, "Chat") : DEFAULT_CHAT_TITLE,
         titleSource: named ? "manual" : "default", mode: lesson ? "teach" : paper?.mode ?? "ask", lessonId: lesson?.id ?? null,
-        model: null, dial: null, createdAt: at, updatedAt: at,
+        model: null, dial: null, independent: false, createdAt: at, updatedAt: at,
       };
       db.prepare(`INSERT INTO chats (id, folder_id, title, title_source, mode, lesson_id, created_at, updated_at)
                   VALUES (?, ?, ?, ?, ?, ?, ?, ?)`)
@@ -171,7 +173,7 @@ export function createLibrary(db: Db, now = () => Date.now()) {
       return chat;
     },
 
-    updateChat(id: string, patch: { title?: string; folderId?: string | null; model?: Chat["model"]; dial?: Dial | null }): Chat {
+    updateChat(id: string, patch: { title?: string; folderId?: string | null; model?: Chat["model"]; dial?: Dial | null; independent?: boolean }): Chat {
       const chat = getChat(id);
       if (patch.folderId) requireFolder(patch.folderId);
       const next: Chat = {
@@ -180,9 +182,10 @@ export function createLibrary(db: Db, now = () => Date.now()) {
         ...(patch.folderId !== undefined && { folderId: patch.folderId }),
         ...(patch.model !== undefined && { model: patch.model }),
         ...(patch.dial !== undefined && { dial: patch.dial }),
+        ...(patch.independent !== undefined && { independent: patch.independent }),
       };
-      db.prepare("UPDATE chats SET title = ?, title_source = ?, folder_id = ?, model_provider = ?, model_id = ?, dial = ? WHERE id = ?")
-        .run(next.title, next.titleSource, next.folderId, next.model?.provider ?? null, next.model?.id ?? null, next.dial, id);
+      db.prepare("UPDATE chats SET title = ?, title_source = ?, folder_id = ?, model_provider = ?, model_id = ?, dial = ?, independent = ? WHERE id = ?")
+        .run(next.title, next.titleSource, next.folderId, next.model?.provider ?? null, next.model?.id ?? null, next.dial, next.independent ? 1 : 0, id);
       return next;
     },
 

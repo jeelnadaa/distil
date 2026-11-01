@@ -127,6 +127,13 @@
     if (updated) chat.dial = updated.dial;
   }
 
+  // F-925: a chat in a folder knows what was studied there, unless it's set to Independent.
+  async function toggleIndependent() {
+    if (!chat) return;
+    const updated = await attempt(() => api.updateChat(chat!.id, { independent: !chat!.independent }));
+    if (updated) chat.independent = updated.independent;
+  }
+
   async function pickModel(ref: ModelRef) {
     model = ref;
     if (chat) await attempt(() => api.updateChat(chat!.id, { model: ref }));
@@ -225,6 +232,12 @@
   <Composer bind:value={draft} busy={controller !== null} onsend={send} onstop={() => controller?.abort()}>
     <ModelSelect value={model} onchange={pickModel} label="Model for this chat" compact />
     {#if chat}<DialSelect value={chat.dial} inherited={inheritedDial(chat.folderId)} label="Visuals in this chat" onchange={pickDial} />{/if}
+    {#if chat?.folderId}
+      <button type="button" class="btn btn--ghost btn--sm independent" aria-pressed={chat.independent} onclick={toggleIndependent}
+        data-tip={chat.independent ? "This chat ignores what you've studied in the folder. Select to use it again." : "Replies build on what you've studied in this folder. Select to ask without it."}>
+        {chat.independent ? "Independent" : "Uses your progress"}
+      </button>
+    {/if}
   </Composer>
 </div>
 {/if}
@@ -241,6 +254,8 @@
 </Dialog>
 
 <style>
+  .independent { color: var(--text-faint); font-weight: 500; }
+  .independent[aria-pressed="true"] { color: var(--accent); }
   .thread { display: grid; gap: var(--s-5); padding-bottom: var(--s-8); }
   .empty { display: grid; gap: var(--s-3); padding-top: 12vh; max-width: 56ch; }
   .turn--user { justify-self: end; max-width: min(70%, 640px); padding: var(--s-3) var(--s-4); background: var(--surface-sunken); border-radius: var(--r-md); }

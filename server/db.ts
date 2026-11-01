@@ -364,6 +364,20 @@ const MIGRATIONS = [
   );
   CREATE INDEX questions_paper ON questions(chat_id, ord);
   `,
+  `
+  -- Phase 7: the knowledge graph's edges between ledger items (F-921): "follows" means from_id builds on
+  -- to_id, "supports" that it backs it up. A chat can opt out of its folder's digest (F-925).
+  CREATE TABLE item_links (
+    folder_id TEXT NOT NULL REFERENCES folders(id) ON DELETE CASCADE,
+    from_id   TEXT NOT NULL REFERENCES items(id) ON DELETE CASCADE,
+    to_id     TEXT NOT NULL REFERENCES items(id) ON DELETE CASCADE,
+    kind      TEXT NOT NULL CHECK (kind IN ('follows', 'supports')),
+    PRIMARY KEY (from_id, to_id)
+  );
+  CREATE INDEX item_links_folder ON item_links(folder_id);
+  ALTER TABLE chats ADD COLUMN independent INTEGER NOT NULL DEFAULT 0;
+  CREATE INDEX cards_item ON cards(item_id);
+  `,
 ];
 
 export function openDb(file: string): Db {

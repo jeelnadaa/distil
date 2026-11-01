@@ -11,6 +11,8 @@
   import MaterialsTab from "./MaterialsTab.svelte";
   import PlanTab from "./PlanTab.svelte";
   import PracticeTab from "./practice/PracticeTab.svelte";
+  import CardsTab from "./CardsTab.svelte";
+  import ProgressTab from "./ProgressTab.svelte";
 
   let { id, tab }: { id: string; tab: FolderTab } = $props();
 
@@ -129,6 +131,8 @@
         <a href="#/folder/{id}/ledger" aria-current={tab === "ledger" ? "page" : undefined}>Ledger</a>
         <a href="#/folder/{id}/plan" aria-current={tab === "plan" ? "page" : undefined}>Plan</a>
         <a href="#/folder/{id}/practice" aria-current={tab === "practice" ? "page" : undefined}>Practice</a>
+        <a href="#/folder/{id}/cards" aria-current={tab === "cards" ? "page" : undefined}>Cards</a>
+        <a href="#/folder/{id}/progress" aria-current={tab === "progress" ? "page" : undefined}>Progress</a>
       </nav>
 
       {#if current || (items.length && plan)}
@@ -168,6 +172,10 @@
       {#if loaded}
         {#if tab === "materials"}
           <MaterialsTab folderId={id} {materials} {jobs} onchange={refresh} ondistil={(m) => (distil = { mode: "extract", material: m })} />
+        {:else if tab === "cards"}
+          <CardsTab folderId={id} jobs={mine} onchange={refresh} />
+        {:else if tab === "progress"}
+          <ProgressTab folderId={id} jobs={mine} onchange={refresh} />
         {:else if tab === "practice"}
           <PracticeTab folderId={id} {plan} items={counted.length} />
         {:else if tab === "plan"}

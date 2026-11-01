@@ -26,6 +26,8 @@ import { type Check, checkView, type CheckView, type Session, type Step, type Te
 export type TeachDeps = LlmDeps & {
   db: Db; library: Library; messages: Messages; plans: Plans; ledger: Ledger; learner: Learner; retrieval: Retrieval; teach: TeachStore;
   log?: (msg: string) => void;
+  // Called when a lesson finishes, so its items get flashcards (F-901).
+  onLessonDone?: (lessonId: string) => void;
 };
 
 export type SessionView = Pick<Session, "phase" | "steps" | "step" | "repairs"> & { open: CheckView | null };
@@ -168,6 +170,7 @@ export function createTeacher(deps: TeachDeps) {
       after: (session) => {
         session.phase = "done";
         if (lesson.status !== "done") plans.updateLesson(lesson.id, { status: "done" });
+        try { deps.onLessonDone?.(lesson.id); } catch (err) { deps.log?.(`cards for lesson ${lesson.id}: ${(err as Error).message}`); }
       },
     };
   }

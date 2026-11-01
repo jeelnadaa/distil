@@ -114,6 +114,7 @@
     <a class="sb__brand" href="#/" aria-label="Distil home"><Lockup /></a>
   </div>
   <a class="sb__link" class:is-active={nav.route.name === "today"} href="#/today"><Icon name="today" size="sm" />Today</a>
+  <a class="sb__link" class:is-active={nav.route.name === "review"} href="#/review"><Icon name="cards" size="sm" />Review</a>
   <button type="button" class="btn btn--secondary sb__new" onclick={() => act.newChat(null)}>
     <Icon name="plus" size="sm" />New chat
   </button>

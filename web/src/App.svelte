@@ -3,6 +3,7 @@
   import ChatView from "./components/ChatView.svelte";
   import Home from "./components/Home.svelte";
   import MaterialView from "./components/MaterialView.svelte";
+  import ReviewView from "./components/ReviewView.svelte";
   import SettingsView from "./components/SettingsView.svelte";
   import Sidebar from "./components/Sidebar.svelte";
   import Tooltip from "./components/Tooltip.svelte";
@@ -35,6 +36,8 @@
         {#key nav.route.id}<WorkspaceView id={nav.route.id} tab={nav.route.tab} />{/key}
       {:else if nav.route.name === "today"}
         <TodayView />
+      {:else if nav.route.name === "review"}
+        {#key nav.route.folderId}<ReviewView folderId={nav.route.folderId} />{/key}
       {:else if nav.route.name === "settings"}
         <SettingsView section={nav.route.section} />
       {:else}

@@ -31,9 +31,12 @@ import type { Visuals } from "./visuals/builder.ts";
 import { registerVisualRoutes } from "./visuals/routes.ts";
 import type { Practice } from "./practice/engine.ts";
 import { registerPracticeRoutes } from "./practice/routes.ts";
+import type { Cards } from "./retention/cards.ts";
+import type { Retention } from "./retention/engine.ts";
+import { registerRetentionRoutes } from "./retention/routes.ts";
 
 export type AppDeps = ChatDeps & { dataDir: string; allowedHosts: string[]; fonts: Fonts; materials: Materials; search: Search; ledger: Ledger; jobs: Jobs; fetch?: FetchFn }
-  & { db: Db; learner: Learner; plans: Plans; briefs: Briefs; local: LocalModels; vectors: Vectors; retrieval: Retrieval; teacher: Teacher; visuals: Visuals; practice: Practice };
+  & { db: Db; learner: Learner; plans: Plans; briefs: Briefs; local: LocalModels; vectors: Vectors; retrieval: Retrieval; teacher: Teacher; visuals: Visuals; practice: Practice; retention: Retention; cards: Cards };
 
 const NullableId = z.string().min(1).nullable();
 const ModelRefBody = z.object({ provider: z.string().min(1), id: z.string().min(1), key: z.string().min(1).optional() });
@@ -111,7 +114,7 @@ export function createApp(deps: AppDeps) {
     return c.json({ chat, messages: messages.list(chat.id), meter: meterFor(deps, chat) });
   });
   app.patch("/chats/:id", async (c) => {
-    const patch = await body(c, z.object({ title: z.string().optional(), folderId: NullableId.optional(), model: ModelRefBody.nullable().optional(), dial: z.enum(DIALS).nullable().optional() }));
+    const patch = await body(c, z.object({ title: z.string().optional(), folderId: NullableId.optional(), model: ModelRefBody.nullable().optional(), dial: z.enum(DIALS).nullable().optional(), independent: z.boolean().optional() }));
     return c.json(library.updateChat(c.req.param("id"), patch));
   });
   app.delete("/chats/:id", (c) => {
@@ -315,5 +318,6 @@ export function createApp(deps: AppDeps) {
   registerTeachRoutes(app, deps);
   registerVisualRoutes(app, deps);
   registerPracticeRoutes(app, deps);
+  registerRetentionRoutes(app, deps);
   return app;
 }

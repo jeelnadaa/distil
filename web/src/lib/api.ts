@@ -24,12 +24,18 @@ import type { Dial } from "../../../server/visuals/reference.ts";
 import type { NewPaper, PaperSummary, PaperView } from "../../../server/practice/engine.ts";
 import type { AnswerValue, Grade, Level } from "../../../server/practice/questions.ts";
 import type { Paper, QuestionView, Report, Scope } from "../../../server/practice/store.ts";
+import type { Card, CardKind, Queue, QueueCard } from "../../../server/retention/cards.ts";
+import type { GraphView, ItemMastery, ProgressView, Stats } from "../../../server/retention/engine.ts";
+import type { Grade as CardGrade } from "../../../server/retention/fsrs.ts";
+import type { Level as MasteryLevel } from "../../../server/retention/mastery.ts";
 
 export type { Brief, Compiled, Lesson, Plan, PlanKind, PlanView, SavedPlan, StoredBrief, TodayLesson, TodayView, Unit };
 export type { CapStatus, Chat, SavedFont, Folder, Item, ItemMark, ItemType, Job, Message, Meter, ModelInfo, ModelRef, Settings, Strategy, TurnEvent };
 export type { ActionKind, Answer, CheckView, Confidence, PublicCheck, Result, SessionView, Source, Step, TeachEvent };
 export type { Dial, Visual };
 export type { AnswerValue, Grade, Level, NewPaper, Paper, PaperSummary, PaperView, QuestionView, Report, Scope };
+export type { Card, CardGrade, CardKind, GraphView, ItemMastery, MasteryLevel, ProgressView, Queue, QueueCard, Stats };
+export type { Next } from "../../../server/plan/today.ts";
 export type TeachView = { session: SessionView | null; checks: CheckView[] };
 export type FolderMaterial = Material & { inherited: boolean };
 export type { Material, StoredChunk };
@@ -106,7 +112,7 @@ export const api = {
 
   createChat: (folderId: string | null) => json<Chat>("POST", "/chats", { folderId }),
   chat: (id: string) => json<{ chat: Chat; messages: Message[]; meter: Meter }>("GET", `/chats/${id}`),
-  updateChat: (id: string, patch: { title?: string; folderId?: string | null; model?: ModelRef | null; dial?: Dial | null }) => json<Chat>("PATCH", `/chats/${id}`, patch),
+  updateChat: (id: string, patch: { title?: string; folderId?: string | null; model?: ModelRef | null; dial?: Dial | null; independent?: boolean }) => json<Chat>("PATCH", `/chats/${id}`, patch),
   deleteChat: (id: string) => done("DELETE", `/chats/${id}`),
 
   providers: () => json<Provider[]>("GET", "/providers"),
@@ -198,6 +204,21 @@ export const api = {
   reveal: (chatId: string, questionId: string) => json<PaperView>("POST", `/chats/${chatId}/paper/questions/${questionId}/reveal`, {}),
   submitPaper: (chatId: string, elapsedMs: number) => json<PaperView>("POST", `/chats/${chatId}/paper/submit`, { elapsedMs }),
   retryPaper: (chatId: string) => json<PaperView>("POST", `/chats/${chatId}/paper/retry`, {}),
+  // Retention (Phase 7): flashcards and their review, a folder's progress and knowledge graph, streak and XP.
+  cards: (folderId: string) => json<Card[]>("GET", `/folders/${folderId}/cards`),
+  addCard: (folderId: string, card: { kind: CardKind; front: string; back: string }) => json<Card>("POST", `/folders/${folderId}/cards`, card),
+  updateCard: (id: string, patch: { kind?: CardKind; front?: string; back?: string }) => json<Card>("PATCH", `/cards/${id}`, patch),
+  deleteCard: (id: string) => done("DELETE", `/cards/${id}`),
+  generateCards: (folderId: string, items?: string[]) => json<{ job: Job | null }>("POST", `/folders/${folderId}/cards/generate`, { items }),
+  importCards: (folderId: string, text: string) => json<{ imported: number }>("POST", `/folders/${folderId}/cards/import`, { text }),
+  cardsExportUrl: (folderId: string) => `/api/folders/${folderId}/cards.tsv`,
+  reviewQueue: (folderId?: string) => json<Queue>("GET", `/review${folderId ? `?folder=${folderId}` : ""}`),
+  reviewCard: (id: string, grade: CardGrade) => json<Card & { preview: number[] }>("POST", `/cards/${id}/review`, { grade }),
+  explainCard: (id: string) => json<{ text: string }>("POST", `/cards/${id}/explain`, {}),
+  progress: (folderId: string) => json<ProgressView>("GET", `/folders/${folderId}/progress`),
+  graph: (folderId: string, unit?: string | null) => json<GraphView>("GET", `/folders/${folderId}/graph${unit ? `?unit=${unit}` : ""}`),
+  buildGraph: (folderId: string, unit: string | null) => json<Job>("POST", `/folders/${folderId}/graph`, { unit }),
+  stats: () => json<Stats | null>("GET", "/stats"),
   teachStart: (chatId: string, onEvent: (e: TeachEvent) => void, signal: AbortSignal) => events(`/chats/${chatId}/teach/start`, {}, onEvent, signal),
   teachAnswer: (chatId: string, answer: Answer, onEvent: (e: TeachEvent) => void, signal: AbortSignal) => events(`/chats/${chatId}/teach/answer`, answer, onEvent, signal),
   teachAction: (chatId: string, kind: ActionKind, onEvent: (e: TeachEvent) => void, signal: AbortSignal) => events(`/chats/${chatId}/teach/action`, { kind }, onEvent, signal),

@@ -1,10 +1,10 @@
 // App-wide state: route, library tree, providers and models, settings and toasts.
 import { api, ApiError, type Chat, type Folder, type ModelInfo, type ModelRef, type NewPaper, type Provider, type SettingsView } from "./api.ts";
 
-export type FolderTab = "materials" | "ledger" | "plan" | "practice";
-const TABS: FolderTab[] = ["materials", "ledger", "plan", "practice"];
+export type FolderTab = "materials" | "ledger" | "plan" | "practice" | "cards" | "progress";
+const TABS: FolderTab[] = ["materials", "ledger", "plan", "practice", "cards", "progress"];
 // home: the one place a chat starts (logo and New chat); folderId when it was started from a folder.
-export type Route = { name: "home"; folderId?: string } | { name: "chat"; id: string } | { name: "today" } | { name: "folder"; id: string; tab: FolderTab }
+export type Route = { name: "home"; folderId?: string } | { name: "chat"; id: string } | { name: "today" } | { name: "review"; folderId?: string } | { name: "folder"; id: string; tab: FolderTab }
   | { name: "material"; id: string; loc: number | null; item: string | null } | { name: "settings"; section?: string };
 
 const parseHash = (): Route => {
@@ -13,6 +13,7 @@ const parseHash = (): Route => {
   if (name === "material" && id) return { name: "material", id, loc: Number(sub) || null, item: extra || null };
   if (name === "folder" && id) return { name: "folder", id, tab: TABS.find((t) => t === sub) ?? "materials" };
   if (name === "today") return { name: "today" };
+  if (name === "review") return { name: "review", folderId: id || undefined };
   if (name === "settings") return { name: "settings", section: id };
   if (name === "new") return { name: "home", folderId: id || undefined };
   return { name: "home" };

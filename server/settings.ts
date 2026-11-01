@@ -28,6 +28,9 @@ export const SettingsSchema = z.object({
   embeddings: Embeddings,
   // The interactivity dial's global default (F-741); folders and chats can override it.
   dial: z.enum(DIALS),
+  // How mastery shows (F-914), and whether streaks and XP are on (F-934, off by default).
+  mastery: z.enum(["both", "levels", "percent"]),
+  gamification: z.boolean(),
   customEndpoints: z.array(z.object({
     id: z.string().regex(/^custom-[a-z0-9-]+$/),
     name: z.string().trim().min(1).max(60),
@@ -46,6 +49,8 @@ export const DEFAULT_SETTINGS: Settings = {
   caps: { warnAt: 0.8, global: { daily: null, monthly: null }, perProvider: {} },
   embeddings: { mode: "off" },
   dial: "balanced",
+  mastery: "both",
+  gamification: false,
   customEndpoints: [],
 };
 

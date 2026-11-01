@@ -253,6 +253,12 @@
             <div class="srow"><div><strong>Visuals</strong><span class="caption muted">How often replies draw diagrams, plots and simulations. Folders and chats can set their own.</span></div>
               <Segmented label="Visuals" value={settings.dial} options={(Object.keys(DIAL_LABEL) as Dial[]).map((d) => ({ value: d, label: DIAL_LABEL[d], tip: DIAL_TIP[d] }))}
                 onchange={(dial) => save({ dial })} /></div>
+            <div class="srow"><div><strong>Mastery</strong><span class="caption muted">How progress shows how well you know each item.</span></div>
+              <Segmented label="Mastery" value={settings.mastery} options={[{ value: "both", label: "Both" }, { value: "levels", label: "Levels", tip: "Shaky, solid, mastered" }, { value: "percent", label: "Percent" }]}
+                onchange={(mastery) => save({ mastery })} /></div>
+            <div class="srow"><div><strong>Streaks and XP</strong><span class="caption muted">A day streak and points for what you get right, shown on Today. Off unless you want them.</span></div>
+              <Segmented label="Streaks and XP" value={settings.gamification ? "on" : "off"} options={[{ value: "off", label: "Off" }, { value: "on", label: "On" }]}
+                onchange={(v) => save({ gamification: v === "on" })} /></div>
           {/if}
         </section>
 
