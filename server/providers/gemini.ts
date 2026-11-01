@@ -50,10 +50,33 @@ export const gemini: Adapter = {
   },
 
   async listModels(endpoint, signal) {
-    const res = await send(endpoint, "/models?pageSize=1000", { headers: headers(endpoint), signal });
-    const { models = [] } = (await res.json()) as { models?: GeminiModel[] };
-    return models
-      .filter((m) => m.supportedGenerationMethods?.includes("generateContent"))
-      .map((m) => ({ id: m.name.replace(/^models\//, ""), name: m.displayName ?? m.name, contextWindow: m.inputTokenLimit ?? null }));
+    return (await listAll(endpoint, signal)).filter((m) => m.methods.includes("generateContent")).map(({ methods: _, ...m }) => m);
+  },
+
+  async embed(endpoint, req) {
+    const model = `models/${req.model}`;
+    const res = await send(endpoint, `/${model}:batchEmbedContents`, {
+      method: "POST",
+      headers: headers(endpoint),
+      signal: req.signal,
+      body: JSON.stringify({ requests: req.texts.map((text) => ({
+        model, content: { parts: [{ text }] }, taskType: req.task === "query" ? "RETRIEVAL_QUERY" : "RETRIEVAL_DOCUMENT",
+      })) }),
+    });
+    const { embeddings = [] } = (await res.json()) as { embeddings?: { values: number[] }[] };
+    return { vectors: embeddings.map((e) => e.values), tokens: null };
+  },
+
+  async listEmbeddingModels(endpoint, signal) {
+    return (await listAll(endpoint, signal)).filter((m) => m.methods.includes("embedContent")).map(({ methods: _, ...m }) => m);
   },
 };
+
+async function listAll(endpoint: Endpoint, signal?: AbortSignal) {
+  const res = await send(endpoint, "/models?pageSize=1000", { headers: headers(endpoint), signal });
+  const { models = [] } = (await res.json()) as { models?: GeminiModel[] };
+  return models.map((m) => ({
+    id: m.name.replace(/^models\//, ""), name: m.displayName ?? m.name, contextWindow: m.inputTokenLimit ?? null,
+    methods: m.supportedGenerationMethods ?? [],
+  }));
+}

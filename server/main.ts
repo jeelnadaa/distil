@@ -10,13 +10,17 @@ import { registerExtraction } from "./ledger/extract.ts";
 import { createLedger } from "./ledger/store.ts";
 import { createLearner } from "./learning/learner.ts";
 import { registerIngest } from "./materials/ingest.ts";
-import { createSearch } from "./materials/search.ts";
 import { createMaterials } from "./materials/store.ts";
 import { createMessages } from "./messages.ts";
 import { createBriefs } from "./plan/brief.ts";
 import { chatContext } from "./plan/context.ts";
 import { lessonProgress } from "./plan/progress.ts";
 import { registerPlanner } from "./plan/planner.ts";
+import { createLocalModels } from "./retrieval/local.ts";
+import { createRetrieval, queueIndexing, registerIndexing } from "./retrieval/retrieve.ts";
+import { registerModelDownload } from "./retrieval/routes.ts";
+import { createVectors } from "./retrieval/vectors.ts";
+import { createSearch } from "./materials/search.ts";
 import { createPlans } from "./plan/store.ts";
 import { createProviders } from "./providers/service.ts";
 import { createSecrets } from "./secrets.ts";
@@ -42,7 +46,16 @@ export function createServer({ port, dataDir = defaultDataDir(), fetch }: { port
   const ledger = createLedger(db);
   const usage = createUsage(db);
   const providers = createProviders(settings, createSecrets(join(dataDir, "secrets.json")));
-  registerIngest(jobs, materials, ledger);
+  const search = createSearch(db);
+  const local = createLocalModels(join(dataDir, "models"));
+  const vectors = createVectors(db);
+  const retrieval = createRetrieval({ db, search, vectors, local, providers, settings, usage });
+  registerIndexing(jobs, retrieval);
+  registerModelDownload(jobs, local, (size) => {
+    const e = settings.get().embeddings;
+    if (e.mode === "local" && e.size === size) queueIndexing(jobs, retrieval);
+  });
+  registerIngest(jobs, materials, ledger, () => queueIndexing(jobs, retrieval));
   registerExtraction(jobs, { providers, settings, usage, materials, ledger });
   const learner = createLearner(db);
   const plans = createPlans(db);
@@ -57,7 +70,10 @@ export function createServer({ port, dataDir = defaultDataDir(), fetch }: { port
     usage,
     fonts: createFonts(join(dataDir, "fonts")),
     materials,
-    search: createSearch(db),
+    search,
+    local,
+    vectors,
+    retrieval,
     ledger,
     learner,
     db,

@@ -20,9 +20,16 @@ export type ModelInfo = { id: string; name: string; contextWindow: number | null
 
 export type Endpoint = { baseUrl: string; apiKey: string | null; fetch?: typeof fetch };
 
+// Embeddings for retrieval (F-1005): documents when indexing, queries when searching (some models embed them differently).
+export type EmbedRequest = { model: string; texts: string[]; task: "document" | "query"; signal?: AbortSignal };
+export type Embedded = { vectors: number[][]; tokens: number | null };
+
 export type Adapter = {
   stream(endpoint: Endpoint, request: ChatRequest): AsyncIterable<StreamEvent>;
   listModels(endpoint: Endpoint, signal?: AbortSignal): Promise<ModelInfo[]>;
+  // Providers without an embeddings API leave these out.
+  embed?(endpoint: Endpoint, request: EmbedRequest): Promise<Embedded>;
+  listEmbeddingModels?(endpoint: Endpoint, signal?: AbortSignal): Promise<ModelInfo[]>;
 };
 
 export class ProviderError extends Error {

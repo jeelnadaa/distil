@@ -19,10 +19,14 @@ import type { Db } from "./db.ts";
 import type { Learner } from "./learning/learner.ts";
 import type { Briefs } from "./plan/brief.ts";
 import { registerPlanRoutes } from "./plan/routes.ts";
+import type { LocalModels } from "./retrieval/local.ts";
+import { queueIndexing, type Retrieval } from "./retrieval/retrieve.ts";
+import { registerRetrievalRoutes } from "./retrieval/routes.ts";
+import type { Vectors } from "./retrieval/vectors.ts";
 import type { Plans } from "./plan/store.ts";
 
 export type AppDeps = ChatDeps & { dataDir: string; allowedHosts: string[]; fonts: Fonts; materials: Materials; search: Search; ledger: Ledger; jobs: Jobs; fetch?: FetchFn }
-  & { db: Db; learner: Learner; plans: Plans; briefs: Briefs };
+  & { db: Db; learner: Learner; plans: Plans; briefs: Briefs; local: LocalModels; vectors: Vectors; retrieval: Retrieval };
 
 const NullableId = z.string().min(1).nullable();
 const ModelRefBody = z.object({ provider: z.string().min(1), id: z.string().min(1), key: z.string().min(1).optional() });
@@ -138,7 +142,13 @@ export function createApp(deps: AppDeps) {
 
   /* ---------- Settings & usage (F-1104, F-1302) ---------- */
   app.get("/settings", (c) => c.json({ ...settings.get(), dataDir: deps.dataDir }));
-  app.patch("/settings", async (c) => c.json({ ...settings.update(await body(c, SettingsPatch)), dataDir: deps.dataDir }));
+  app.patch("/settings", async (c) => {
+    const before = JSON.stringify(settings.get().embeddings);
+    const next = settings.update(await body(c, SettingsPatch));
+    // A new embedding model indexes the materials for it.
+    if (JSON.stringify(next.embeddings) !== before) queueIndexing(deps.jobs, deps.retrieval);
+    return c.json({ ...next, dataDir: deps.dataDir });
+  });
   app.get("/usage", (c) => {
     const s = settings.get();
     const provider = c.req.query("provider") ?? s.models.strong?.provider ?? "";
@@ -294,5 +304,6 @@ export function createApp(deps: AppDeps) {
   });
 
   registerPlanRoutes(app, deps);
+  registerRetrievalRoutes(app, deps);
   return app;
 }

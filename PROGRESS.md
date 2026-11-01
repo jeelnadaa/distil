@@ -141,6 +141,12 @@ Living status log. Update in the same commit as every change.
 - Lesson chats (owner test): the stopgap teaching prompt quizzed course admin (what a chapter covers, which fields use statistics) and moved on after a wrong answer. It now only mentions admin, explains with an example, asks questions that need thinking, and re-explains and re-asks after a wrong answer. A question whose reply failed is left out of the history, so retries don't repeat it. Phase 4's teacher takes these rules over. 140 tests.
 - Lesson progress: after each reply in a lesson chat, the cheap model reads the exchange and records which items were taught and which the learner answered correctly on their own (`server/plan/progress.ts`); a lesson whose items are all understood is done. The lesson bar became a ring button in the top bar that opens a lesson dialog (items, taught, understood, unit lessons). Checked live on Gemini 3.5 Flash Lite: a right answer counted, a wrong one didn't, and the tutor re-asked on the same item. Owner added F-617 (teach from every source on a topic) and F-618 (format fits the content) to Phase 4. 141 tests.
 
+### 2026-11-01 · Phase 4 — retrieval
+- Owner decisions for Phase 4 recorded in `plan.md` §2 ("Teach decisions"): all three search kinds, optional confidence, two repairs then move on, probe only when it helps.
+- Search by meaning (F-1005): Settings › Models offers Off, a provider embedding model (Gemini and OpenAI-compatible keys list theirs) or a model on this computer (Small, Medium, High through `@huggingface/transformers` — added this phase; its blocked install scripts only fetch CUDA builds and image tools, which Distil doesn't use). A local model downloads only after a dialog shows its exact size from Hugging Face, and can be removed. Chunks are embedded by a background job (migration 12, `chunk_vectors`) that runs when the model changes and after a file is read, and waits out per-minute quota limits instead of failing.
+- Retrieval (F-1004): keyword and meaning rankings merged by reciprocal rank fusion, falling back to keyword search when embeddings are off or failing; for lesson items it gathers each item's own source passages plus what every other file in the folder says about it (F-617).
+- Checked live on Gemini `gemini-embedding-001`: the free tier's 30k tokens a minute limit is waited out while the textbook folder indexes. 147 tests.
+
 ## Open questions
 
 See `plan.md` §18.

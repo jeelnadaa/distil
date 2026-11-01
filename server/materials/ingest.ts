@@ -6,7 +6,8 @@ import type { Materials } from "./store.ts";
 
 // Parsing and chunking run locally and cost no tokens, so they start as soon as a file is added.
 // Extraction (which spends tokens) is a separate job the learner starts after seeing the estimate (F-208).
-export function registerIngest(jobs: Jobs, materials: Materials, ledger: Ledger) {
+// onRead: a material's chunks changed (search by meaning indexes them).
+export function registerIngest(jobs: Jobs, materials: Materials, ledger: Ledger, onRead?: () => void) {
   jobs.register("parse", async (job, { signal, progress }) => {
     const id = job.materialId!;
     const material = materials.get(id);
@@ -20,6 +21,7 @@ export function registerIngest(jobs: Jobs, materials: Materials, ledger: Ledger)
       const removed = ledger.removeOrphans();
       if ((job.params as { reimport?: boolean }).reimport) materials.setReimport(id, { at: Date.now(), ...chunks, items: removed.slice(0, 500) });
       progress(1, 1);
+      onRead?.();
     } catch (err) {
       materials.setStatus(id, "error", err instanceof Error ? err.message : String(err));
       throw err;

@@ -269,6 +269,17 @@ const MIGRATIONS = [
   -- its goal, exam date and hours back, and a re-plan can reuse it.
   ALTER TABLE plans ADD COLUMN brief TEXT;
   `,
+  `
+  -- Embeddings for meaning-based search (F-1005): one vector per chunk and embedding model ("google:…",
+  -- "local:small"), as little-endian float32. Changing the model leaves the old vectors unused until removed.
+  CREATE TABLE chunk_vectors (
+    chunk_id TEXT NOT NULL REFERENCES chunks(id) ON DELETE CASCADE,
+    model    TEXT NOT NULL,
+    vec      BLOB NOT NULL,
+    PRIMARY KEY (chunk_id, model)
+  );
+  CREATE INDEX chunk_vectors_model ON chunk_vectors(model);
+  `,
 ];
 
 export function openDb(file: string): Db {

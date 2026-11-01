@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@hono/node-server": "^2.1.5",
+    "@huggingface/transformers": "^3.8.1",
     "@mozilla/readability": "^0.6.0",
     "fflate": "^0.8.3",
     "highlight.js": "^11.12.0",

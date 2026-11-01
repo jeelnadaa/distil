@@ -29,6 +29,11 @@ export type LessonDetail = {
   lesson: Lesson; folderId: string; unit: Unit; unitNo: number; unitLessons: { done: number; total: number };
   index: number; total: number; items: Item[];
 };
+// Search by meaning (F-1005): the local models and how far indexing has got for the chosen model.
+export type EmbeddingsView = {
+  local: { size: "small" | "medium" | "high"; label: string; note: string; installed: boolean }[];
+  index: { done: number; total: number } | null;
+};
 export type ProviderKey = { id: string; label: string; preview: string };
 export type Provider = ProviderSpec & { configured: boolean; keys: ProviderKey[] };
 export type SettingsView = Settings & { dataDir: string };
@@ -96,6 +101,12 @@ export const api = {
   // Without keyId, every key of the provider.
   removeKey: (provider: string, keyId?: string) => done("DELETE", `/providers/${provider}/keys${keyId ? `/${keyId}` : ""}`),
 
+  embeddings: () => json<EmbeddingsView>("GET", "/embeddings"),
+  embeddingModels: (provider: string) => json<ModelInfo[]>("GET", `/providers/${provider}/embedding-models`),
+  localModelSize: (size: string) => json<{ bytes: number }>("GET", `/embeddings/local/${size}`),
+  downloadLocalModel: (size: string) => json<Job>("POST", `/embeddings/local/${size}/download`, {}),
+  removeLocalModel: (size: string) => done("DELETE", `/embeddings/local/${size}`),
+  indexNow: () => json<{ queued: boolean }>("POST", "/embeddings/index", {}),
   settings: () => json<SettingsView>("GET", "/settings"),
   updateSettings: (patch: Partial<Settings>) => json<SettingsView>("PATCH", "/settings", patch),
   fonts: () => json<SavedFont[]>("GET", "/fonts"),

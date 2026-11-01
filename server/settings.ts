@@ -4,6 +4,13 @@ import type { Db } from "./db.ts";
 // key: which of the provider's saved keys to use; its default key when absent.
 const ModelRef = z.object({ provider: z.string().min(1), id: z.string().min(1), key: z.string().min(1).optional() });
 const Limit = z.number().int().positive().nullable();
+export const LOCAL_SIZES = ["small", "medium", "high"] as const;
+// Meaning-based search (F-1005): off, an embedding model from a provider key, or a local model.
+const Embeddings = z.discriminatedUnion("mode", [
+  z.object({ mode: z.literal("off") }),
+  z.object({ mode: z.literal("provider"), provider: z.string().min(1), id: z.string().min(1), key: z.string().min(1).optional() }),
+  z.object({ mode: z.literal("local"), size: z.enum(LOCAL_SIZES) }),
+]);
 const CapPair = z.object({ daily: Limit, monthly: Limit });
 
 export const SettingsSchema = z.object({
@@ -17,6 +24,7 @@ export const SettingsSchema = z.object({
     global: CapPair,
     perProvider: z.record(z.string(), CapPair),
   }),
+  embeddings: Embeddings,
   customEndpoints: z.array(z.object({
     id: z.string().regex(/^custom-[a-z0-9-]+$/),
     name: z.string().trim().min(1).max(60),
@@ -26,11 +34,14 @@ export const SettingsSchema = z.object({
 
 export type Settings = z.infer<typeof SettingsSchema>;
 export type ModelRef = z.infer<typeof ModelRef>;
+export type EmbeddingsSetting = z.infer<typeof Embeddings>;
+export type LocalSize = (typeof LOCAL_SIZES)[number];
 
 export const DEFAULT_SETTINGS: Settings = {
   models: { strong: null, cheap: null },
   fallbacks: { strong: [], cheap: [] },
   caps: { warnAt: 0.8, global: { daily: null, monthly: null }, perProvider: {} },
+  embeddings: { mode: "off" },
   customEndpoints: [],
 };
 

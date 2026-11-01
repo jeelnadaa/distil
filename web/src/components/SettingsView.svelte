@@ -6,6 +6,7 @@
   import { motionPref, palettePref, PALETTES, setMotion, setPalette, setTheme, themePref, type Motion, type PaletteId, type Theme } from "../lib/prefs.ts";
   import { app, attempt, loadModels, nav, refreshProviders, refreshSettings, toast } from "../lib/state.svelte.ts";
   import Dialog from "./Dialog.svelte";
+  import EmbeddingsSetting from "./EmbeddingsSetting.svelte";
   import Icon from "./Icon.svelte";
   import ModelSelect from "./ModelSelect.svelte";
   import Segmented from "./Segmented.svelte";
@@ -217,6 +218,7 @@
                 {#if settings.models.cheap}{@render chain("cheap")}{:else}<span class="caption faint">Uses the strong model and its fallbacks.</span>{/if}</div>
             </div>
             <div><button type="button" class="btn btn--ghost btn--sm" onclick={() => loadModels(true)}><Icon name="refresh" size="sm" />Refresh model lists</button></div>
+            <EmbeddingsSetting {settings} providers={configured} {save} />
           {:else}
             <p class="body-sm muted">Add a provider key above to see its models.</p>
           {/if}

@@ -54,4 +54,17 @@ export const openai: Adapter = {
     const { data = [] } = (await res.json()) as { data?: { id: string; name?: string; context_length?: number }[] };
     return data.map((m) => ({ id: m.id, name: m.name ?? m.id, contextWindow: m.context_length ?? null }));
   },
+
+  async embed(endpoint, req) {
+    const res = await send(endpoint, "/embeddings", {
+      method: "POST", headers: headers(endpoint), signal: req.signal, body: JSON.stringify({ model: req.model, input: req.texts }),
+    });
+    const { data = [], usage } = (await res.json()) as { data?: { index: number; embedding: number[] }[]; usage?: { prompt_tokens?: number } };
+    return { vectors: [...data].sort((a, b) => a.index - b.index).map((d) => d.embedding), tokens: usage?.prompt_tokens ?? null };
+  },
+
+  // OpenAI-compatible servers don't mark embedding models, so they're found by name.
+  async listEmbeddingModels(endpoint, signal) {
+    return (await openai.listModels(endpoint, signal)).filter((m) => /embed/i.test(m.id));
+  },
 };

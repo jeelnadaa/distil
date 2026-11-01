@@ -23,7 +23,7 @@ const BASE_DELAY_MS = 2000;
 // A provider asking us to come back later than this is out of quota for the day, not busy.
 export const MAX_WAIT_MS = 2 * 60 * 1000;
 
-const sleep = (ms: number, signal?: AbortSignal) => new Promise<void>((resolve, reject) => {
+export const sleep = (ms: number, signal?: AbortSignal) => new Promise<void>((resolve, reject) => {
   if (signal?.aborted) return reject(signal.reason);
   const timer = setTimeout(() => { signal?.removeEventListener("abort", stop); resolve(); }, ms);
   const stop = () => { clearTimeout(timer); reject(signal!.reason); };

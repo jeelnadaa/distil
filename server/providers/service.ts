@@ -3,7 +3,7 @@ import type { Secrets } from "../secrets.ts";
 import { maskKey } from "../secrets.ts";
 import type { ModelRef, SettingsStore } from "../settings.ts";
 import { ADAPTERS, BUILT_IN, customSpec, type ProviderSpec } from "./catalog.ts";
-import type { ChatRequest, Endpoint, ModelInfo, StreamEvent } from "./types.ts";
+import type { ChatRequest, Embedded, EmbedRequest, Endpoint, ModelInfo, StreamEvent } from "./types.ts";
 
 const MODEL_CACHE_MS = 10 * 60_000;
 
@@ -93,6 +93,20 @@ export function createProviders(settings: SettingsStore, secrets: Secrets, fetch
       const s = spec(ref.provider);
       if (!isConfigured(s)) throw new AppError(400, "not_configured", `Add a key for ${s.name} first.`);
       return ADAPTERS[s.kind].stream(endpoint(s, secrets.get(s.id, ref.key)?.key ?? null), { ...request, model: ref.id });
+    },
+
+    // Embeddings through the provider's own API (F-1005); providers without one have no embedding models.
+    embed(ref: ModelRef, request: Omit<EmbedRequest, "model">): Promise<Embedded> {
+      const s = spec(ref.provider);
+      const embed = ADAPTERS[s.kind].embed;
+      if (!embed) throw new AppError(400, "no_embeddings", `${s.name} has no embedding models.`);
+      if (!isConfigured(s)) throw new AppError(400, "not_configured", `Add a key for ${s.name} first.`);
+      return embed(endpoint(s, secrets.get(s.id, ref.key)?.key ?? null), { ...request, model: ref.id });
+    },
+    async embeddingModels(id: string): Promise<ModelInfo[]> {
+      const s = spec(id);
+      const list = ADAPTERS[s.kind].listEmbeddingModels;
+      return list && isConfigured(s) ? list(endpoint(s)) : [];
     },
   };
 }
