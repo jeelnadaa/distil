@@ -8,7 +8,7 @@ Living status log. Update in the same commit as every change.
 
 ## Next up
 
-1. Phase 3: Brief Compiler, planner with code-enforced coverage, plan map and outline, deadline schedule, today view.
+1. Phase 3 UI: Plan tab (brief card, map and outline, schedule strip, editing, export), ledger coverage bars, Today view. The server half (brief, planner, schedule, Start lesson, `/today`) is in.
 
 ## Phase checklist
 

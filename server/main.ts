@@ -13,6 +13,10 @@ import { registerIngest } from "./materials/ingest.ts";
 import { createSearch } from "./materials/search.ts";
 import { createMaterials } from "./materials/store.ts";
 import { createMessages } from "./messages.ts";
+import { createBriefs } from "./plan/brief.ts";
+import { chatContext } from "./plan/context.ts";
+import { registerPlanner } from "./plan/planner.ts";
+import { createPlans } from "./plan/store.ts";
 import { createProviders } from "./providers/service.ts";
 import { createSecrets } from "./secrets.ts";
 import { createSettings } from "./settings.ts";
@@ -39,6 +43,10 @@ export function createServer({ port, dataDir = defaultDataDir(), fetch }: { port
   const providers = createProviders(settings, createSecrets(join(dataDir, "secrets.json")));
   registerIngest(jobs, materials, ledger);
   registerExtraction(jobs, { providers, settings, usage, materials, ledger });
+  const learner = createLearner(db);
+  const plans = createPlans(db);
+  const briefs = createBriefs(db);
+  registerPlanner(jobs, { providers, settings, usage, db, plans, briefs, learner });
   const deps = {
     dataDir,
     allowedHosts: [`localhost:${port}`, `127.0.0.1:${port}`, `[::1]:${port}`],
@@ -50,9 +58,13 @@ export function createServer({ port, dataDir = defaultDataDir(), fetch }: { port
     materials,
     search: createSearch(db),
     ledger,
-    learner: createLearner(db),
+    learner,
+    db,
+    plans,
+    briefs,
     jobs,
     providers,
+    context: chatContext(db, plans, ledger),
     log,
     fetch,
   };

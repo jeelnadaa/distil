@@ -253,6 +253,17 @@ const MIGRATIONS = [
   );
   CREATE INDEX cards_due ON cards(folder_id, due_at);
   `,
+  `
+  -- Phase 3: a plan is a course (from a ledger) or a skill plan with milestones and projects (F-510);
+  -- lessons carry their kind, exam weight 1–3 (F-508), suggested aids as JSON (F-502) and when they were
+  -- finished (the schedule's record of past days). The brief remembers which kind of plan it asks for.
+  ALTER TABLE plans ADD COLUMN kind TEXT NOT NULL DEFAULT 'course' CHECK (kind IN ('course', 'skill'));
+  ALTER TABLE lessons ADD COLUMN kind TEXT NOT NULL DEFAULT 'lesson' CHECK (kind IN ('lesson', 'project'));
+  ALTER TABLE lessons ADD COLUMN weight INTEGER NOT NULL DEFAULT 1 CHECK (weight BETWEEN 1 AND 3);
+  ALTER TABLE lessons ADD COLUMN aids TEXT NOT NULL DEFAULT '[]';
+  ALTER TABLE lessons ADD COLUMN done_at INTEGER;
+  ALTER TABLE briefs ADD COLUMN kind TEXT NOT NULL DEFAULT 'course' CHECK (kind IN ('course', 'skill'));
+  `,
 ];
 
 export function openDb(file: string): Db {

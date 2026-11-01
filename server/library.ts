@@ -12,6 +12,7 @@ export type Chat = {
   title: string;
   titleSource: "default" | "auto" | "manual";
   mode: string;
+  lessonId: string | null;
   model: { provider: string; id: string } | null;
   createdAt: number;
   updatedAt: number;
@@ -19,13 +20,13 @@ export type Chat = {
 
 type FolderRow = { id: string; parent_id: string | null; name: string; created_at: number };
 type ChatRow = {
-  id: string; folder_id: string | null; title: string; title_source: Chat["titleSource"]; mode: string;
+  id: string; folder_id: string | null; title: string; title_source: Chat["titleSource"]; mode: string; lesson_id: string | null;
   model_provider: string | null; model_id: string | null; created_at: number; updated_at: number;
 };
 
 const toFolder = (r: FolderRow): Folder => ({ id: r.id, parentId: r.parent_id, name: r.name, createdAt: r.created_at });
 const toChat = (r: ChatRow): Chat => ({
-  id: r.id, folderId: r.folder_id, title: r.title, titleSource: r.title_source, mode: r.mode,
+  id: r.id, folderId: r.folder_id, title: r.title, titleSource: r.title_source, mode: r.mode, lessonId: r.lesson_id,
   model: r.model_provider && r.model_id ? { provider: r.model_provider, id: r.model_id } : null,
   createdAt: r.created_at, updatedAt: r.updated_at,
 });
@@ -144,16 +145,23 @@ export function createLibrary(db: Db, now = () => Date.now()) {
 
     getChat,
 
-    createChat(folderId: string | null): Chat {
+    lessonChat(lessonId: string): Chat | null {
+      const row = db.prepare("SELECT * FROM chats WHERE lesson_id = ? ORDER BY updated_at DESC LIMIT 1").get(lessonId) as ChatRow | undefined;
+      return row ? toChat(row) : null;
+    },
+
+    // A lesson chat (F-504) is named after its lesson, so it never gets an automatic title.
+    createChat(folderId: string | null, lesson?: { id: string; title: string }): Chat {
       if (folderId) requireFolder(folderId);
       const at = now();
       const chat: Chat = {
-        id: randomUUID(), folderId, title: DEFAULT_CHAT_TITLE, titleSource: "default", mode: "ask",
+        id: randomUUID(), folderId, title: lesson ? cleanName(lesson.title, "Chat") : DEFAULT_CHAT_TITLE,
+        titleSource: lesson ? "manual" : "default", mode: lesson ? "teach" : "ask", lessonId: lesson?.id ?? null,
         model: null, createdAt: at, updatedAt: at,
       };
-      db.prepare(`INSERT INTO chats (id, folder_id, title, title_source, mode, created_at, updated_at)
-                  VALUES (?, ?, ?, ?, ?, ?, ?)`)
-        .run(chat.id, chat.folderId, chat.title, chat.titleSource, chat.mode, at, at);
+      db.prepare(`INSERT INTO chats (id, folder_id, title, title_source, mode, lesson_id, created_at, updated_at)
+                  VALUES (?, ?, ?, ?, ?, ?, ?, ?)`)
+        .run(chat.id, chat.folderId, chat.title, chat.titleSource, chat.mode, chat.lessonId, at, at);
       return chat;
     },
 

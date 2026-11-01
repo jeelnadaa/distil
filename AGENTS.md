@@ -61,6 +61,7 @@ Read this file fully before doing anything in this repo.
 | `server/secrets.ts` | API keys in `<data>/secrets.json`: several labelled keys per provider, first is the default |
 | `server/materials/` | Phase 2 ingest: `store` (copies in `<data>/materials/`, re-import keeps unchanged chunks), `parse` (PDF, DOCX, PPTX, Markdown, text, images; flags visual pages), `chunk`, `ingest` (parse job), `render` (PDF pages to JPEG for vision), `web` (links → article Markdown or file), `youtube` (transcripts: Gemini or pasted), `search` (FTS5 keyword index, anchored hits) |
 | `server/ledger/` | Coverage Ledger: `store` (items, sources, merge candidates) and `extract` (extract → audit → merge job, estimate) |
+| `server/plan/` | Phase 3 Study Plan: `brief` (Brief Compiler, nearest brief, F-105 text), `planner` (part-by-part plan job, code-enforced coverage via `coverage`), `dag`, `sections`, `schedule` (deadline days, drift, re-balance), `store`, `view`, `today`, `export` (Markdown, iCalendar), `context` (what each chat turn knows), `routes` |
 | `server/learning/` | Shared by every learning mode: `types.ts` (Study Brief schema, item statuses, evidence kinds, chat modes) and `learner.ts` (evidence per item; statuses only move forward) |
 | `scripts/fake-llm.mjs` | Fake OpenAI-compatible model for checking screens by hand without a real key |
 | `server/jobs.ts` | Background job runner backed by SQLite (resumes after restart) |

@@ -13,6 +13,8 @@ export type ChatDeps = {
   providers: Providers;
   settings: SettingsStore;
   usage: UsageStore;
+  // Extra system context for a chat: its study brief and, in a lesson chat, the lesson's items (F-105).
+  context?: (chat: Chat) => string;
   log?: (msg: string) => void;
 };
 
@@ -66,6 +68,7 @@ export async function* streamTurn(
     .filter((m) => m.status === "done" && m.content)
     .map((m) => ({ role: m.role, content: m.content }));
   history.push({ role: "user", content });
+  const system = [ASK_SYSTEM, deps.context?.(chat)].filter(Boolean).join("\n\n");
 
   const user = messages.add({ chatId: chat.id, role: "user", content, status: "done" });
   const assistant = messages.add({ chatId: chat.id, role: "assistant", content: "", status: "streaming", provider: chain[0]!.provider, model: chain[0]!.id });
@@ -79,7 +82,7 @@ export async function* streamTurn(
   const record = () => usage.record({
     provider: answering.provider, model: answering.id, role: "chat", chatId: chat.id, folderId: chat.folderId,
     usage: reported ?? {
-      input: estimateTokens(ASK_SYSTEM + history.map((m) => m.content).join("")),
+      input: estimateTokens(system + history.map((m) => m.content).join("")),
       output: estimateTokens(reply), cached: 0, reasoning: 0,
     },
     estimated: !reported,
@@ -93,7 +96,7 @@ export async function* streamTurn(
         yield { type: "model", provider: answering.provider, model: answering.id };
       }
       try {
-        for await (const event of providers.stream(answering, { system: ASK_SYSTEM, messages: history, signal })) {
+        for await (const event of providers.stream(answering, { system, messages: history, signal })) {
           if (event.type === "text") {
             reply += event.text;
             yield { type: "delta", text: event.text };

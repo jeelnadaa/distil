@@ -15,8 +15,14 @@ import { MAX_PASTED_CHARS, pastedTranscript, transcribeVideo, videoTitle, watchU
 import { ProviderError } from "./providers/types.ts";
 import { ITEM_TYPES } from "./prompts.ts";
 import { SettingsPatch } from "./settings.ts";
+import type { Db } from "./db.ts";
+import type { Learner } from "./learning/learner.ts";
+import type { Briefs } from "./plan/brief.ts";
+import { registerPlanRoutes } from "./plan/routes.ts";
+import type { Plans } from "./plan/store.ts";
 
-export type AppDeps = ChatDeps & { dataDir: string; allowedHosts: string[]; fonts: Fonts; materials: Materials; search: Search; ledger: Ledger; jobs: Jobs; fetch?: FetchFn };
+export type AppDeps = ChatDeps & { dataDir: string; allowedHosts: string[]; fonts: Fonts; materials: Materials; search: Search; ledger: Ledger; jobs: Jobs; fetch?: FetchFn }
+  & { db: Db; learner: Learner; plans: Plans; briefs: Briefs };
 
 const NullableId = z.string().min(1).nullable();
 const ModelRefBody = z.object({ provider: z.string().min(1), id: z.string().min(1), key: z.string().min(1).optional() });
@@ -29,7 +35,7 @@ const ItemPatch = z.object({
   mark: z.enum(["skip", "known", "out_of_scope"]).nullable().optional(),
 });
 
-async function body<T extends z.ZodType>(c: Context, schema: T): Promise<z.infer<T>> {
+export async function body<T extends z.ZodType>(c: Context, schema: T): Promise<z.infer<T>> {
   const json = await c.req.json().catch(() => {
     throw new AppError(400, "invalid_json", "The request body isn't valid JSON.");
   });
@@ -287,5 +293,6 @@ export function createApp(deps: AppDeps) {
     return c.body(null, 204);
   });
 
+  registerPlanRoutes(app, deps);
   return app;
 }
