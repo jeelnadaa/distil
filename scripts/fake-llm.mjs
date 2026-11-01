@@ -12,6 +12,31 @@ const REPLY = [
 
 const PORT = Number(process.argv[2] ?? 11999);
 
+// Study Plan agents: a brief with one question, and a plan with one unit per section and lessons of 8 items,
+// each after the one before it.
+const brief = () => ({
+  brief: { goal: "Pass the course exam", scope: "", level: "", depth: "exam_ready", deadline: null, hoursPerDay: 2, daysOff: [], assessment: "", language: "English" },
+  kind: "course",
+  questions: [{ field: "deadline", question: "When is the exam?", options: [
+    { label: "In two weeks", value: new Date(Date.now() + 14 * 864e5).toISOString().slice(0, 10) },
+    { label: "In a month", value: new Date(Date.now() + 30 * 864e5).toISOString().slice(0, 10) },
+    { label: "No exam", value: null },
+  ] }],
+});
+const plan = (prompt) => {
+  const units = [];
+  for (const line of prompt.split("\n")) {
+    if (line.startsWith("## ")) units.push({ title: line.slice(3).split(" › ").at(-1).slice(0, 80), summary: "", ids: [] });
+    const id = line.match(/^(i\d+) \[/)?.[1];
+    if (id) (units.at(-1) ?? (units.push({ title: "Basics", summary: "", ids: [] }), units.at(-1))).ids.push(id);
+  }
+  let n = 0;
+  return { units: units.map((u) => ({ title: u.title, summary: u.summary, lessons: Array.from({ length: Math.ceil(u.ids.length / 8) }, (_, i) => {
+    const key = `L${++n}`;
+    return { key, title: `${u.title.split(" ").slice(0, 4).join(" ")} ${i + 1}`, summary: "", kind: "lesson", minutes: 30, aids: i % 3 ? [] : ["diagram"], weight: 1, items: u.ids.slice(i * 8, i * 8 + 8), after: i ? [`L${n - 1}`] : [] };
+  }) })) };
+};
+
 createServer(async (req, res) => {
   if (req.url === "/v1/models") {
     res.writeHead(200, { "content-type": "application/json" });
@@ -23,8 +48,8 @@ createServer(async (req, res) => {
     const { messages } = JSON.parse(body);
     const system = messages.find((m) => m.role === "system")?.content ?? "";
     const prompt = messages.at(-1).content;
-    // Ledger agents: one item per sentence for extraction, nothing missed on audit, no merges.
-    const ledger = /coverage ledger/i.test(system) ? (() => {
+    // Ledger agents (and the plan agents above, sent the same way): one item per sentence for extraction, nothing missed on audit, no merges.
+    const ledger = /^You compile a Study Brief/.test(system) ? brief() : /^You plan a course of study/.test(system) ? plan(prompt) : /coverage ledger/i.test(system) ? (() => {
       if (/remove duplicates/i.test(system)) return { merges: [] };
       if (/audit/i.test(system)) return { missed: [] };
       const chunk = prompt.split("<chunk>")[1]?.split("</chunk>")[0] ?? "";

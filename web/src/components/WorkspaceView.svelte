@@ -1,12 +1,14 @@
 <script lang="ts">
   import ActivityDock from "./ActivityDock.svelte";
   import SoundButton from "./SoundButton.svelte";
-  import { api, type FolderMaterial, type Item, type Job, type Material } from "../lib/api.ts";
+  import { api, type FolderMaterial, type Item, type Job, type Material, type PlanView } from "../lib/api.ts";
   import { attempt, folderPath, type FolderTab, go, library, nav } from "../lib/state.svelte.ts";
   import DistilDialog from "./DistilDialog.svelte";
   import Icon from "./Icon.svelte";
+  import CoverageBars from "./CoverageBars.svelte";
   import LedgerTab from "./LedgerTab.svelte";
   import MaterialsTab from "./MaterialsTab.svelte";
+  import PlanTab from "./PlanTab.svelte";
 
   let { id, tab }: { id: string; tab: FolderTab } = $props();
 
@@ -25,6 +27,7 @@
   let materials = $state<FolderMaterial[]>([]);
   let items = $state<Item[]>([]);
   let jobs = $state<Job[]>([]);
+  let plan = $state<PlanView | null>(null);
   let loaded = $state(false);
   let distil = $state<{ mode: "extract" | "reaudit"; material?: Material } | null>(null);
 
@@ -44,9 +47,9 @@
     if (json !== itemsJson) { itemsJson = json; items = next; }
   };
   async function refresh() {
-    const result = await attempt(() => Promise.all([api.materials(id), api.items(id), api.jobs()]));
+    const result = await attempt(() => Promise.all([api.materials(id), api.items(id), api.jobs(), api.plan(id)]));
     if (!result) return;
-    [materials, , jobs] = result;
+    [materials, , jobs, plan] = result;
     setItems(result[1]);
     loaded = true;
   }
@@ -54,10 +57,11 @@
   let ticks = 0;
   async function poll() {
     const withItems = ++ticks % 4 === 0;
-    const result = await attempt(() => Promise.all([api.materials(id), api.jobs(), withItems ? api.items(id) : Promise.resolve(null)]));
+    const result = await attempt(() => Promise.all([api.materials(id), api.jobs(), withItems ? api.items(id) : Promise.resolve(null), withItems ? api.plan(id) : Promise.resolve(null)]));
     if (!result) return;
     [materials, jobs] = result;
     if (result[2]) setItems(result[2]);
+    if (result[3]) plan = result[3];
   }
 
   // Poll while work is running in this folder; settle with one last refresh when it stops.
@@ -79,11 +83,6 @@
   });
 
   const pct = (n: number, d: number) => (d ? Math.round((n / d) * 100) : 0);
-  const coverage = $derived([
-    { label: "Planned", n: counted.filter((i) => i.status !== "pending").length },
-    { label: "Taught", n: counted.filter((i) => ["taught", "checked", "mastered"].includes(i.status)).length },
-    { label: "Checked", n: counted.filter((i) => ["checked", "mastered"].includes(i.status)).length },
-  ]);
   const summary = $derived([
     `${own.length} ${own.length === 1 ? "file" : "files"}`,
     `${items.length} ${items.length === 1 ? "item" : "items"}`,
@@ -118,22 +117,19 @@
       <nav class="subtabs" aria-label="Workspace">
         <a href="#/folder/{id}/materials" aria-current={tab === "materials" ? "page" : undefined}>Materials</a>
         <a href="#/folder/{id}/ledger" aria-current={tab === "ledger" ? "page" : undefined}>Ledger</a>
+        <a href="#/folder/{id}/plan" aria-current={tab === "plan" ? "page" : undefined}>Plan</a>
       </nav>
 
-      {#if current || items.length}
+      {#if current || (items.length && plan)}
         <div class="ws__top">
-          {#if items.length}
+          {#if items.length && plan}
             <section class="panel ws__panel" aria-label="Coverage">
               <div class="ws__panel-head">
                 <span class="eyebrow">Coverage · {counted.length} items</span>
                 <button type="button" class="btn btn--ghost btn--sm" disabled={!!active.length} onclick={() => (distil = { mode: "reaudit" })}><Icon name="refresh" size="sm" />What did we miss?</button>
               </div>
-              <div class="coverage">
-                {#each coverage as row (row.label)}
-                  <div class="coverage__row"><span class="eyebrow">{row.label}</span><div class="coverage__track"><div class="coverage__fill" style:--v="{pct(row.n, counted.length)}%"></div></div><span class="num">{row.n}</span></div>
-                {/each}
-              </div>
-              {#if !coverage[0]!.n}<p class="caption faint">Lessons are planned from the ledger in the next step (Study Plan).</p>{/if}
+              <CoverageBars {...plan.coverage} />
+              {#if !plan.plan}<p class="caption faint">Each item gets a place in a lesson once you <a href="#/folder/{id}/plan">build the plan</a>.</p>{/if}
             </section>
           {/if}
           {#if current}
@@ -161,8 +157,10 @@
       {#if loaded}
         {#if tab === "materials"}
           <MaterialsTab folderId={id} {materials} {jobs} onchange={refresh} ondistil={(m) => (distil = { mode: "extract", material: m })} />
+        {:else if tab === "plan"}
+          {#if plan}<PlanTab folderId={id} folderName={folder.name} view={plan} {items} onview={(v) => (plan = v)} onchange={refresh} />{/if}
         {:else}
-          <LedgerTab folderId={id} {items} {materials} distilling={active.some((j) => j.kind === "extract")} onchange={refresh} ondistil={() => (distil = { mode: "extract" })} canDistil={undistilled.length > 0} />
+          <LedgerTab folderId={id} {items} gaps={plan ? { unmapped: plan.plan ? plan.coverage.unmapped : [], untaught: plan.coverage.untaught } : null} {materials} distilling={active.some((j) => j.kind === "extract")} onchange={refresh} ondistil={() => (distil = { mode: "extract" })} canDistil={undistilled.length > 0} />
         {/if}
       {/if}
     {/if}

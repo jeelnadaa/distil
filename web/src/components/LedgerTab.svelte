@@ -10,12 +10,16 @@
   import Segmented from "./Segmented.svelte";
   import Select from "./Select.svelte";
 
-  let { folderId, items, materials, distilling, canDistil, onchange, ondistil }: {
+  // gaps: items the plan has no lesson for, and items of started lessons that weren't taught (F-305).
+  let { folderId, items, materials, distilling, canDistil, gaps, onchange, ondistil }: {
     folderId: string; items: Item[]; materials: FolderMaterial[]; distilling: boolean; canDistil: boolean;
-    onchange: () => void; ondistil: () => void;
+    gaps: { unmapped: string[]; untaught: string[] } | null; onchange: () => void; ondistil: () => void;
   } = $props();
 
-  type View = "all" | "scope" | "marked";
+  type View = "all" | "scope" | "marked" | "gaps";
+  const unmapped = $derived(new Set(gaps?.unmapped));
+  const untaught = $derived(new Set(gaps?.untaught));
+  const gapCount = $derived(unmapped.size + untaught.size);
   const MARKS: Record<ItemMark, string> = { known: "Known", skip: "Skipped", out_of_scope: "Out of scope" };
   const STATUS: Record<string, string> = { pending: "Pending", planned: "Planned", taught: "Taught", checked: "Checked", mastered: "Mastered" };
   const MANUAL = "Added by you";
@@ -29,7 +33,7 @@
   const visible = $derived.by(() => {
     const q = query.trim().toLowerCase();
     return items.filter((i) => (!type || i.type === type)
-      && (view === "all" || (view === "marked") === !!i.mark)
+      && (view === "all" || (view === "gaps" ? unmapped.has(i.id) || untaught.has(i.id) : (view === "marked") === !!i.mark))
       && (!q || i.title.toLowerCase().includes(q) || i.statement.toLowerCase().includes(q)));
   });
   // Grouped by the material each item was first found in, in the order the materials were added.
@@ -117,6 +121,7 @@
       options={[{ value: "", label: "All types" }, ...typeOptions]} />
     <Segmented label="Scope" value={view} onchange={(v) => (view = v)} options={[
       { value: "all", label: "All", tip: "Every item" }, { value: "scope", label: "In scope", tip: "Items not marked known, skipped or out of scope" }, { value: "marked", label: "Marked", tip: "Items marked known, skipped or out of scope" },
+      ...(gapCount || view === "gaps" ? [{ value: "gaps" as const, label: `Gaps · ${gapCount}`, tip: "Items not in a lesson yet, or not taught in a lesson you started" }] : []),
     ]} />
     <span class="spacer"></span>
     <button type="button" class="btn btn--ghost btn--sm" onclick={() => (editing = { id: null, type: "concept", title: "", statement: "" })}><Icon name="plus" size="sm" />Add item</button>
@@ -139,7 +144,10 @@
                 <td class="sources">
                   {#each anchors(item) as s (`${s.materialId}:${s.loc}`)}<a class="anchor" href="#/material/{s.materialId}/{s.loc}/{item.id}" data-tip={s.quote}><span class="anchor__file">{s.materialName}</span>&nbsp;· {locLabel(s.unit, s.loc)}</a>{/each}
                 </td>
-                <td><span class="status status--{item.status}"><i></i>{item.mark ? MARKS[item.mark] : STATUS[item.status]}</span></td>
+                <td>
+                  <span class="status status--{item.status}"><i></i>{item.mark ? MARKS[item.mark] : STATUS[item.status]}</span>
+                  {#if unmapped.has(item.id)}<span class="gap">Not in a lesson</span>{:else if untaught.has(item.id)}<span class="gap">Not taught yet</span>{/if}
+                </td>
                 <td class="num"><Menu label="Actions for {item.title}" items={actions(item)} /></td>
               </tr>
             {/each}
@@ -176,6 +184,7 @@
 
 <style>
   .sources { max-width: 260px; }
+  .gap { display: block; margin-top: 4px; font: 500 10.5px var(--font-mono); color: var(--warning); white-space: nowrap; }
   .sources .anchor { display: inline-block; margin: 2px 4px 2px 0; white-space: nowrap; }
   .item-form { display: grid; gap: var(--s-4); }
   .ledger__more { display: flex; gap: var(--s-3); justify-content: center; align-items: center; padding: var(--s-4); }

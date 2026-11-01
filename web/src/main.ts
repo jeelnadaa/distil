@@ -6,6 +6,7 @@ import "./styles/brand.css";
 import "./styles/shell.css";
 import "./styles/content.css";
 import "./styles/workspace.css";
+import "./styles/plan.css";
 import { mount } from "svelte";
 import App from "./App.svelte";
 import { injectIcons } from "./lib/icons.ts";

@@ -1,16 +1,18 @@
 // App-wide state: route, library tree, providers and models, settings and toasts.
 import { api, ApiError, type Chat, type Folder, type ModelInfo, type ModelRef, type Provider, type SettingsView } from "./api.ts";
 
-export type FolderTab = "materials" | "ledger";
+export type FolderTab = "materials" | "ledger" | "plan";
+const TABS: FolderTab[] = ["materials", "ledger", "plan"];
 // home: the one place a chat starts (logo and New chat); folderId when it was started from a folder.
-export type Route = { name: "home"; folderId?: string } | { name: "chat"; id: string } | { name: "folder"; id: string; tab: FolderTab }
+export type Route = { name: "home"; folderId?: string } | { name: "chat"; id: string } | { name: "today" } | { name: "folder"; id: string; tab: FolderTab }
   | { name: "material"; id: string; loc: number | null; item: string | null } | { name: "settings"; section?: string };
 
 const parseHash = (): Route => {
   const [, name, id, sub, extra] = location.hash.split("/");
   if (name === "chat" && id) return { name: "chat", id };
   if (name === "material" && id) return { name: "material", id, loc: Number(sub) || null, item: extra || null };
-  if (name === "folder" && id) return { name: "folder", id, tab: sub === "ledger" ? "ledger" : "materials" };
+  if (name === "folder" && id) return { name: "folder", id, tab: TABS.find((t) => t === sub) ?? "materials" };
+  if (name === "today") return { name: "today" };
   if (name === "settings") return { name: "settings", section: id };
   if (name === "new") return { name: "home", folderId: id || undefined };
   return { name: "home" };
@@ -100,3 +102,12 @@ export const folderPath = (folderId: string | null): Folder[] => {
   }
   return path;
 };
+
+// Opens a lesson's chat (F-504). A new one starts with an opening message, since empty chats are tidied away.
+export async function startLesson(id: string) {
+  const chat = await attempt(() => api.startLesson(id));
+  if (!chat) return;
+  if (chat.createdAt === chat.updatedAt) Object.assign(pending, { chatId: chat.id, text: "Let's start the lesson.", model: null });
+  await attempt(refreshLibrary);
+  go(`#/chat/${chat.id}`);
+}

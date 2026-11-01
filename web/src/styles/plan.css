@@ -1,0 +1,101 @@
+/* Study Plan (S5) and Today (S1), ported from design/css/screens.css. */
+
+/* ---------- Plan ---------- */
+.plan__bar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-3) var(--s-4); margin-bottom: var(--s-4); }
+.plan__bar .spacer { flex: 1; }
+.plan__note { display: flex; gap: var(--s-2); align-items: baseline; margin-bottom: var(--s-4); }
+
+.sched { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(44px, 1fr); gap: 4px; margin-bottom: var(--s-5); overflow-x: auto; padding-bottom: 2px; }
+.sched__day { display: grid; gap: 6px; align-content: start; }
+.sched__day .eyebrow { font-size: 10px; white-space: nowrap; }
+.sched__day i { display: block; height: calc(var(--w) * 10px + 4px); border-radius: var(--r-xs); background: var(--text); opacity: .85; }
+.sched__day.is-past i { opacity: .25; }
+.sched__day i.is-now { background: var(--accent); opacity: 1; }
+.sched__day i.is-mock { background: repeating-linear-gradient(135deg, var(--text) 0 4px, transparent 4px 7px); }
+.sched__day i.is-rev { background: var(--border-control); }
+.sched__day i.is-off { height: 4px; background: var(--surface-sunken); opacity: 1; }
+.sched__day.is-today .eyebrow { color: var(--accent); }
+.sched__day.is-exam { justify-items: start; }
+.sched__day.is-exam .drop { width: 14px; height: 14px; }
+
+.plan-map { overflow-x: auto; }
+.pmap { display: block; max-width: none; height: auto; }
+.pmap__units text { font: 500 10.5px var(--font-mono); letter-spacing: .08em; fill: var(--text-faint); }
+.pmap__units line { stroke: var(--border); stroke-dasharray: 3 5; }
+.pmap__edges path { stroke: var(--border-control); stroke-width: 1.25; stroke-linejoin: round; fill: none; }
+.pmap__nodes rect { fill: var(--surface); stroke: var(--border-control); transition: stroke var(--dur-fast) var(--ease-out); }
+.pmap__nodes text { font: 600 12.5px var(--font-text); fill: var(--text-faint); }
+.pmap__nodes .count { font: 500 10px var(--font-mono); text-anchor: end; }
+.pmap__nodes .is-done rect { fill: var(--surface-sunken); stroke: var(--border); }
+.pmap__nodes .is-done text { fill: var(--text-muted); }
+.pmap__nodes .is-current rect { fill: var(--accent-wash); stroke: var(--accent); stroke-width: 1.5; }
+.pmap__nodes .is-current text { fill: var(--text); }
+.pmap__nodes .is-current circle { fill: var(--accent); }
+.pmap__nodes .is-next rect { stroke: var(--text); }
+.pmap__nodes .is-next text { fill: var(--text); }
+.pmap__nodes .is-project rect { stroke-dasharray: 4 3; }
+.pmap__nodes g { cursor: pointer; outline: none; }
+.pmap__nodes g:hover rect, .pmap__nodes g:focus-visible rect { stroke: var(--accent); }
+.pmap__legend { display: flex; flex-wrap: wrap; gap: var(--s-4); align-items: center; padding-top: var(--s-3); border-top: 1px solid var(--border); margin-top: var(--s-3); }
+.pmap__legend span { display: inline-flex; align-items: center; gap: 6px; }
+.pmap__legend .spacer { flex: 1; }
+.lg { width: 14px; height: 10px; border-radius: 3px; border: 1px solid var(--border-control); }
+.lg--done { background: var(--surface-sunken); border-color: var(--border); }
+.lg--current { background: var(--accent-wash); border-color: var(--accent); }
+.lg--next { border-color: var(--text); }
+
+.outline { list-style: none; padding: 0; margin: 0; }
+.outline__unit { display: flex; justify-content: space-between; gap: var(--s-3); padding: var(--s-5) 0 var(--s-2); border-bottom: 1px solid var(--text); }
+.outline__lesson { display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; gap: var(--s-3); align-items: center; padding: var(--s-3) 0; border-bottom: 1px solid var(--border); }
+.outline__lesson > div { display: grid; min-width: 0; }
+.outline__lesson .num { font-size: 12px; color: var(--text-faint); }
+.outline__lesson.is-done strong { color: var(--text-muted); font-weight: 550; }
+.outline__lesson.is-current, .outline__lesson.is-selected { background: var(--accent-wash); margin-inline: calc(var(--s-3) * -1); padding-inline: var(--s-3); border-radius: var(--r-sm); }
+.outline__actions, .outline__lesson > .outline__actions { display: flex; align-items: center; gap: var(--s-1); }
+
+.brief-form { display: grid; gap: var(--s-4); }
+.brief-form__row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s-4); }
+.qchips { display: flex; flex-wrap: wrap; gap: var(--s-2); align-items: center; }
+.qchips .body-sm { margin-right: var(--s-2); flex-basis: 100%; }
+.qchips [aria-pressed="true"] { border-color: var(--text); box-shadow: inset 0 0 0 1px var(--text); }
+
+/* ---------- Today ---------- */
+.today { display: grid; gap: var(--s-7); }
+.today__head { display: grid; gap: var(--s-3); max-width: 760px; }
+.upnext { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); border-top: 1px solid var(--text); border-bottom: 1px solid var(--border); }
+.upnext__main { display: grid; gap: var(--s-3); align-content: start; padding: var(--s-6) var(--s-6) var(--s-6) 0; }
+.upnext__actions { display: flex; flex-wrap: wrap; gap: var(--s-2); margin-top: var(--s-2); }
+.upnext__later { list-style: none; margin: 0; padding: var(--s-5) 0 var(--s-5) var(--s-6); border-left: 1px solid var(--border); display: grid; align-content: center; }
+.upnext__later li { display: grid; grid-template-columns: 28px 1fr; gap: var(--s-2); padding: var(--s-3) 0; border-bottom: 1px solid var(--border); }
+.upnext__later li:last-child { border: 0; }
+.upnext__later li div { display: grid; }
+.upnext__later .num { font-size: 12px; padding-top: 3px; }
+.today__grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s-6); }
+.tcard { display: grid; gap: var(--s-3); align-content: start; }
+.tcard header { display: flex; justify-content: space-between; align-items: center; gap: var(--s-2); min-height: 32px; border-bottom: 1px solid var(--border); padding-bottom: var(--s-2); }
+.tcard .btn { justify-self: start; }
+.week { display: grid; gap: var(--s-3); }
+.week__head { display: flex; justify-content: space-between; align-items: baseline; gap: var(--s-3); }
+.week__days { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+.day { display: grid; gap: 6px; align-content: start; padding: var(--s-3); min-height: 132px; font-size: 13px; min-width: 0; }
+.day + .day { border-left: 1px solid var(--border); }
+.day b { font-weight: 550; padding: 4px 6px; border-radius: var(--r-xs); background: var(--surface-sunken); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.day__note { font-style: normal; font-family: var(--font-mono); font-size: 11px; color: var(--text-faint); }
+.day.is-today { background: var(--surface); box-shadow: inset 0 2px 0 var(--accent); }
+.day.is-today .eyebrow { color: var(--accent); }
+.day__exam { background: var(--primary) !important; color: var(--on-primary); }
+.day--exam { background: var(--accent-wash); }
+.day--exam b { background: none; padding: 0; font-family: var(--font-display); font-weight: 400; font-size: 20px; overflow: visible; white-space: normal; }
+
+@media (max-width: 1100px) {
+  .upnext { grid-template-columns: 1fr; }
+  .upnext__main { padding-right: 0; }
+  .upnext__later { border-left: 0; border-top: 1px solid var(--border); padding-left: 0; }
+  .today__grid { grid-template-columns: 1fr; }
+  .week__days { grid-template-columns: repeat(7, 160px); overflow-x: auto; }
+}
+@media (max-width: 640px) {
+  .brief-form__row { grid-template-columns: 1fr; }
+  .outline__lesson { grid-template-columns: 32px minmax(0, 1fr); }
+  .outline__actions { grid-column: 2; }
+}

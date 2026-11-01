@@ -9,9 +9,15 @@ import type { Material, StoredChunk } from "../../../server/materials/store.ts";
 import type { Message } from "../../../server/messages.ts";
 import type { ProviderSpec } from "../../../server/providers/catalog.ts";
 import type { ModelInfo } from "../../../server/providers/types.ts";
+import type { Brief } from "../../../server/learning/types.ts";
+import type { Compiled, StoredBrief } from "../../../server/plan/brief.ts";
+import type { Lesson, Plan, PlanKind, Unit } from "../../../server/plan/store.ts";
+import type { TodayLesson, TodayView } from "../../../server/plan/today.ts";
+import type { PlanView } from "../../../server/plan/view.ts";
 import type { ModelRef, Settings } from "../../../server/settings.ts";
 import type { CapStatus } from "../../../server/usage.ts";
 
+export type { Brief, Compiled, Lesson, Plan, PlanKind, PlanView, StoredBrief, TodayLesson, TodayView, Unit };
 export type { CapStatus, Chat, SavedFont, Folder, Item, ItemMark, ItemType, Job, Message, Meter, ModelInfo, ModelRef, Settings, Strategy, TurnEvent };
 export type FolderMaterial = Material & { inherited: boolean };
 export type { Material, StoredChunk };
@@ -55,6 +61,9 @@ async function call(method: string, path: string, body?: unknown, signal?: Abort
   }
   return res;
 }
+
+// The learner's local day (YYYY-MM-DD), which the plan's schedule is counted in.
+export const localDay = (at = new Date()) => `${at.getFullYear()}-${String(at.getMonth() + 1).padStart(2, "0")}-${String(at.getDate()).padStart(2, "0")}`;
 
 const json = async <T>(method: string, path: string, body?: unknown): Promise<T> => (await call(method, path, body)).json();
 
@@ -112,6 +121,23 @@ export const api = {
   deleteItem: (id: string) => done("DELETE", `/items/${id}`),
   jobs: () => json<Job[]>("GET", "/jobs"),
   abortJob: (id: string) => json<Job>("POST", `/jobs/${id}/abort`),
+
+  // Study Plan (Phase 3). Dates are the learner's local day.
+  brief: (folderId: string) => json<StoredBrief | null>("GET", `/folders/${folderId}/brief`),
+  compileBrief: (folderId: string, request: string) => json<Compiled>("POST", `/folders/${folderId}/brief/compile?today=${localDay()}`, { request }),
+  saveBrief: (folderId: string, brief: Brief, kind: PlanKind) => json<StoredBrief>("PUT", `/folders/${folderId}/brief`, { brief, kind }),
+  plan: (folderId: string) => json<PlanView>("GET", `/folders/${folderId}/plan?today=${localDay()}`),
+  buildPlan: (folderId: string) => json<Job>("POST", `/folders/${folderId}/plan`, {}),
+  extendPlan: (folderId: string) => json<Job>("POST", `/folders/${folderId}/plan/extend`, {}),
+  setBufferDays: (folderId: string, bufferDays: number) => json<PlanView>("PATCH", `/folders/${folderId}/plan?today=${localDay()}`, { bufferDays }),
+  exportUrl: (folderId: string, format: "md" | "ics") => `/api/folders/${folderId}/plan/export.${format}?today=${localDay()}`,
+  updateLesson: (id: string, patch: { title?: string; minutes?: number; status?: Lesson["status"]; move?: { unitId: string; index: number } }) =>
+    json<PlanView>("PATCH", `/lessons/${id}?today=${localDay()}`, patch),
+  splitLesson: (id: string, at: number) => json<PlanView>("POST", `/lessons/${id}/split?today=${localDay()}`, { at }),
+  mergeLesson: (id: string) => json<PlanView>("POST", `/lessons/${id}/merge?today=${localDay()}`, {}),
+  knowLesson: (id: string) => json<PlanView>("POST", `/lessons/${id}/known?today=${localDay()}`, {}),
+  startLesson: (id: string) => json<Chat>("POST", `/lessons/${id}/start`, {}),
+  today: () => json<TodayView>("GET", `/today?today=${localDay()}`),
 
   usage: () => json<{ today: number; month: number; cap: CapStatus }>("GET", "/usage"),
 
