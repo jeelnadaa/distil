@@ -181,7 +181,12 @@ describe("plan API", () => {
     const again = await call("POST", `/lessons/${plan.lessons[0]!.id}/start`);
     expect(first.status).toBe(201);
     expect(again.body.id).toBe(first.body.id);
-    expect((await call("GET", `/lessons/${plan.lessons[0]!.id}`)).body.lesson.status).toBe("in_progress");
+    const detail = (await call("GET", `/lessons/${plan.lessons[0]!.id}`)).body;
+    expect(detail.lesson.status).toBe("in_progress");
+    // The lesson chat's bar: where the lesson sits and how far its unit has got.
+    expect(first.body.lessonId).toBe(plan.lessons[0]!.id);
+    expect(detail.unitNo).toBe(1);
+    expect(detail.unitLessons).toEqual({ done: 0, total: plan.lessons.filter((l) => l.unitId === plan.units[0]!.id).length });
   });
 
   it("marks a known lesson done and keeps its finish day when renamed", async () => {

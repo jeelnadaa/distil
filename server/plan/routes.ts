@@ -156,8 +156,11 @@ export function registerPlanRoutes(app: Hono, deps: AppDeps) {
     const lesson = plans.lesson(c.req.param("id"));
     const plan = plans.lessonPlan(lesson.id);
     const titles = new Map(plan.lessons.map((l) => [l.id, l]));
+    const unitLessons = plan.lessons.filter((l) => l.unitId === lesson.unitId);
     return c.json({
       lesson, folderId: plan.folderId, planKind: plan.kind, unit: plan.units.find((u) => u.id === lesson.unitId)!,
+      unitNo: plan.units.findIndex((u) => u.id === lesson.unitId) + 1,
+      unitLessons: { done: unitLessons.filter((l) => l.status === "done").length, total: unitLessons.length },
       index: plan.lessons.findIndex((l) => l.id === lesson.id) + 1, total: plan.lessons.length,
       items: lesson.items.map((id) => ledger.get(id)),
       requires: lesson.requires.map((id) => ({ id, title: titles.get(id)?.title ?? "", status: titles.get(id)?.status ?? "todo" })),

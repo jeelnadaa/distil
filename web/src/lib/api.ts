@@ -24,6 +24,11 @@ export type { Material, StoredChunk };
 export type Estimate = ReturnType<typeof estimateExtraction> & { materials: number };
 // What a Distil run covers: a whole folder, or one material, optionally only a location range of it.
 export type DistilScope = { strategy: Strategy; materialId?: string; from?: number; to?: number };
+// A lesson with where it sits in its plan and its unit, as a lesson chat shows it.
+export type LessonDetail = {
+  lesson: Lesson; folderId: string; unit: Unit; unitNo: number; unitLessons: { done: number; total: number };
+  index: number; total: number; items: Item[];
+};
 export type ProviderKey = { id: string; label: string; preview: string };
 export type Provider = ProviderSpec & { configured: boolean; keys: ProviderKey[] };
 export type SettingsView = Settings & { dataDir: string };
@@ -140,6 +145,7 @@ export const api = {
   splitLesson: (id: string, at: number) => json<PlanView>("POST", `/lessons/${id}/split?today=${localDay()}`, { at }),
   mergeLesson: (id: string) => json<PlanView>("POST", `/lessons/${id}/merge?today=${localDay()}`, {}),
   knowLesson: (id: string) => json<PlanView>("POST", `/lessons/${id}/known?today=${localDay()}`, {}),
+  lesson: (id: string) => json<LessonDetail>("GET", `/lessons/${id}`),
   startLesson: (id: string) => json<Chat>("POST", `/lessons/${id}/start`, {}),
   today: () => json<TodayView>("GET", `/today?today=${localDay()}`),
 
