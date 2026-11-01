@@ -1,4 +1,4 @@
-import { createWriteStream, existsSync, mkdirSync, renameSync, rmSync } from "node:fs";
+import { createWriteStream, existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { Readable, Transform } from "node:stream";
 import { pipeline as pipe } from "node:stream/promises";
@@ -26,6 +26,9 @@ const VARIANTS: Record<"gpu" | "cpu", Variant> = {
 // The tokenizer and configs every variant needs (those the repo has).
 const SIDE_FILES = ["tokenizer.json", "tokenizer_config.json", "config.json", "special_tokens_map.json"];
 const HUB = "https://huggingface.co";
+// Graphics adapters tried in turn (DirectML numbers them from 0), and the passages each is timed on.
+const ADAPTERS = [0, 1, 2, 3];
+const SAMPLE = Array.from({ length: 4 }, (_, i) => `A sample passage, number ${i + 1}, used to time this graphics adapter. `.repeat(12));
 
 type Extractor = (texts: string[], o: { pooling: "mean" | "cls"; normalize: boolean }) => Promise<{ tolist(): number[][] }>;
 
@@ -51,30 +54,66 @@ export function createLocalModels(dir: string, fetchImpl: typeof fetch = fetch, 
     return wanted;
   }
 
+  // The graphics adapter that ran fastest, remembered across restarts: a laptop's first adapter is often
+  // its integrated graphics, many times slower than the dedicated card.
+  const adapterFile = join(dir, "gpu.json");
+  const savedAdapter = (): number | null => {
+    try { return (JSON.parse(readFileSync(adapterFile, "utf8")) as { adapter: number }).adapter; } catch { return null; }
+  };
+  const saveAdapter = (adapter: number | null) => {
+    if (adapter === null) rmSync(adapterFile, { force: true });
+    else { mkdirSync(dir, { recursive: true }); writeFileSync(adapterFile, JSON.stringify({ adapter })); }
+  };
+
   async function load(size: LocalSize, log?: (msg: string) => void): Promise<Extractor> {
     const found = onDisk(size);
     if (!found) throw new AppError(409, "model_missing", `The ${LOCAL_MODELS[size].label} search model isn't downloaded. Download it in Settings › Models.`);
     const { pipeline, env } = await import("@huggingface/transformers");
     env.allowRemoteModels = false;
     env.localModelPath = dir;
-    let last: unknown;
-    for (const device of found.devices) {
-      try {
-        const extractor = await pipeline("feature-extraction", LOCAL_MODELS[size].repo, {
-          dtype: found.dtype, device, local_files_only: true,
-          // ONNX Runtime warns about every op it keeps on the CPU; only errors are worth printing.
-          session_options: { logSeverityLevel: 3 },
-        }) as unknown as Extractor;
-        // A GPU that can't run the model sometimes fails only on the first run, so it runs once here.
-        await extractor(["warm up"], { pooling: LOCAL_MODELS[size].pooling, normalize: true });
-        running.set(size, device === "cpu" ? "cpu" : "gpu");
-        return extractor;
-      } catch (err) {
-        last = err;
-        log?.(`The ${LOCAL_MODELS[size].label} search model couldn't run on ${device === "cpu" ? "the processor" : "the graphics card"}: ${err instanceof Error ? err.message : err}`);
+    const { pooling, label } = LOCAL_MODELS[size];
+    // Opens the model on the processor or one graphics adapter and runs it once: a GPU that can't run the
+    // model sometimes fails only on the first run.
+    const open = async (adapter: number | null) => {
+      const extractor = await pipeline("feature-extraction", LOCAL_MODELS[size].repo, {
+        dtype: found.dtype, device: adapter === null ? "cpu" : "dml", local_files_only: true,
+        // ONNX Runtime warns about every op it keeps on the CPU; only errors are worth printing.
+        session_options: { logSeverityLevel: 3, ...(adapter !== null && { executionProviders: [{ name: "dml", deviceId: adapter }] }) },
+      }) as unknown as Extractor & { dispose?: () => Promise<void> };
+      await extractor(["warm up"], { pooling, normalize: true });
+      return extractor;
+    };
+
+    if (found.devices.includes("dml")) {
+      // The saved adapter, or else each adapter in turn, timed on a sample; the fastest is kept.
+      const saved = savedAdapter();
+      for (const candidates of saved === null ? [ADAPTERS] : [[saved], ADAPTERS]) {
+        let best: { adapter: number; ms: number; extractor: Awaited<ReturnType<typeof open>> } | null = null;
+        for (const adapter of candidates) {
+          try {
+            const extractor = await open(adapter);
+            const started = performance.now();
+            if (candidates.length > 1) await extractor(SAMPLE, { pooling, normalize: true });
+            const ms = performance.now() - started;
+            if (!best || ms < best.ms) { await best?.extractor.dispose?.(); best = { adapter, ms, extractor }; }
+            else await extractor.dispose?.();
+          } catch (err) {
+            // Past the last adapter, opening fails; that ends the search.
+            if (adapter === candidates[0] || candidates.length === 1) log?.(`The ${label} search model couldn't run on graphics adapter ${adapter}: ${err instanceof Error ? err.message : err}`);
+            if (candidates.length > 1 && adapter > 0) break;
+          }
+        }
+        if (best) {
+          if (best.adapter !== saved) saveAdapter(best.adapter);
+          running.set(size, "gpu");
+          return best.extractor;
+        }
+        if (saved !== null) saveAdapter(null);
       }
     }
-    throw last;
+    const extractor = await open(null);
+    running.set(size, "cpu");
+    return extractor;
   }
 
   return {

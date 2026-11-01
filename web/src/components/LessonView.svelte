@@ -225,14 +225,17 @@
 
 
 <style>
-  .lesson { flex: 1; min-height: 0; display: flex; }
+  /* One reading width for the lesson text, its checks and the ask box, centred in the lesson column. */
+  .lesson { flex: 1; min-height: 0; display: flex; --lesson-w: 720px; }
   /* The ask box sits in the lesson column, so it lines up with the text and moves with the panels. */
   .lesson__main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
-  .doc { display: grid; gap: var(--s-5); padding-bottom: var(--s-8); }
+  .doc { max-width: var(--lesson-w); display: grid; gap: var(--s-5); padding-bottom: var(--s-8); }
   .intro { display: grid; gap: var(--s-3); padding-top: 10vh; max-width: 56ch; }
-  .block { display: grid; gap: var(--s-4); max-width: 72ch; min-width: 0; }
+  .block { display: grid; gap: var(--s-4); min-width: 0; }
+  .block :global(.check) { max-width: none; }
+  .lesson__main :global(.composer) { width: min(var(--lesson-w), 100%); }
   .block .banner span { min-width: 0; overflow-wrap: anywhere; }
-  .note { justify-self: start; max-width: min(72ch, 100%); padding: var(--s-2) var(--s-4) var(--s-3); border-left: 3px solid var(--accent); background: var(--surface-sunken); border-radius: 0 var(--r-sm) var(--r-sm) 0; display: grid; gap: 2px; }
+  .note { justify-self: start; max-width: 100%; padding: var(--s-2) var(--s-4) var(--s-3); border-left: 3px solid var(--accent); background: var(--surface-sunken); border-radius: 0 var(--r-sm) var(--r-sm) 0; display: grid; gap: 2px; }
   .note p:last-child { white-space: pre-wrap; overflow-wrap: anywhere; }
   .divider { display: flex; align-items: center; gap: var(--s-3); color: var(--text-faint); font-size: var(--t-eyebrow); letter-spacing: .08em; text-transform: uppercase; }
   .divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: var(--border); }

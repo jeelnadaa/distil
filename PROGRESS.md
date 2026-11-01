@@ -160,6 +160,9 @@ Living status log. Update in the same commit as every change.
 - Local search models on the graphics card (owner): on Windows Distil downloads each model's half-precision file and runs it through DirectML (any DirectX 12 GPU), falling back to the processor if the GPU can't start it; elsewhere the 8-bit file runs on the processor (the bundled runtime's CUDA build needs a separate CUDA install). Measured on an RTX 3070 Ti with Low: 2.8 s per 64 passages on the GPU against 4.6 s on the processor; the 8-bit file on the GPU was slower (6.5 s), so it is never sent there. A model already downloaded as 8-bit keeps working on the processor. Each model card shows where it runs and, while downloading, megabytes and a progress bar; indexing waits until a model is downloaded, and a re-download rebuilds its vectors.
 - Lesson ask box: sits in the lesson column, so it lines up with the text and moves with the sidebar and session plan; it has the chat's model picker again, and the teacher answers with the picked model first, then the strong slot. 157 tests.
 
+- Graphics adapter choice: DirectML's adapter 0 on this laptop is the Intel integrated graphics, where High took 70 s for 32 passages. On first use Distil now opens the model on each adapter, times a short sample, keeps the fastest and remembers it (), testing again if it stops working; the processor stays the last fallback. High on the RTX 3070 Ti: 1.1 s for the same 32 passages; the one-time test adds about 19 s to the first load. High was swapped to its graphics-card version (1.1 GB).
+- Lesson layout: the lesson text, its checks and the ask box share one 720 px reading width, centred in the lesson column (the text used to sit at the left of a wider column).
+
 ## Open questions
 
 See `plan.md` §18.
