@@ -135,6 +135,12 @@ export const motionPref = (): Motion => {
   return saved === "full" || saved === "reduce" ? saved : "system";
 };
 
+// Scrolls started by the app glide only when motion isn't reduced (the setting, else the system's).
+export const glide = (): ScrollBehavior => {
+  const m = motionPref();
+  return m === "reduce" || (m === "system" && matchMedia("(prefers-reduced-motion: reduce)").matches) ? "auto" : "smooth";
+};
+
 export function setTheme(value: Theme) {
   if (value === "system") delete root().dataset.theme;
   else root().dataset.theme = value;

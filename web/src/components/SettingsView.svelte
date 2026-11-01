@@ -3,7 +3,7 @@
   import SoundButton from "./SoundButton.svelte";
   import { tick } from "svelte";
   import { api, type Dial, type ModelRef, type Provider, type ProviderKey, type Settings } from "../lib/api.ts";
-  import { motionPref, palettePref, PALETTES, setMotion, setPalette, setTheme, themePref, type Motion, type PaletteId, type Theme } from "../lib/prefs.ts";
+  import { motionPref, palettePref, PALETTES, setMotion, setPalette, setTheme, themePref, type Motion, type PaletteId, type Theme, glide } from "../lib/prefs.ts";
   import { app, attempt, loadModels, nav, refreshProviders, refreshSettings, toast } from "../lib/state.svelte.ts";
   import Dialog from "./Dialog.svelte";
   import { DIAL_LABEL, DIAL_TIP } from "./DialSelect.svelte";
@@ -12,6 +12,9 @@
   import ModelSelect from "./ModelSelect.svelte";
   import Segmented from "./Segmented.svelte";
   import WebSearchSetting from "./WebSearchSetting.svelte";
+  import DataSetting from "./DataSetting.svelte";
+  import AboutSetting from "./AboutSetting.svelte";
+  import type { AppInfo } from "../lib/api.ts";
   import TextFontSetting from "./TextFontSetting.svelte";
 
   let { section }: { section?: string } = $props();
@@ -24,14 +27,19 @@
     { id: "learning", label: "Learning", icon: "graph" },
     { id: "appearance", label: "Appearance", icon: "type" },
     { id: "data", label: "Data", icon: "database" },
+    { id: "about", label: "About", icon: "download" },
   ];
 
   // Jump straight to a deep-linked section on open; glide between sections afterwards.
+  // The Data and About rows arrive with the app info and shift what's below them, so that jumps again.
   let opened = false;
+  let ready = false;
   $effect(() => {
     const target = section;
-    const behavior: ScrollBehavior = opened ? "smooth" : "instant";
+    const nowReady = !!info;
+    const behavior: ScrollBehavior = opened && nowReady === ready ? glide() : "instant";
     opened = true;
+    ready = nowReady;
     tick().then(() => target && document.getElementById(target)?.scrollIntoView({ block: "start", behavior }));
   });
 
@@ -39,6 +47,8 @@
   const configured = $derived(app.providers.filter((p) => p.configured));
   let usage = $state<{ today: number; month: number } | null>(null);
   $effect(() => { attempt(() => api.usage()).then((u) => (usage = u ?? null)); });
+  let info = $state<AppInfo | null>(null);
+  $effect(() => { attempt(api.appInfo).then((v) => { if (v) info = v; }); });
 
   const fmt = new Intl.NumberFormat(undefined, { notation: "compact", maximumFractionDigits: 1 });
 
@@ -296,7 +306,14 @@
         <section id="data" class="sset">
           <header><h2 class="display-md">Data</h2></header>
           <div class="srow"><div><strong>Data folder</strong><span class="caption muted mono">{settings.dataDir}</span></div></div>
-          <p class="caption faint">Everything Distil knows lives here: chats, settings, usage and keys. Copy the folder while Distil is closed to back it up. Set <span class="mono">DISTIL_DATA_DIR</span> to use another location.</p>
+          <p class="caption faint">Everything Distil knows lives here: chats, settings, usage and keys. Set <span class="mono">DISTIL_DATA_DIR</span> to use another location.</p>
+          {#if info}<DataSetting bind:info />{/if}
+        </section>
+
+        <section id="about" class="sset">
+          <header><h2 class="display-md">About</h2></header>
+          {#if info}<AboutSetting bind:info />{/if}
+          <p class="caption faint">Made with open-source software; see <span class="mono">CREDITS.md</span> in the install folder. Distil is MIT-licensed.</p>
         </section>
       </div>
     {/if}

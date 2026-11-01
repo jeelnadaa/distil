@@ -4,11 +4,11 @@ Living status log. Update in the same commit as every change.
 
 ## Current phase
 
-**Phase 9 — Ship** is next, on `main`.
+**Phase 10 — Tune** is next, on `main`.
 
 ## Next up
 
-1. Phase 9 — Ship (plan.md §13, §15).
+1. Phase 10 — Tune: ledger and answer quality against saved evaluation sets (plan.md §15).
 2. Needs the owner: Sign in with Google (F-1203). It means signing in to a Google account and reusing a Google CLI login, which the build can't do or test unattended; see plan.md §2 "Providers+ decisions".
 3. Still open from Phase 7 (should/could): image-occlusion cards (F-901), graph nodes linked to exact source messages (F-923), clusters and a whole-folder graph across units (F-924), notes import and a table of nodes (F-926, F-927), badges (F-933).
 4. Still open from Phase 4 (should/could): opening recall questions from the previous lesson (F-614), predict-before-reveal prompts (F-608), dictation (F-615).
@@ -28,7 +28,7 @@ Living status log. Update in the same commit as every change.
 - [x] Phase 6 — Practice & Exams
 - [x] Phase 7 — Retention
 - [x] Phase 8 — Providers+ & usage dashboard (Google sign-in waits for the owner)
-- [ ] Phase 9 — Ship
+- [x] Phase 9 — Ship
 - [ ] Phase 10 — Tune (ledger and answer quality)
 
 ## Log
@@ -201,6 +201,17 @@ Living status log. Update in the same commit as every change.
 - Not built: Sign in with Google (F-1203). It needs a Google account login and Google's CLI OAuth client, neither of which the build may use unattended; left for the owner to decide and test.
 - Checked live on Gemini 3.5 Flash: the usage page on two days of real use (day, week and month, every breakdown, CSV), Settings › Web search with no key, and a 6-section syllabus on Bayes' theorem without search (about 16k tokens, read into 7 chunks). Web search was tested with fakes only; no search key was available. 241 tests.
 
+### 2026-11-01 · Phase 9 — Ship
+- Windows app (F-1305): `npm run package` builds `release/Distil-<v>-win-x64.zip` with the Node runtime, the app and its production dependencies (other systems' native binaries left out), a launcher and `Install.ps1`. Installing is per user, no administrator rights: `%LOCALAPPDATA%\Programs\Distil`, Start menu and desktop shortcuts, an entry in Settings › Apps, `Uninstall.ps1` (the data folder stays). The launcher opens Distil in its own Edge app window (Chrome if there's no Edge, else the default browser), stops the server when the window closes, and starts it again when asked (restore, update). No Electron and nothing downloaded to build (plan.md §2).
+- Auto-update: a build made with `--feed <url>` checks that JSON feed after start and daily; Settings › About shows the new version and its notes, downloads it on request, checks its SHA-256, unpacks it beside the current version and switches on restart, keeping the previous version. The feed and the download must be HTTPS. `release/feed.json` and `app-<v>.zip` are what to publish.
+- Backup and restore (F-1304), Settings › Data: a zip of a consistent copy of the database, the materials and added fonts (keys and downloaded models left out); restoring checks the zip (names, manifest, schema version, database check), stages it, and swaps it in at the next start, keeping the replaced data in `before-restore/`.
+- Keyboard (F-1303): `?` opens a shortcut sheet (also the keyboard button in the sidebar); `n` new chat, `g` then `t`/`r`/`u`/`s`, `/` to the message box, `1`–`6` folder tabs; single keys never fire while typing or with a dialog open.
+- Accessibility (F-1307): a skip link, page titles that follow the screen, scrolls the app starts respect reduced motion; text contrast checked (lowest 4.99:1, faint text on the light theme). Icon buttons and images were already labelled.
+- Built-in tutorial (F-1312): a "How to use Distil" chat, added once on first start, opens with a tour of every mode (no tokens) and answers questions from a user guide shipped with the app (`server/tutorial/guide.md`), on the cheap model. Settings › About and the shortcut sheet open it again.
+- `CREDITS.md`; the release adds every bundled package with its licence.
+- Owner feedback: the sidebar's New chat button now lines up with Today and Review, and the current page is shown by fill only, so it no longer looks like a second button.
+- Checked: a release built and installed into a scratch folder, started by its launcher (no window), restarted through the API, updated from 0.1.0 to a test 0.1.1 served from a local feed (download, checksum, switch on restart), and a 33 MB backup of the test library restored into it (6 folders, 8 materials, no keys). The tutorial answered a question about caps from its guide on Gemini 3.5 Flash Lite. Not checked: the real Start menu and desktop shortcuts and the Apps entry (not written to this machine), and the Edge window, which the test ran without. 247 tests.
+
 ## Open questions
 
 See `plan.md` §18.
@@ -219,7 +230,10 @@ See `plan.md` §18.
 - Caps and the usage page are in tokens only; there are no per-model prices (plan.md §2).
 - Web search (Tavily, Brave) is checked only against fakes; no real search key has been tried.
 - A cap is checked before each request, so one reply already in flight can finish past 100 %.
-- Keys are in a user-only file, not yet the OS credential store; the desktop build (Phase 9) moves them.
+- Keys are in a user-only file, not the OS credential store (F-1206); the Windows build keeps them there too.
+- The release isn't code-signed, so Windows SmartScreen may warn when Install.ps1 or the shortcut first runs; signing needs a certificate.
+- The installer zip bundles the Satoshi font (it's in the built UI). Check its licence (ITF FFL) allows that before handing the zip out publicly.
+- No update feed is published yet, so builds don't check for updates until one is built with `--feed`.
 - Inline maths (KaTeX) doesn't wrap, so a long formula in a chat reply widens the column on a phone.
 - The fake model's plans are mechanical (one unit per heading); judge plan quality only with a real model.
 - Ledger quality gaps for Phase 10: some duplicates survive merging on the cheap model (28 repeated titles on the textbook), and 32 quotes don't match their page text exactly.

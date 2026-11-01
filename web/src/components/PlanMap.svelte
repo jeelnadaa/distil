@@ -15,6 +15,7 @@
 </script>
 
 <script lang="ts">
+  import { glide } from "../lib/prefs.ts";
   import { wheelScroll } from "../lib/wheel.ts";
 
   // matches: lessons that pass the Plan tab's filters (the rest are dimmed), or null for no filter.
@@ -69,7 +70,7 @@
   $effect(() => {
     const first = matches && plan.lessons.find((l) => matches.has(l.id));
     const p = first && layout.pos.get(first.id);
-    if (p) scroller?.scrollTo({ left: Math.max(0, p.x - PAD - 24), behavior: "smooth" });
+    if (p) scroller?.scrollTo({ left: Math.max(0, p.x - PAD - 24), behavior: glide() });
   });
 </script>
 

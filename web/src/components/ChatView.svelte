@@ -47,7 +47,9 @@
       chat = data.chat;
       messages = data.messages;
       meter = data.meter;
-      model = data.chat.model ?? app.settings?.models.strong ?? null;
+      // The tutorial answers on the cheap model, like the server's default for it.
+      const models = app.settings?.models;
+      model = data.chat.model ?? (data.chat.mode === "guide" ? models?.cheap : null) ?? models?.strong ?? null;
       pinned = true;
       await scrollToEnd();
       if (pending.chatId === chatId) {
@@ -240,9 +242,10 @@
       <span>{capWarn.checks.map((c) => `${periodLabel(c)}: ${Math.round((c.used / c.cap) * 100)} % of cap`).join(" · ")}</span>
       <span class="spacer"></span><a class="btn btn--ghost btn--sm" href="#/settings/limits">Limits</a></div>
   {/if}
-  <Composer bind:value={draft} busy={controller !== null} onsend={send} onstop={() => controller?.abort()}>
+  <Composer bind:value={draft} busy={controller !== null} onsend={send} onstop={() => controller?.abort()}
+    placeholder={chat?.mode === "guide" ? "Ask how to do something in Distil…" : undefined}>
     <ModelSelect value={model} onchange={pickModel} label="Model for this chat" compact />
-    {#if chat}<DialSelect value={chat.dial} inherited={inheritedDial(chat.folderId)} label="Visuals in this chat" onchange={pickDial} />{/if}
+    {#if chat && chat.mode !== "guide"}<DialSelect value={chat.dial} inherited={inheritedDial(chat.folderId)} label="Visuals in this chat" onchange={pickDial} />{/if}
     {#if chat?.folderId}
       <button type="button" class="btn btn--ghost btn--sm independent" aria-pressed={chat.independent} onclick={toggleIndependent}
         data-tip={chat.independent ? "This chat ignores what you've studied in the folder. Select to use it again." : "Replies build on what you've studied in this folder. Select to ask without it."}>

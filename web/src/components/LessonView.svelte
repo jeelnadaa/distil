@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { glide } from "../lib/prefs.ts";
   import { tick, untrack } from "svelte";
   import { api, ApiError, type ActionKind, type Answer, type Chat, type CheckView, type Dial, type Message, type ModelRef, type SessionView, type Source, type TeachEvent } from "../lib/api.ts";
   import { fencedBlocks } from "../../../server/visuals/blocks.ts";
@@ -99,7 +100,7 @@
   }
 
   // After a question mid-lesson the open check is further up; this brings it back into view.
-  const toOpen = () => document.getElementById(`check-${open?.id}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+  const toOpen = () => document.getElementById(`check-${open?.id}`)?.scrollIntoView({ behavior: glide(), block: "center" });
 
   const start = () => run((on, signal) => api.teachStart(chat.id, on, signal));
   const answer = (check: CheckView, a: Omit<Answer, "checkId">) => run((on, signal) => api.teachAnswer(chat.id, { ...a, checkId: check.id }, on, signal));

@@ -1,6 +1,6 @@
 # Distil
 
-> Status: **early development** — folders, chats, streaming Ask mode, your own keys and token caps work, and so does the coverage ledger: add PDFs, slides, docs, photos, web pages or YouTube videos and Distil lists every learnable item with a link back to where it is. Study plans work too: a brief from one sentence, a plan that covers 100 % of the ledger, a deadline schedule that re-balances, and a Today view. Lessons are taught step by step from your own material, with citations, a check after every step and repairs when an answer misses. Replies and lessons draw interactive visuals in Distil's own style (diagrams, plots, charts, quizzes, worked steps, simulations), as much or as little as you set. Practice sets and timed mock exams are written from your material with mark schemes, marked (handwriting too) and turned into a report and flashcards. What you learn becomes flashcards on a spaced schedule, with mastery per item, a progress heatmap, a knowledge graph and a "what next" list on Today. A usage page shows where your tokens went, and a topic with no material gets a syllabus written for it, from web sources when you add a search key. Packaging (installer, backups, the tutorial chat) comes next. See [PROGRESS.md](PROGRESS.md).
+> Status: **early development** — folders, chats, streaming Ask mode, your own keys and token caps work, and so does the coverage ledger: add PDFs, slides, docs, photos, web pages or YouTube videos and Distil lists every learnable item with a link back to where it is. Study plans work too: a brief from one sentence, a plan that covers 100 % of the ledger, a deadline schedule that re-balances, and a Today view. Lessons are taught step by step from your own material, with citations, a check after every step and repairs when an answer misses. Replies and lessons draw interactive visuals in Distil's own style (diagrams, plots, charts, quizzes, worked steps, simulations), as much or as little as you set. Practice sets and timed mock exams are written from your material with mark schemes, marked (handwriting too) and turned into a report and flashcards. What you learn becomes flashcards on a spaced schedule, with mastery per item, a progress heatmap, a knowledge graph and a "what next" list on Today. A usage page shows where your tokens went, and a topic with no material gets a syllabus written for it, from web sources when you add a search key. It installs on Windows as a desktop app with backups, updates and a built-in guide chat. Quality tuning comes next. See [PROGRESS.md](PROGRESS.md).
 
 A local-first, open-source study app. Bring your material (PDFs, slides, notes, photos, links,
 YouTube) or just a goal, and get a study plan that provably covers everything in it. Then learn it
@@ -18,11 +18,17 @@ npm run fonts   # downloads Satoshi once (its licence doesn't allow committing i
 npm run dev     # http://127.0.0.1:5173
 ```
 
-For a production build: `npm run build`, then `npm start` (http://127.0.0.1:4321). Your data lives in
+For a production build: `npm run build`, then `npm start` (http://127.0.0.1:4321).
+
+**Windows app:** `npm run package` builds `release/Distil-<version>-win-x64.zip`. Unzip it, right-click
+`Install.ps1` and choose *Run with PowerShell*; Distil then opens from the Start menu in its own window. Add
+`-- --feed https://…/feed.json` to build one that checks for updates, and publish `release/feed.json` with
+`release/app-<version>.zip` at that address. Your data lives in
 `~/Distil`; set `DISTIL_DATA_DIR` to put it elsewhere. Add a provider key under Settings › Providers.
 Google AI Studio has a free tier. Keys stay in that folder and are only sent to their own provider.
 Settings › Appearance changes the theme, the colour palette and the text font (Satoshi, Anthropic Sans if
-you have it installed, or any font of your own).
+you have it installed, or any font of your own). Settings › Data makes and restores backups. Press `?` for
+keyboard shortcuts, and open the *How to use Distil* chat for a tour.
 
 ## Planned highlights
 
@@ -58,5 +64,5 @@ mock exams, flashcards with spaced repetition, mastery tracking, and token caps 
 
 ## License
 
-[MIT](LICENSE). Fonts keep their own licences: Instrument Serif and JetBrains Mono are SIL OFL;
+[MIT](LICENSE); bundled software is listed in [CREDITS.md](CREDITS.md). Fonts keep their own licences: Instrument Serif and JetBrains Mono are SIL OFL;
 Satoshi (ITF Free Font Licence) is downloaded by `npm run fonts`, not shipped in this repository.

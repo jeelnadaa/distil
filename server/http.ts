@@ -37,10 +37,16 @@ import type { Retention } from "./retention/engine.ts";
 import { registerRetentionRoutes } from "./retention/routes.ts";
 import type { Researcher } from "./research/researcher.ts";
 import { registerResearchRoutes } from "./research/routes.ts";
+import { registerAppRoutes } from "./app-routes.ts";
+import type { Backup } from "./backup.ts";
+import type { Updates } from "./updates.ts";
+import type { Tutorial } from "./tutorial/tutorial.ts";
 import type { Secrets } from "./secrets.ts";
 
 export type AppDeps = ChatDeps & { dataDir: string; allowedHosts: string[]; fonts: Fonts; materials: Materials; search: Search; ledger: Ledger; jobs: Jobs; fetch?: FetchFn }
-  & { db: Db; learner: Learner; plans: Plans; briefs: Briefs; local: LocalModels; vectors: Vectors; retrieval: Retrieval; teacher: Teacher; visuals: Visuals; practice: Practice; retention: Retention; cards: Cards; researcher: Researcher; secrets: Secrets };
+  & { db: Db; learner: Learner; plans: Plans; briefs: Briefs; local: LocalModels; vectors: Vectors; retrieval: Retrieval; teacher: Teacher; visuals: Visuals; practice: Practice; retention: Retention; cards: Cards; researcher: Researcher; secrets: Secrets }
+  // restart: set when the desktop launcher runs the server; updates: set in an installed build.
+  & { backup: Backup; tutorial: Tutorial; restart?: () => void; updates?: Updates };
 
 const NullableId = z.string().min(1).nullable();
 const ModelRefBody = z.object({ provider: z.string().min(1), id: z.string().min(1), key: z.string().min(1).optional() });
@@ -75,7 +81,7 @@ export function createApp(deps: AppDeps) {
     if (origin && new URL(origin).host !== host) throw new AppError(403, "forbidden_origin", "Cross-origin requests are not allowed.");
     // File uploads are raw bytes; that content type can't be sent cross-site without a CORS preflight, which we never grant.
     const type = c.req.header("content-type") ?? "";
-    const upload = c.req.method === "POST" && /^\/api\/(folders\/[^/]+\/materials|materials\/[^/]+\/replace)$/.test(c.req.path) && type === "application/octet-stream";
+    const upload = c.req.method === "POST" && /^\/api\/(folders\/[^/]+\/materials|materials\/[^/]+\/replace|backup\/restore)$/.test(c.req.path) && type === "application/octet-stream";
     if (c.req.method !== "GET" && c.req.method !== "DELETE" && !upload && !type.startsWith("application/json")) {
       throw new AppError(415, "json_only", "Send JSON.");
     }
@@ -113,6 +119,7 @@ export function createApp(deps: AppDeps) {
     const { folderId } = await body(c, z.object({ folderId: NullableId }));
     return c.json(library.createChat(folderId), 201);
   });
+  app.post("/tutorial", (c) => c.json(deps.tutorial.open()));
   app.get("/chats/:id", (c) => {
     const chat = library.getChat(c.req.param("id"));
     return c.json({ chat, messages: messages.list(chat.id), meter: meterFor(deps, chat) });
@@ -332,5 +339,6 @@ export function createApp(deps: AppDeps) {
   registerPracticeRoutes(app, deps);
   registerRetentionRoutes(app, deps);
   registerResearchRoutes(app, deps);
+  registerAppRoutes(app, deps);
   return app;
 }

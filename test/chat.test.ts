@@ -7,6 +7,7 @@ import type { Providers } from "../server/providers/service.ts";
 import { createSettings } from "../server/settings.ts";
 import { createUsage } from "../server/usage.ts";
 import { scriptedAdapter } from "./helpers.ts";
+import { createTutorial, GUIDE_SYSTEM, WELCOME } from "../server/tutorial/tutorial.ts";
 
 function setup(replies: (string | Error)[]) {
   const db = openDb(":memory:");
@@ -114,4 +115,26 @@ describe("cleanTitle", () => {
     ["## **Gibbs Phenomenon**", "Gibbs Phenomenon"],
     ["   ", null],
   ])("%j → %j", (raw, expected) => expect(cleanTitle(raw)).toBe(expected));
+});
+
+describe("tutorial chat", () => {
+  it("is added once, answers from the guide on the cheap model, and starts the history with the learner", async () => {
+    const { deps, adapter, db } = setup(["Open **Settings › Limits**."]);
+    const tutorial = createTutorial({ db, library: deps.library, messages: deps.messages });
+    tutorial.addOnce();
+    const chat = tutorial.find()!;
+    expect(chat).toMatchObject({ mode: "guide", title: "How to use Distil", titleSource: "manual" });
+    expect(deps.messages.list(chat.id)[0]).toMatchObject({ role: "assistant", content: WELCOME });
+
+    await run(deps, chat.id, "How do I cap tokens?");
+    const req = adapter.requests[0] as { model: string; system: string; messages: { role: string }[] };
+    expect(req.model).toBe("cheap");
+    expect(req.system).toBe(GUIDE_SYSTEM);
+    expect(req.messages.map((m) => m.role)).toEqual(["user"]);
+
+    deps.library.deleteChat(chat.id);
+    tutorial.addOnce();
+    expect(tutorial.find()).toBeNull();
+    expect(tutorial.open().id).not.toBe(chat.id);
+  });
 });

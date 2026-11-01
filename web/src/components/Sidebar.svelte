@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { shortcuts } from "./ShortcutSheet.svelte";
   import { api } from "../lib/api.ts";
   import { resolvedTheme, setTheme } from "../lib/prefs.ts";
   import { attempt, folderPath, go, library, nav, refreshLibrary, toast } from "../lib/state.svelte.ts";
@@ -137,6 +138,7 @@
   <div class="sb__foot">
     <a class="sb__link" class:is-active={nav.route.name === "settings"} href="#/settings"><Icon name="gear" size="sm" />Settings</a>
     <a class="btn btn--ghost btn--icon btn--sm" class:is-active={nav.route.name === "usage"} href="#/usage" aria-label="Usage" data-tip="Usage"><Icon name="chart" size="sm" /></a>
+    <button type="button" class="btn btn--ghost btn--icon btn--sm" aria-label="Keyboard shortcuts" data-tip="Keyboard shortcuts (?)" onclick={() => (shortcuts.open = true)}><Icon name="keyboard" size="sm" /></button>
     <button type="button" class="btn btn--ghost btn--icon btn--sm" aria-label="Switch to {theme === 'dark' ? 'light' : 'dark'} theme" onclick={flipTheme}>
       <Icon name={theme === "dark" ? "sun" : "moon"} size="sm" />
     </button>
@@ -163,7 +165,7 @@
 </Dialog>
 
 <style>
-  .sb__new { margin: 0 var(--s-1) var(--s-2); justify-content: flex-start; }
+  .sb__new { margin: var(--s-2) 0 var(--s-2); justify-content: flex-start; }
   .sb__section { border-radius: var(--r-sm); }
   .sb__section.is-drop { box-shadow: inset 0 0 0 1px var(--accent); background: var(--accent-wash); }
   .sb__tree { flex: 1; min-height: 0; overflow: auto; padding-bottom: var(--s-3); }

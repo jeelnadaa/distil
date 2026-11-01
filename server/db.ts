@@ -218,7 +218,7 @@ const MIGRATIONS = [
   -- Where an item's content comes from: the folder's material, an extra topic added from a labelled
   -- answer (F-314, Phase 4), or a researcher's syllabus built from the model (F-205, Phase 8).
   ALTER TABLE items ADD COLUMN provenance TEXT NOT NULL DEFAULT 'material' CHECK (provenance IN ('material', 'extra', 'generated'));
-  -- A Teach chat belongs to its lesson. chats.mode is one of ask, teach, practice, exam.
+  -- A Teach chat belongs to its lesson. chats.mode is one of ask, teach, practice, exam (and guide, the tutorial).
   ALTER TABLE chats ADD COLUMN lesson_id TEXT REFERENCES lessons(id) ON DELETE SET NULL;
   -- Learner evidence per item (F-610, F-807, F-911): every probe, check, practice or exam answer and
   -- card review. Mastery and statuses are derived from it in code (server/learning/learner.ts).
@@ -379,6 +379,8 @@ const MIGRATIONS = [
   CREATE INDEX cards_item ON cards(item_id);
   `,
 ];
+
+export const SCHEMA_VERSION = MIGRATIONS.length;
 
 export function openDb(file: string): Db {
   const db = new DatabaseSync(file);

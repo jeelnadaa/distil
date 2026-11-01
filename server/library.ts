@@ -156,15 +156,15 @@ export function createLibrary(db: Db, now = () => Date.now()) {
       return row ? toChat(row) : null;
     },
 
-    // A lesson chat (F-504) is named after its lesson, and a practice set or exam (F-801) after itself, so
-    // neither gets an automatic title.
-    createChat(folderId: string | null, lesson?: { id: string; title: string }, paper?: { mode: "practice" | "exam"; title: string }): Chat {
+    // A lesson chat (F-504) is named after its lesson, and a practice set, exam (F-801) or the tutorial
+    // (F-1312) after itself, so none gets an automatic title.
+    createChat(folderId: string | null, lesson?: { id: string; title: string }, kind?: { mode: "practice" | "exam" | "guide"; title: string }): Chat {
       if (folderId) requireFolder(folderId);
       const at = now();
-      const named = lesson?.title ?? paper?.title;
+      const named = lesson?.title ?? kind?.title;
       const chat: Chat = {
         id: randomUUID(), folderId, title: named ? cleanName(named, "Chat") : DEFAULT_CHAT_TITLE,
-        titleSource: named ? "manual" : "default", mode: lesson ? "teach" : paper?.mode ?? "ask", lessonId: lesson?.id ?? null,
+        titleSource: named ? "manual" : "default", mode: lesson ? "teach" : kind?.mode ?? "ask", lessonId: lesson?.id ?? null,
         model: null, dial: null, independent: false, createdAt: at, updatedAt: at,
       };
       db.prepare(`INSERT INTO chats (id, folder_id, title, title_source, mode, lesson_id, created_at, updated_at)

@@ -8,6 +8,7 @@ import type { ModelRef, SettingsStore } from "./settings.ts";
 import { type CapStatus, estimateTokens, type UsageStore } from "./usage.ts";
 import { widgetPromptReference } from "./visuals/reference.ts";
 import { repairVisuals } from "./visuals/repair.ts";
+import { GUIDE_SYSTEM } from "./tutorial/tutorial.ts";
 
 export type ChatDeps = {
   library: Library;
@@ -48,7 +49,8 @@ export function prepareTurn(deps: ChatDeps, chatId: string, text: string, model?
   const content = text.trim();
   if (!content) throw new AppError(400, "empty_message", "Type a message first.");
   const { models, fallbacks, caps } = deps.settings.get();
-  const ref = model ?? chat.model ?? models.strong;
+  // The tutorial answers from its guide, which the cheap model does well.
+  const ref = model ?? chat.model ?? (chat.mode === "guide" ? models.cheap ?? models.strong : models.strong);
   if (!ref) throw new AppError(400, "no_model", "Pick a model in Settings first.");
   const chain = deps.providers.withKeys([ref, ...(models.strong ? [models.strong, ...fallbacks.strong] : [])])
     .filter((r) => deps.usage.capStatus(caps, r.provider).state !== "blocked");
@@ -72,10 +74,12 @@ export async function* streamTurn(
   const history: ChatMessage[] = earlier
     .filter((m, i) => m.status === "done" && m.content && !(m.role === "user" && earlier[i + 1] && earlier[i + 1]!.status !== "done"))
     .map((m) => ({ role: m.role, content: m.content }));
+  // Providers want the user to speak first; the tutorial's opening tour is left out (its guide covers it).
+  while (history[0]?.role === "assistant") history.shift();
   history.push({ role: "user", content });
   // The visuals reference follows the fixed instructions, so the cacheable prefix stays the same turn to turn.
   const dial = library.dialFor(chat, deps.settings.get().dial);
-  const system = [ASK_SYSTEM, widgetPromptReference(dial, content), deps.context?.(chat)].filter(Boolean).join("\n\n");
+  const system = chat.mode === "guide" ? GUIDE_SYSTEM : [ASK_SYSTEM, widgetPromptReference(dial, content), deps.context?.(chat)].filter(Boolean).join("\n\n");
 
   const user = messages.add({ chatId: chat.id, role: "user", content, status: "done" });
   const assistant = messages.add({ chatId: chat.id, role: "assistant", content: "", status: "streaming", provider: chain[0]!.provider, model: chain[0]!.id });

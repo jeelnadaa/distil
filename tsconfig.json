@@ -16,5 +16,5 @@
     "noUncheckedIndexedAccess": true,
     "resolveJsonModule": true
   },
-  "include": ["server", "web/src", "test", "vite.config.ts", "vitest.config.ts"]
+  "include": ["server", "web/src", "test", "scripts", "vite.config.ts", "vitest.config.ts"]
 }

@@ -76,8 +76,10 @@ md.renderer.rules.math_block = (tokens, i) => `<div class="math-block">${tex(tok
 // lesson's citations) stay inside.
 const defaultLink = md.renderer.rules.link_open ?? ((tokens, i, options, _env, self) => self.renderToken(tokens, i, options));
 md.renderer.rules.link_open = (tokens, i, options, env, self) => {
-  if (String(tokens[i]!.attrGet("href") ?? "").startsWith("#/")) tokens[i]!.attrSet("class", "cite");
-  else {
+  const href = String(tokens[i]!.attrGet("href") ?? "");
+  if (href.startsWith("#/")) {
+    if (href.startsWith("#/material/")) tokens[i]!.attrSet("class", "cite");
+  } else {
     tokens[i]!.attrSet("target", "_blank");
     tokens[i]!.attrSet("rel", "noopener noreferrer");
   }

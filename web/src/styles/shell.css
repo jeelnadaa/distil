@@ -33,6 +33,8 @@
 }
 .sb__link:hover, .tree__row:hover { background: color-mix(in oklab, var(--text) 6%, transparent); color: var(--text); }
 .sb__link.is-active, .tree__row.is-active { background: var(--surface); color: var(--text); box-shadow: 0 0 0 1px var(--border); }
+/* Top-level links show the current page by fill alone, so they never read as buttons. */
+.sb__link.is-active { box-shadow: none; background: color-mix(in oklab, var(--text) 8%, transparent); }
 .sb__badge { margin-left: auto; font-size: 11px; color: var(--accent); }
 .sb__section { display: flex; align-items: center; justify-content: space-between; padding: var(--s-4) var(--s-2) var(--s-1); }
 .tree { list-style: none; padding: 0; overflow: auto; flex: 1; min-height: 0; }

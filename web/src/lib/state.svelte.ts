@@ -27,6 +27,14 @@ addEventListener("hashchange", () => {
 });
 export const go = (hash: string) => { location.hash = hash; };
 
+// The built-in "How to use Distil" chat (F-1312), brought back if it was deleted.
+export async function openTutorial() {
+  const chat = await attempt(api.openTutorial);
+  if (!chat) return;
+  if (!library.chats.some((c) => c.id === chat.id)) await attempt(refreshLibrary);
+  go(`#/chat/${chat.id}`);
+}
+
 export const library = $state({ folders: [] as Folder[], chats: [] as Chat[], loaded: false });
 export async function refreshLibrary() {
   const data = await api.library();

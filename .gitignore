@@ -6,3 +6,6 @@ design/assets/fonts/Satoshi-LICENSE-FFL.txt
 node_modules/
 dist/
 *.tsbuildinfo
+
+# Built by npm run package
+release/

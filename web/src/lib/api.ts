@@ -39,6 +39,13 @@ export type { Next } from "../../../server/plan/today.ts";
 export type { UsagePeriod, UsageReport, UsageRow };
 // Web search keys for the researcher (F-1209), masked.
 export type SearchProviders = { provider: string | null; providers: { id: string; label: string; preview: string | null }[] };
+// The app itself (F-1304, F-1305): version, a restore waiting for a restart, auto-update.
+export type BackupManifest = { version: string; createdAt: number; folders: number; materials: number };
+export type UpdateStatus = {
+  enabled: boolean; current: string; state: "idle" | "checking" | "available" | "downloading" | "ready" | "error";
+  latest: { version: string; notes: string } | null; progress: number | null; error: string | null; checkedAt: number | null;
+};
+export type AppInfo = { version: string; canRestart: boolean; restore: BackupManifest | null; update: UpdateStatus | null };
 export type TeachView = { session: SessionView | null; checks: CheckView[] };
 export type FolderMaterial = Material & { inherited: boolean };
 export type { Material, StoredChunk };
@@ -189,6 +196,14 @@ export const api = {
   removeSearchKey: (id: string) => json<SearchProviders>("DELETE", `/search-providers/${id}/key`),
   setSearchProvider: (provider: string | null) => json<SearchProviders>("PATCH", "/search-providers", { provider }),
   research: (folderId: string, topic: string) => json<Job>("POST", `/folders/${folderId}/research`, { topic }),
+  appInfo: () => json<AppInfo>("GET", "/app"),
+  openTutorial: () => json<Chat>("POST", "/tutorial", {}),
+  restart: () => json<{ ok: true }>("POST", "/app/restart", {}),
+  checkUpdate: () => json<AppInfo>("POST", "/app/update/check", {}),
+  installUpdate: () => json<AppInfo>("POST", "/app/update/install", {}),
+  backupUrl: "/api/backup",
+  restoreBackup: async (file: File): Promise<AppInfo> => (await call("POST", "/backup/restore", undefined, undefined, file)).json(),
+  cancelRestore: () => json<AppInfo>("DELETE", "/backup/restore"),
   usageReport: (period: UsagePeriod) => json<UsageReport>("GET", `/usage/report?period=${period}`),
   usageExportUrl: (period: UsagePeriod) => `/api/usage/export.csv?period=${period}`,
 

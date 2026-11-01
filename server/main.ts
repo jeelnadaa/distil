@@ -34,20 +34,26 @@ import { createResearcher } from "./research/researcher.ts";
 import { createSettings } from "./settings.ts";
 import type { FetchFn } from "./materials/web.ts";
 import { createUsage } from "./usage.ts";
+import { applyPendingRestore, createBackup } from "./backup.ts";
+import type { Updates } from "./updates.ts";
+import { createTutorial } from "./tutorial/tutorial.ts";
 
 export const defaultDataDir = () => process.env.DISTIL_DATA_DIR ?? join(homedir(), "Distil");
 
 // Wires the stores to the HTTP app. Shared by the production server and the Vite dev server.
-// fetch: replaced in tests so links resolve without the network.
-export function createServer({ port, dataDir = defaultDataDir(), fetch }: { port: number; dataDir?: string; fetch?: FetchFn }) {
+// fetch: replaced in tests so links resolve without the network. restart and updates: from the desktop launcher.
+export function createServer({ port, dataDir = defaultDataDir(), fetch, restart, updates }: { port: number; dataDir?: string; fetch?: FetchFn; restart?: () => void; updates?: Updates }) {
   mkdirSync(dataDir, { recursive: true });
+  const log = (msg: string) => console.error(`[distil] ${msg}`);
+  applyPendingRestore(dataDir, log);
   const db = openDb(join(dataDir, "distil.db"));
   const settings = createSettings(db);
   const messages = createMessages(db);
   messages.recoverInterrupted();
   const library = createLibrary(db);
   library.removeEmptyChats();
-  const log = (msg: string) => console.error(`[distil] ${msg}`);
+  const tutorial = createTutorial({ db, library, messages });
+  tutorial.addOnce();
   const materials = createMaterials(db, join(dataDir, "materials"));
   const jobs = createJobs(db, { log });
   const ledger = createLedger(db);
@@ -104,6 +110,10 @@ export function createServer({ port, dataDir = defaultDataDir(), fetch }: { port
     cards,
     researcher,
     secrets,
+    backup: createBackup({ db, dataDir }),
+    tutorial,
+    restart,
+    updates,
     context: chatContext(db, retention.digest),
     log,
     fetch,
