@@ -11,13 +11,13 @@ import { queueIndexing } from "./retrieve.ts";
 
 const Size = z.enum(LOCAL_SIZES);
 const size = (raw: string): LocalSize => Size.parse(raw);
-export const downloadLabel = (s: LocalSize) => `Downloading the ${LOCAL_MODELS[s].label.toLowerCase()} search model`;
+export const downloadLabel = (s: LocalSize) => `Downloading the ${LOCAL_MODELS[s].label} search model`;
 
 export function registerModelDownload(jobs: Jobs, local: LocalModels, after: (s: LocalSize) => void) {
-  jobs.register("embed-model", async (job, { progress }) => {
+  jobs.register("embed-model", async (job, { progress, signal }) => {
     const s = size(String(job.params.size));
     // Shown in megabytes, so the activity panel reads like a download.
-    await local.download(s, (done, total) => progress(Math.round(done / 1e6), Math.max(1, Math.round(total / 1e6))));
+    await local.download(s, (done, total) => progress(Math.round(done / 1e6), Math.max(1, Math.round(total / 1e6))), signal);
     after(s);
   });
 }

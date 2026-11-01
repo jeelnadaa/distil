@@ -4,7 +4,7 @@ import type { Db } from "./db.ts";
 // key: which of the provider's saved keys to use; its default key when absent.
 const ModelRef = z.object({ provider: z.string().min(1), id: z.string().min(1), key: z.string().min(1).optional() });
 const Limit = z.number().int().positive().nullable();
-export const LOCAL_SIZES = ["small", "medium", "high"] as const;
+export const LOCAL_SIZES = ["low", "medium", "high"] as const;
 // Meaning-based search (F-1005): off, an embedding model from a provider key, or a local model.
 const Embeddings = z.discriminatedUnion("mode", [
   z.object({ mode: z.literal("off") }),

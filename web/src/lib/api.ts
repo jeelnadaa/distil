@@ -14,7 +14,7 @@ import type { Compiled, StoredBrief } from "../../../server/plan/brief.ts";
 import type { Lesson, Plan, PlanKind, SavedPlan, Unit } from "../../../server/plan/store.ts";
 import type { TodayLesson, TodayView } from "../../../server/plan/today.ts";
 import type { PlanView } from "../../../server/plan/view.ts";
-import type { ModelRef, Settings } from "../../../server/settings.ts";
+import type { LocalSize, ModelRef, Settings } from "../../../server/settings.ts";
 import type { CapStatus } from "../../../server/usage.ts";
 import type { Confidence, PublicCheck, Result } from "../../../server/teach/checks.ts";
 import type { ActionKind, Answer, SessionView, TeachEvent } from "../../../server/teach/engine.ts";
@@ -36,7 +36,7 @@ export type LessonDetail = {
 };
 // Search by meaning (F-1005): the local models and how far indexing has got for the chosen model.
 export type EmbeddingsView = {
-  local: { size: "small" | "medium" | "high"; label: string; note: string; installed: boolean }[];
+  local: { size: LocalSize; label: string; note: string; installed: boolean }[];
   index: { done: number; total: number } | null;
 };
 export type ProviderKey = { id: string; label: string; preview: string };

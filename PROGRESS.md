@@ -9,7 +9,7 @@ Living status log. Update in the same commit as every change.
 ## Next up
 
 1. Phase 5 — Interactives: visuals and quiz widgets inside lessons (F-618's second half, F-708).
-2. Still open from Phase 4 (should/could): opening recall questions from the previous lesson (F-614), predict-before-reveal prompts (F-608), dictation (F-615). Downloading a local embedding model has only been checked up to the consent dialog; the download itself waits for the owner's go-ahead.
+2. Still open from Phase 4 (should/could): opening recall questions from the previous lesson (F-614), predict-before-reveal prompts (F-608), dictation (F-615).
 
 ## Phase checklist
 
@@ -144,7 +144,7 @@ Living status log. Update in the same commit as every change.
 
 ### 2026-11-01 · Phase 4 — retrieval
 - Owner decisions for Phase 4 recorded in `plan.md` §2 ("Teach decisions"): all three search kinds, optional confidence, two repairs then move on, probe only when it helps.
-- Search by meaning (F-1005): Settings › Models offers Off, a provider embedding model (Gemini and OpenAI-compatible keys list theirs) or a model on this computer (Small, Medium, High through `@huggingface/transformers` — added this phase; its blocked install scripts only fetch CUDA builds and image tools, which Distil doesn't use). A local model downloads only after a dialog shows its exact size from Hugging Face, and can be removed. Chunks are embedded by a background job (migration 12, `chunk_vectors`) that runs when the model changes and after a file is read, and waits out per-minute quota limits instead of failing.
+- Search by meaning (F-1005): Settings › Models offers Off, a provider embedding model (Gemini and OpenAI-compatible keys list theirs) or a model on this computer (Low, Medium, High through `@huggingface/transformers` — added this phase; its blocked install scripts only fetch CUDA builds and image tools, which Distil doesn't use). A local model downloads only after a dialog shows its exact size from Hugging Face, and can be removed. Chunks are embedded by a background job (migration 12, `chunk_vectors`) that runs when the model changes and after a file is read, and waits out per-minute quota limits instead of failing.
 - Retrieval (F-1004): keyword and meaning rankings merged by reciprocal rank fusion, falling back to keyword search when embeddings are off or failing; for lesson items it gathers each item's own source passages plus what every other file in the folder says about it (F-617).
 - Checked live on Gemini `gemini-embedding-001`: the free tier's 30k tokens a minute limit is waited out while the textbook folder indexes. 147 tests.
 
@@ -154,6 +154,8 @@ Living status log. Update in the same commit as every change.
 - After an answer: right moves on (a right answer marked "guess" gets one follow-up first); wrong, partly or "I don't know" gets a repair, at most two, then the step is marked shaky and the lesson moves on; a recap names what was learned, what is shaky and the next lesson, and finishes the lesson (F-605–F-607, F-610, F-613). Probe answers are recorded as evidence without moving statuses.
 - Lesson screen: a lesson document with citations that open the material viewer, note cards for the learner, check cards (folded until opened, keys 1–6 and Ctrl+Enter), Probe / Teaching / Recap dividers, quick actions (explain differently, simpler, deeper, example), an ask box for questions mid-lesson, and a session plan panel (F-602, F-603, F-609, F-611, F-612, F-616). Replaces the Phase 3 lesson prompt and the tracker (`server/plan/progress.ts` removed); lesson chats no longer take plain messages.
 - Checked live on Gemini 3.5 Flash Lite through a whole lesson (probe, four steps, a repair, a guess follow-up, a quick action, a question, two shaky steps, recap): statuses moved, the lesson was marked done. 153 tests.
+
+- Local search models (owner): the sizes are named Low, Medium and High. Distil now downloads a model's files itself (each to a `.part` file, the model file last, so a stopped download never looks installed) and loads them only from the data folder: the library's own download cache wrote nothing to disk when run inside the dev server. Checked live: Low (24 MB) downloaded from Settings, indexed all 575 textbook sections on this computer, and meaning search found "Measures of the Spread of the Data" for "how spread out the numbers are". 155 tests.
 
 ## Open questions
 

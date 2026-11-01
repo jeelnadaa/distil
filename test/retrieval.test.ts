@@ -1,4 +1,4 @@
-import { mkdtempSync } from "node:fs";
+import { existsSync, mkdtempSync, readdirSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
@@ -10,7 +10,7 @@ import { createSearch } from "../server/materials/search.ts";
 import { createMaterials } from "../server/materials/store.ts";
 import type { Providers } from "../server/providers/service.ts";
 import { type EmbedRequest, ProviderError } from "../server/providers/types.ts";
-import type { LocalModels } from "../server/retrieval/local.ts";
+import { createLocalModels, type LocalModels } from "../server/retrieval/local.ts";
 import { createRetrieval } from "../server/retrieval/retrieve.ts";
 import { cosine, createVectors } from "../server/retrieval/vectors.ts";
 import { createSettings } from "../server/settings.ts";
@@ -111,5 +111,43 @@ describe("retrieval", () => {
   it("compares vectors by angle", () => {
     expect(cosine([1, 0], [2, 0])).toBeCloseTo(1);
     expect(cosine([1, 0], [0, 3])).toBeCloseTo(0);
+  });
+});
+
+describe("local models", () => {
+  // A fake Hugging Face: the repo's file list, then each file's bytes; failAt breaks one file's download.
+  const hub = (failAt?: string) => (async (url: string) => {
+    if (url.includes("/tree/main")) {
+      return Response.json([
+        { path: "config.json", size: 2 }, { path: "tokenizer.json", size: 3 }, { path: "README.md", size: 50 },
+        { path: "onnx/model_quantized.onnx", size: 9, lfs: { size: 4 } }, { path: "onnx/model.onnx", size: 99 },
+      ]);
+    }
+    const file = url.split("/resolve/main/")[1]!;
+    if (file === failAt) return new Response("nope", { status: 500 });
+    return new Response({ "config.json": "{}", "tokenizer.json": "tok", "onnx/model_quantized.onnx": "onnx" }[file] ?? "");
+  }) as unknown as typeof fetch;
+
+  it("reports the download size and fetches only the files the model needs, the model file last", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "distil-models-"));
+    const local = createLocalModels(dir, hub());
+    expect(await local.size("low")).toBe(2 + 3 + 4);
+    const seen: number[] = [];
+    await local.download("low", (done) => seen.push(done));
+    expect(local.installed("low")).toBe(true);
+    expect(seen.at(-1)).toBe(9);
+    const folder = join(dir, "Xenova", "all-MiniLM-L6-v2");
+    expect(readdirSync(folder).sort()).toEqual(["config.json", "onnx", "tokenizer.json"]);
+    expect(readFileSync(join(folder, "onnx", "model_quantized.onnx"), "utf8")).toBe("onnx");
+    local.remove("low");
+    expect(existsSync(folder)).toBe(false);
+  });
+
+  it("doesn't look installed after a failed download", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "distil-models-"));
+    const local = createLocalModels(dir, hub("onnx/model_quantized.onnx"));
+    await expect(local.download("low", () => {})).rejects.toMatchObject({ code: "download_failed" });
+    expect(local.installed("low")).toBe(false);
+    await expect(local.embed("low", ["x"])).rejects.toMatchObject({ code: "model_missing" });
   });
 });
