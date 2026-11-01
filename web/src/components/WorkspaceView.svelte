@@ -175,7 +175,7 @@
         {:else if tab === "cards"}
           <CardsTab folderId={id} jobs={mine} onchange={refresh} />
         {:else if tab === "progress"}
-          <ProgressTab folderId={id} jobs={mine} onchange={refresh} />
+          <ProgressTab folderId={id} />
         {:else if tab === "practice"}
           <PracticeTab folderId={id} {plan} items={counted.length} />
         {:else if tab === "plan"}

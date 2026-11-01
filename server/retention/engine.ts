@@ -34,7 +34,7 @@ export type ProgressView = {
 export type GraphView = {
   units: { id: string; title: string; items: number; linked: boolean }[];
   unit: string | null;
-  nodes: { id: string; title: string; type: string; lesson: string | null; mastery: number; level: Level; source: { materialId: string; loc: number } | null }[];
+  nodes: { id: string; title: string; statement: string; type: string; lesson: string | null; mastery: number; level: Level; source: { materialId: string; loc: number } | null }[];
   edges: { from: string; to: string; kind: "follows" | "supports" }[];
   lessons: Record<string, string>;
 };
@@ -250,7 +250,7 @@ export function createRetention(deps: RetentionDeps) {
         const it = scope.items.get(id)!;
         const m = map.get(id) ?? { value: 0, level: "new" as Level };
         const a = anchor.get(id) as { material_id: string; loc: number } | undefined;
-        return { id, title: it.title, type: it.type, lesson: scope.lessonOf.get(id) ?? null, mastery: m.value, level: m.level, source: a ? { materialId: a.material_id, loc: a.loc } : null };
+        return { id, title: it.title, statement: it.statement, type: it.type, lesson: scope.lessonOf.get(id) ?? null, mastery: m.value, level: m.level, source: a ? { materialId: a.material_id, loc: a.loc } : null };
       }),
       edges,
       lessons: Object.fromEntries(Object.entries(scope.lessons).filter(([id]) => scope.ids.some((i) => scope.lessonOf.get(i) === id))),

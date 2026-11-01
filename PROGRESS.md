@@ -188,6 +188,11 @@ Living status log. Update in the same commit as every change.
 - Streaks and XP (F-931, F-932, F-934), off by default: a streak counts days with verified learning or a finished lesson and forgives one missed day a week; XP only for unaided right answers (10) and good reviews (2). Shown as one quiet line on Today.
 - Checked live on Gemini 3.5 Flash Lite: 14 cards written for taught statistics items (all four kinds), a full review session by keyboard (cloze hiding, a learning card coming back, "Explain this"), 8 items lifted to solid by the reviews, a 60-item unit mapped into 63 links, Anki export, the settings and the Independent switch, phone layouts. Fixed during testing: a fast second key press could grade a card twice; large graphs were scaled down until unreadable. 237 tests.
 
+### 2026-11-01 · Interactive knowledge graph
+- Owner feedback: the graph should be interactive, open full screen, and be reachable while learning. Nodes can now be dragged (positions are kept in the browser per unit, with "Reset layout"); edges follow the nodes. Selecting an item shows its statement, mastery, lesson, what it builds on and what leads to it (each one selectable) and "Open in material"; its links are highlighted and the rest dimmed. A full-screen button opens the graph over the whole window (Esc closes it).
+- Lesson chats have a graph button in the top bar: it opens the lesson's unit full screen with the lesson's items outlined, and the unit can be mapped from there.
+- `GraphPanel` now holds the unit picker, mapping (watches its own job), full screen and the detail card; the Progress tab and lesson chats both use it.
+
 ## Open questions
 
 See `plan.md` §18.

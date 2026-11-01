@@ -7,6 +7,7 @@
   import Composer from "./Composer.svelte";
   import Dialog from "./Dialog.svelte";
   import Icon from "./Icon.svelte";
+  import GraphPanel from "./GraphPanel.svelte";
   import LessonProgress from "./LessonProgress.svelte";
   import DialSelect, { inheritedDial } from "./DialSelect.svelte";
   import LessonView from "./LessonView.svelte";
@@ -127,6 +128,13 @@
     if (updated) chat.dial = updated.dial;
   }
 
+  // The knowledge graph of the lesson's unit, full screen, with the lesson's items outlined.
+  let lessonGraph = $state<{ folderId: string; unit: string; items: string[] } | null>(null);
+  async function openGraph() {
+    const d = chat?.lessonId ? await attempt(() => api.lesson(chat!.lessonId!)) : null;
+    if (d) lessonGraph = { folderId: d.folderId, unit: d.unit.id, items: d.lesson.items };
+  }
+
   // F-925: a chat in a folder knows what was studied there, unless it's set to Independent.
   async function toggleIndependent() {
     if (!chat) return;
@@ -173,7 +181,10 @@
     {/if}
   </nav>
   <span class="topbar__spacer"></span>
-  {#if chat?.lessonId}<LessonProgress lessonId={chat.lessonId} tick={progressTick} />{/if}
+  {#if chat?.lessonId}
+    <button type="button" class="btn btn--ghost btn--icon btn--sm" aria-label="Knowledge graph" data-tip="Knowledge graph of this unit" onclick={openGraph}><Icon name="graph" size="sm" /></button>
+    <LessonProgress lessonId={chat.lessonId} tick={progressTick} />
+  {/if}
   {#if meter && chat?.mode !== "practice" && chat?.mode !== "exam"}
     <span class="meter" data-tip="Tokens used in this chat{contextPct !== null ? ` · last prompt filled ${contextPct.toFixed(0)} % of the model's context` : ''}">
       {fmt.format(meter.input + meter.output)} tokens
@@ -240,6 +251,10 @@
     {/if}
   </Composer>
 </div>
+{/if}
+
+{#if lessonGraph}
+  {#key progressTick}<GraphPanel folderId={lessonGraph.folderId} unit={lessonGraph.unit} highlight={lessonGraph.items} onclose={() => (lessonGraph = null)} />{/key}
 {/if}
 
 <Dialog bind:open={capHit.open} title="Token cap reached" eyebrow="Limit" danger>
