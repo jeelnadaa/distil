@@ -2,11 +2,12 @@
   import ActivityDock from "./ActivityDock.svelte";
   import SoundButton from "./SoundButton.svelte";
   import { tick, untrack } from "svelte";
-  import { api, ApiError, type CapStatus, type Chat, type Item, type LessonDetail, type Message, type Meter, type ModelRef } from "../lib/api.ts";
+  import { api, ApiError, type CapStatus, type Chat, type Message, type Meter, type ModelRef } from "../lib/api.ts";
   import { app, attempt, folderPath, library, loadModels, nav, pending, refreshLibrary, toast } from "../lib/state.svelte.ts";
   import Composer from "./Composer.svelte";
   import Dialog from "./Dialog.svelte";
   import Icon from "./Icon.svelte";
+  import LessonProgress from "./LessonProgress.svelte";
   import Markdown from "./Markdown.svelte";
   import ModelSelect from "./ModelSelect.svelte";
 
@@ -24,6 +25,8 @@
   let titleDraft = $state("");
   let scroller = $state<HTMLElement>();
   let pinned = true;
+  // Bumped when a reply moved the lesson's items, so the lesson button reloads.
+  let progressTick = $state(0);
 
   const fmt = new Intl.NumberFormat(undefined, { notation: "compact", maximumFractionDigits: 1 });
   const path = $derived(chat ? folderPath(chat.folderId) : []);
@@ -55,23 +58,6 @@
 
   $effect(() => { loadModels(); });
 
-  // A lesson chat shows its lesson: where it sits in the plan and how far its items and its unit have got.
-  let lesson = $state<LessonDetail | null>(null);
-  const loadLesson = async (lessonId: string | null) => {
-    const detail = lessonId ? await api.lesson(lessonId).catch(() => null) : null;
-    if (chat?.lessonId === lessonId) lesson = detail;
-  };
-  $effect(() => { const lessonId = chat?.lessonId ?? null; untrack(() => loadLesson(lessonId)); });
-  const learned = (item: Item) => item.status !== "pending" && item.status !== "planned";
-  const itemState = (item: Item) => (item.status === "checked" || item.status === "mastered" ? "checked" : learned(item) ? "taught" : "todo");
-  const taught = $derived(lesson?.items.filter(learned).length ?? 0);
-  const checked = $derived(lesson?.items.filter((i) => itemState(i) === "checked").length ?? 0);
-
-  async function finishLesson() {
-    if (!lesson) return;
-    if (await attempt(() => api.updateLesson(lesson!.lesson.id, { status: "done" }))) loadLesson(lesson.lesson.id);
-  }
-
   async function scrollToEnd() {
     await tick();
     if (pinned && scroller) scroller.scrollTop = scroller.scrollHeight;
@@ -101,9 +87,10 @@
           patch(() => event.message);
           meter = event.meter;
           capWarn = event.cap.state === "warn" ? event.cap : null;
-          if (chat?.lessonId) loadLesson(chat.lessonId);
         } else if (event.type === "error") {
           patch(() => event.message);
+        } else if (event.type === "progress") {
+          progressTick++;
         } else if (event.type === "title" && chat) {
           chat.title = event.title;
           const entry = library.chats.find((c) => c.id === chat!.id);
@@ -166,6 +153,7 @@
     {/if}
   </nav>
   <span class="topbar__spacer"></span>
+  {#if chat?.lessonId}<LessonProgress lessonId={chat.lessonId} tick={progressTick} />{/if}
   {#if meter}
     <span class="meter" data-tip="Tokens used in this chat{contextPct !== null ? ` · last prompt filled ${contextPct.toFixed(0)} % of the model's context` : ''}">
       {fmt.format(meter.input + meter.output)} tokens
@@ -175,31 +163,6 @@
   <SoundButton />
   <ActivityDock />
 </header>
-
-{#if lesson}
-  <section class="lesson-bar" aria-label="Lesson">
-    <div class="lesson-bar__inner">
-      <div class="lesson-bar__where">
-        <span class="eyebrow">Unit {lesson.unitNo} · Lesson {lesson.index} of {lesson.total}</span>
-        <span class="body-sm lesson-bar__unit" title={lesson.unit.title}>{lesson.unit.title}</span>
-      </div>
-      <div class="lesson-bar__progress">
-        <span class="lesson-bar__items" role="img" aria-label="{taught} of {lesson.items.length} items taught, {checked} checked">
-          {#each lesson.items as item (item.id)}<i class="is-{itemState(item)}" title="{item.title} · {itemState(item) === 'todo' ? 'not taught yet' : itemState(item)}"></i>{/each}
-        </span>
-        <span class="caption muted">{taught}/{lesson.items.length} taught · {checked} checked · unit {lesson.unitLessons.done}/{lesson.unitLessons.total} lessons done</span>
-      </div>
-      <div class="lesson-bar__actions">
-        {#if lesson.lesson.status === "done"}
-          <span class="status status--done"><i></i>Done</span>
-        {:else}
-          <button type="button" class="btn btn--ghost btn--sm" onclick={finishLesson}><Icon name="check" size="sm" />Mark done</button>
-        {/if}
-        <a class="btn btn--ghost btn--sm" href="#/folder/{lesson.folderId}/plan">Plan</a>
-      </div>
-    </div>
-  </section>
-{/if}
 
 <div class="scroll" bind:this={scroller} {onscroll}>
   <div class="page thread">
@@ -271,16 +234,6 @@
   .title-btn:hover { background: var(--surface-sunken); }
   .title-input { height: 30px; width: min(420px, 50vw); }
   .cap-warn { width: min(var(--content-max), 100%); margin: 0 auto var(--s-2); }
-  .lesson-bar { border-bottom: 1px solid var(--border); padding: var(--s-2) var(--s-5); }
-  .lesson-bar__inner { width: min(var(--content-max), 100%); margin: 0 auto; display: flex; align-items: center; gap: var(--s-2) var(--s-5); flex-wrap: wrap; }
-  .lesson-bar__where { display: grid; min-width: 0; flex: 1 1 200px; }
-  .lesson-bar__unit { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .lesson-bar__progress { display: grid; gap: 4px; }
-  .lesson-bar__items { display: flex; flex-wrap: wrap; gap: 3px; }
-  .lesson-bar__items i { width: 14px; height: 6px; border-radius: 3px; border: 1px solid var(--border-control); }
-  .lesson-bar__items .is-taught { background: color-mix(in oklab, var(--accent) 45%, transparent); border-color: var(--accent); }
-  .lesson-bar__items .is-checked { background: var(--accent); border-color: var(--accent); }
-  .lesson-bar__actions { display: flex; align-items: center; gap: var(--s-2); }
   .link { color: var(--text-muted); text-decoration: underline; text-underline-offset: 3px; }
   .link:hover { color: var(--text); }
 </style>

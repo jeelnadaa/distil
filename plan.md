@@ -282,6 +282,8 @@ Theory borrowed from LearnHarness and kept: **probe → plan → teach one reaso
 | F-614 | Opening retrieval: each new session starts with 1–3 recall questions from the previous lesson | S |
 | F-615 | Dictation (speech-to-text) for answers and thinking fields | C |
 | F-616 | Keyboard-first answering (1-4, j/k, Enter) | S |
+| F-617 | **Teach from every source on the topic** (owner, 2026-11-01): each item is taught from all of its sources and from whatever else the folder's materials say about the same topic (retrieval across files: textbook, notes, slides, transcripts), so nothing a material teaches on it is left out; the teacher cites where each part came from | M |
+| F-618 | **Format fits the content, not one template** (owner, 2026-11-01): a definition gets an example and a non-example, a formula a derivation or worked numbers, a process its steps, a comparison a table, a misconception a counter-example; checks vary too (MCQ, numeric, short answer, ordering, explain-why), and Phase 5 adds visuals and quiz widgets | M |
 
 ## 7. Interactive learning (fixes P4, P5)
 
@@ -552,7 +554,7 @@ Each phase ends with: features working end-to-end, tests green, docs updated (`P
 | 1 | Foundation | App shell, local data store, settings, BYOK providers + model picker, streaming chat, folders (5 levels) + chats, auto-naming, markdown/math/code rendering, token recording + chat meter + caps (F-1101, F-1102, F-1104, F-1105) | Create folder → chat → talk to a model; usage recorded; cap blocks |
 | 2 | Materials & Ledger | Ingestion (PDF/slides/docs/images/web/YouTube), chunking, extraction, recall audit, dedup, ledger UI, cost pre-flight, material viewer | A real textbook yields a well-formed ledger: every item typed, titled, stated and anchored to a page that holds its quote (checked automatically; owner review not required) |
 | 3 | Study Plan | Brief Compiler, planner with code-enforced coverage, plan map/outline (data-only rendering, §7.5), deadline schedule, today view | Plan covers 100 % of ledger; schedule re-balances |
-| 4 | Teach | Retrieval with keyword index + configurable embeddings (F-1004, F-1005), probe, session plan panel, checks + confidence + thinking, repair loop, item status updates, recap, quick actions | Full lesson from plan click to recap; ledger statuses move |
+| 4 | Teach | Retrieval with keyword index + configurable embeddings (F-1004, F-1005), teaching from every source on a topic (F-617), format chosen per item (F-618), probe, session plan panel, checks + confidence + thinking, repair loop, item status updates, recap, quick actions | Full lesson from plan click to recap; ledger statuses move |
 | 5 | Interactives | Widget grammars + renderer in the design language (§7.5), SVG sanitiser, Distil kit for sandboxed mini-apps with test-before-show and design lint, visual maker, interactivity dial | Dial demonstrably changes behaviour; mini-app errors self-heal; every visual follows the active theme, palette and font with no hard-coded styling |
 | 6 | Practice & Exams | Practice sets, mock exams, timer, grading incl. handwritten, results → mastery/cards | Mock exam generated, taken, graded |
 | 7 | Retention | Flashcards + FSRS, mastery view (levels/percent setting), recommender, streaks/XP (off by default), knowledge graph as data rendered by Distil (§7.5), sibling-chat digest | Daily loop: today view → lesson → reviews |

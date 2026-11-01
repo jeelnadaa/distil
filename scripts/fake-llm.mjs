@@ -49,7 +49,7 @@ createServer(async (req, res) => {
     const system = messages.find((m) => m.role === "system")?.content ?? "";
     const prompt = messages.at(-1).content;
     // Ledger agents (and the plan agents above, sent the same way): one item per sentence for extraction, nothing missed on audit, no merges.
-    const ledger = /^You compile a Study Brief/.test(system) ? brief() : /^You plan a course of study/.test(system) ? plan(prompt) : /coverage ledger/i.test(system) ? (() => {
+    const ledger = /^You keep the record of a tutoring lesson/.test(system) ? { taught: [1], checked: [] } : /^You compile a Study Brief/.test(system) ? brief() : /^You plan a course of study/.test(system) ? plan(prompt) : /coverage ledger/i.test(system) ? (() => {
       if (/remove duplicates/i.test(system)) return { merges: [] };
       if (/audit/i.test(system)) return { missed: [] };
       const chunk = prompt.split("<chunk>")[1]?.split("</chunk>")[0] ?? "";

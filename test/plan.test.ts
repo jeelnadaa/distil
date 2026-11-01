@@ -12,6 +12,7 @@ import { Brief } from "../server/learning/types.ts";
 import { createBriefs } from "../server/plan/brief.ts";
 import { chatContext } from "../server/plan/context.ts";
 import { registerPlanner } from "../server/plan/planner.ts";
+import { lessonProgress } from "../server/plan/progress.ts";
 import { createPlans } from "../server/plan/store.ts";
 import type { Providers } from "../server/providers/service.ts";
 import { createSettings } from "../server/settings.ts";
@@ -41,7 +42,8 @@ function setup(reply: (prompt: string) => unknown) {
     withKeys: (chain: unknown[]) => chain,
   } as unknown as Providers;
   settings.update({ models: { strong: { provider: "google", id: "strong" }, cheap: { provider: "google", id: "cheap" } } });
-  registerPlanner(jobs, { providers, settings, usage: createUsage(db), db, plans, briefs, learner });
+  const usage = createUsage(db);
+  registerPlanner(jobs, { providers, settings, usage, db, plans, briefs, learner });
   const folder = library.createFolder("Statistics", null);
   const add = (title: string) => ledger.addManual(folder.id, { type: "concept", title, statement: `${title}, stated.` });
   const plan = async (mode: "build" | "extend" = "build") => {
@@ -49,10 +51,31 @@ function setup(reply: (prompt: string) => unknown) {
     jobs.enqueue("plan", "Planning", { folderId: folder.id, params: { planId, mode } });
     await jobs.idle();
   };
-  return { db, library, ledger, plans, briefs, folder, add, plan, prompts };
+  const progress = lessonProgress({ providers, settings, usage, plans, ledger, learner });
+  return { db, library, ledger, plans, briefs, folder, add, plan, prompts, progress };
 }
 
 const lesson = (key: string, items: string[], after: string[] = []) => ({ key, title: `Lesson ${key}`, summary: "", kind: "lesson", minutes: 30, weight: 1, aids: [], items, after });
+
+describe("lesson progress", () => {
+  it("records what a lesson chat taught and checked, and finishes the lesson once every item is checked", async () => {
+    const t = setup((prompt) => !prompt.includes("Latest exchange") ? { units: [{ title: "Basics", lessons: [lesson("a", ["i1", "i2"])] }] }
+      : prompt.includes("Right") ? { taught: [], checked: [1, 2, 7] } : { taught: [1, 2], checked: [] });
+    const items = ["Mean", "Median"].map(t.add);
+    await t.plan();
+    const first = t.plans.active(t.folder.id)!.lessons[0]!;
+    const chat = t.library.createChat(t.folder.id, first);
+    const status = () => items.map((i) => t.ledger.get(i.id).status);
+
+    expect(await t.progress(chat, [{ role: "user", content: "Start" }, { role: "assistant", content: "The mean is..." }], "m1")).toBe(true);
+    expect(status()).toEqual(["taught", "taught"]);
+    expect(await t.progress(chat, [{ role: "user", content: "Start" }, { role: "assistant", content: "The mean is..." }], "m2")).toBe(false);
+    expect(t.plans.lesson(first.id).status).not.toBe("done");
+    expect(await t.progress(chat, [{ role: "user", content: "3" }, { role: "assistant", content: "Right." }], "m3")).toBe(true);
+    expect(status()).toEqual(["checked", "checked"]);
+    expect(t.plans.lesson(first.id).status).toBe("done");
+  });
+});
 
 describe("planner", () => {
   it("plans every item even when the model keeps leaving one out", async () => {

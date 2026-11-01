@@ -15,6 +15,7 @@ import { createMaterials } from "./materials/store.ts";
 import { createMessages } from "./messages.ts";
 import { createBriefs } from "./plan/brief.ts";
 import { chatContext } from "./plan/context.ts";
+import { lessonProgress } from "./plan/progress.ts";
 import { registerPlanner } from "./plan/planner.ts";
 import { createPlans } from "./plan/store.ts";
 import { createProviders } from "./providers/service.ts";
@@ -65,6 +66,7 @@ export function createServer({ port, dataDir = defaultDataDir(), fetch }: { port
     jobs,
     providers,
     context: chatContext(db, plans, ledger),
+    progress: lessonProgress({ providers, settings, usage, plans, ledger, learner }),
     log,
     fetch,
   };
