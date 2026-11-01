@@ -15,7 +15,7 @@ import type { Lesson, Plan, PlanKind, SavedPlan, Unit } from "../../../server/pl
 import type { TodayLesson, TodayView } from "../../../server/plan/today.ts";
 import type { PlanView } from "../../../server/plan/view.ts";
 import type { LocalSize, ModelRef, Settings } from "../../../server/settings.ts";
-import type { CapStatus } from "../../../server/usage.ts";
+import type { CapStatus, UsagePeriod, UsageReport, UsageRow } from "../../../server/usage.ts";
 import type { Confidence, PublicCheck, Result } from "../../../server/teach/checks.ts";
 import type { ActionKind, Answer, SessionView, TeachEvent } from "../../../server/teach/engine.ts";
 import type { CheckView, Step } from "../../../server/teach/store.ts";
@@ -36,6 +36,9 @@ export type { Dial, Visual };
 export type { AnswerValue, Grade, Level, NewPaper, Paper, PaperSummary, PaperView, QuestionView, Report, Scope };
 export type { Card, CardGrade, CardKind, GraphView, ItemMastery, MasteryLevel, ProgressView, Queue, QueueCard, Stats };
 export type { Next } from "../../../server/plan/today.ts";
+export type { UsagePeriod, UsageReport, UsageRow };
+// Web search keys for the researcher (F-1209), masked.
+export type SearchProviders = { provider: string | null; providers: { id: string; label: string; preview: string | null }[] };
 export type TeachView = { session: SessionView | null; checks: CheckView[] };
 export type FolderMaterial = Material & { inherited: boolean };
 export type { Material, StoredChunk };
@@ -181,6 +184,13 @@ export const api = {
   today: () => json<TodayView>("GET", `/today?today=${localDay()}`),
 
   usage: () => json<{ today: number; month: number; cap: CapStatus }>("GET", "/usage"),
+  searchProviders: () => json<SearchProviders>("GET", "/search-providers"),
+  addSearchKey: (id: string, key: string) => json<SearchProviders>("POST", `/search-providers/${id}/key`, { key }),
+  removeSearchKey: (id: string) => json<SearchProviders>("DELETE", `/search-providers/${id}/key`),
+  setSearchProvider: (provider: string | null) => json<SearchProviders>("PATCH", "/search-providers", { provider }),
+  research: (folderId: string, topic: string) => json<Job>("POST", `/folders/${folderId}/research`, { topic }),
+  usageReport: (period: UsagePeriod) => json<UsageReport>("GET", `/usage/report?period=${period}`),
+  usageExportUrl: (period: UsagePeriod) => `/api/usage/export.csv?period=${period}`,
 
   // Sends a message and calls onEvent for each streamed event until the turn ends or is aborted.
   send: (chatId: string, text: string, model: ModelRef | undefined, onEvent: (e: TurnEvent) => void, signal: AbortSignal) =>

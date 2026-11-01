@@ -136,6 +136,7 @@
 
   <div class="sb__foot">
     <a class="sb__link" class:is-active={nav.route.name === "settings"} href="#/settings"><Icon name="gear" size="sm" />Settings</a>
+    <a class="btn btn--ghost btn--icon btn--sm" class:is-active={nav.route.name === "usage"} href="#/usage" aria-label="Usage" data-tip="Usage"><Icon name="chart" size="sm" /></a>
     <button type="button" class="btn btn--ghost btn--icon btn--sm" aria-label="Switch to {theme === 'dark' ? 'light' : 'dark'} theme" onclick={flipTheme}>
       <Icon name={theme === "dark" ? "sun" : "moon"} size="sm" />
     </button>

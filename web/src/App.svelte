@@ -9,6 +9,7 @@
   import Tooltip from "./components/Tooltip.svelte";
   import Toasts from "./components/Toasts.svelte";
   import TodayView from "./components/TodayView.svelte";
+  import UsageView from "./components/UsageView.svelte";
   import WorkspaceView from "./components/WorkspaceView.svelte";
   import { attempt, loadModels, nav, refreshLibrary, refreshProviders, refreshSettings } from "./lib/state.svelte.ts";
 
@@ -36,6 +37,8 @@
         {#key nav.route.id}<WorkspaceView id={nav.route.id} tab={nav.route.tab} />{/key}
       {:else if nav.route.name === "today"}
         <TodayView />
+      {:else if nav.route.name === "usage"}
+        <UsageView />
       {:else if nav.route.name === "review"}
         {#key nav.route.folderId}<ReviewView folderId={nav.route.folderId} />{/key}
       {:else if nav.route.name === "settings"}

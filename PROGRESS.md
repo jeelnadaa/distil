@@ -4,13 +4,14 @@ Living status log. Update in the same commit as every change.
 
 ## Current phase
 
-**Phase 8 — Providers+ & usage dashboard** is next, on `main`.
+**Phase 9 — Ship** is next, on `main`.
 
 ## Next up
 
-1. Phase 8 — Providers+ & usage dashboard (plan.md §10, §11).
-2. Still open from Phase 7 (should/could): image-occlusion cards (F-901), graph nodes linked to exact source messages (F-923), clusters and a whole-folder graph across units (F-924), notes import and a table of nodes (F-926, F-927), badges (F-933).
-3. Still open from Phase 4 (should/could): opening recall questions from the previous lesson (F-614), predict-before-reveal prompts (F-608), dictation (F-615).
+1. Phase 9 — Ship (plan.md §13, §15).
+2. Needs the owner: Sign in with Google (F-1203). It means signing in to a Google account and reusing a Google CLI login, which the build can't do or test unattended; see plan.md §2 "Providers+ decisions".
+3. Still open from Phase 7 (should/could): image-occlusion cards (F-901), graph nodes linked to exact source messages (F-923), clusters and a whole-folder graph across units (F-924), notes import and a table of nodes (F-926, F-927), badges (F-933).
+4. Still open from Phase 4 (should/could): opening recall questions from the previous lesson (F-614), predict-before-reveal prompts (F-608), dictation (F-615).
 
 ## Phase checklist
 
@@ -26,7 +27,7 @@ Living status log. Update in the same commit as every change.
 - [x] Phase 5 — Interactives
 - [x] Phase 6 — Practice & Exams
 - [x] Phase 7 — Retention
-- [ ] Phase 8 — Providers+ & usage dashboard
+- [x] Phase 8 — Providers+ & usage dashboard (Google sign-in waits for the owner)
 - [ ] Phase 9 — Ship
 - [ ] Phase 10 — Tune (ledger and answer quality)
 
@@ -193,6 +194,13 @@ Living status log. Update in the same commit as every change.
 - Lesson chats have a graph button in the top bar: it opens the lesson's unit full screen with the lesson's items outlined, and the unit can be mapped from there.
 - `GraphPanel` now holds the unit picker, mapping (watches its own job), full screen and the detail card; the Progress tab and lesson chats both use it.
 
+### 2026-11-01 · Phase 8 — Providers+ & usage
+- Usage page (`#/usage`, chart button next to Settings; F-1103, F-1108): tokens per hour today, per day for the last 7 or 30 days, input and output stacked; a breakdown by model, provider, role, folder or chat with each one's share; the caps with how much of each is used; CSV export of every request in the period. Tokens only, no money (see plan.md §2).
+- Researcher (F-205): "Research a topic" under the link box writes a reference syllabus for a topic in the background (an outline of 6–14 sections on the strong model, then one section at a time) and adds it to the folder as a Markdown material, read like any other and ready to distil. With a web search key (F-1209, Settings › Web search: Tavily or Brave Search, the key tested with one search before it's kept, shown masked) each section is searched and cited, with a Sources list at the end; without one it writes from the model's own knowledge, says so in its first lines and is named "(generated)".
+- Custom OpenAI-compatible endpoints (F-1202) were already in Settings › Providers from Phase 1.
+- Not built: Sign in with Google (F-1203). It needs a Google account login and Google's CLI OAuth client, neither of which the build may use unattended; left for the owner to decide and test.
+- Checked live on Gemini 3.5 Flash: the usage page on two days of real use (day, week and month, every breakdown, CSV), Settings › Web search with no key, and a 6-section syllabus on Bayes' theorem without search (about 16k tokens, read into 7 chunks). Web search was tested with fakes only; no search key was available. 241 tests.
+
 ## Open questions
 
 See `plan.md` §18.
@@ -208,7 +216,8 @@ See `plan.md` §18.
 - Paper photos are kept in the database as data URLs (downscaled to 1600 px in the browser); move them to files if databases grow large.
 - The web bundle is one 614 kB chunk (KaTeX and highlight.js). Fine when served locally; split it if load time ever matters.
 
-- Caps are in tokens only. Cost caps need per-model prices; planned with the usage dashboard (Phase 8).
+- Caps and the usage page are in tokens only; there are no per-model prices (plan.md §2).
+- Web search (Tavily, Brave) is checked only against fakes; no real search key has been tried.
 - A cap is checked before each request, so one reply already in flight can finish past 100 %.
 - Keys are in a user-only file, not yet the OS credential store; the desktop build (Phase 9) moves them.
 - Inline maths (KaTeX) doesn't wrap, so a long formula in a chat reply widens the column on a phone.

@@ -163,7 +163,7 @@
                 </div>
               {/if}
               <div class="ws__bar"><span style:width="{pct(current.done, current.total)}%"></span></div>
-              <p class="mono caption"><span class="faint">{pct(current.done, current.total)}% · {items.length} items</span>{#if active.length > 1}<span class="faint"> · {active.length - 1} more queued</span>{/if}</p>
+              <p class="mono caption"><span class="faint">{pct(current.done, current.total)}% · {current.kind === "research" ? `${current.done} of ${current.total || "?"} sections` : `${items.length} items`}</span>{#if active.length > 1}<span class="faint"> · {active.length - 1} more queued</span>{/if}</p>
             </section>
           {/if}
         </div>

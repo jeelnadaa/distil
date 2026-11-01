@@ -30,6 +30,7 @@ import { createCards } from "./retention/cards.ts";
 import { createRetention } from "./retention/engine.ts";
 import { createProviders } from "./providers/service.ts";
 import { createSecrets } from "./secrets.ts";
+import { createResearcher } from "./research/researcher.ts";
 import { createSettings } from "./settings.ts";
 import type { FetchFn } from "./materials/web.ts";
 import { createUsage } from "./usage.ts";
@@ -51,7 +52,8 @@ export function createServer({ port, dataDir = defaultDataDir(), fetch }: { port
   const jobs = createJobs(db, { log });
   const ledger = createLedger(db);
   const usage = createUsage(db);
-  const providers = createProviders(settings, createSecrets(join(dataDir, "secrets.json")));
+  const secrets = createSecrets(join(dataDir, "secrets.json"));
+  const providers = createProviders(settings, secrets);
   const search = createSearch(db);
   const local = createLocalModels(join(dataDir, "models"));
   const vectors = createVectors(db);
@@ -74,6 +76,7 @@ export function createServer({ port, dataDir = defaultDataDir(), fetch }: { port
   const teacher = createTeacher({ providers, settings, usage, db, library, messages, plans, ledger, learner, retrieval, teach: createTeachStore(db), log, onLessonDone: retention.lessonDone });
   const visuals = createVisuals({ providers, settings, usage, db, library, messages, log });
   const practice = createPractice({ providers, settings, usage, db, jobs, library, ledger, plans, learner, retrieval, papers: createPapers(db) });
+  const researcher = createResearcher({ providers, settings, usage, jobs, materials, secrets, fetch });
   const deps = {
     dataDir,
     allowedHosts: [`localhost:${port}`, `127.0.0.1:${port}`, `[::1]:${port}`],
@@ -99,6 +102,8 @@ export function createServer({ port, dataDir = defaultDataDir(), fetch }: { port
     practice,
     retention,
     cards,
+    researcher,
+    secrets,
     context: chatContext(db, retention.digest),
     log,
     fetch,

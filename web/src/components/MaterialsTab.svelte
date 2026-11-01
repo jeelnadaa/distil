@@ -96,6 +96,23 @@
     return `Updated: ${parts.join(", ")}.`;
   };
 
+  // No material of your own (F-205): the researcher writes a syllabus for the topic and adds it here.
+  let research = $state<{ topic: string; search: string | null } | null>(null);
+  let researching = $state(false);
+  async function openResearch() {
+    const view = await attempt(api.searchProviders);
+    if (view) research = { topic: "", search: view.providers.find((p) => p.id === view.provider)?.label ?? null };
+  }
+  async function startResearch() {
+    researching = true;
+    const job = await attempt(() => api.research(folderId, research!.topic.trim()));
+    researching = false;
+    if (!job) return;
+    research = null;
+    toast("Researching. The syllabus appears here as a material when it's written.");
+    onchange();
+  }
+
   async function remove() {
     const target = removing!;
     removing = null;
@@ -119,6 +136,7 @@
   <input id="material-link" class="input" type="url" placeholder="Or paste a link to a web page, PDF or YouTube video" bind:value={link} disabled={fetching} />
   <button type="submit" class="btn btn--secondary btn--sm" disabled={!link.trim() || fetching}>{fetching ? "Fetching…" : "Add link"}</button>
 </form>
+<p class="caption muted research-row">No material yet? <button type="button" class="linkish" onclick={openResearch}>Research a topic</button> and Distil writes a syllabus to study from.</p>
 <input type="file" accept={ACCEPT} hidden bind:this={replaceInput} onchange={(e) => { const t = e.currentTarget; if (t.files?.[0]) replaceWith(t.files[0]); t.value = ""; }} />
 <input type="file" multiple accept={ACCEPT} hidden bind:this={input} onchange={(e) => { const t = e.currentTarget; if (t.files?.length) upload(t.files); t.value = ""; }} />
 
@@ -202,6 +220,27 @@
   {/snippet}
 </Dialog>
 
+<Dialog bind:open={() => !!research, (v) => { if (!v && !researching) research = null; }} title="Research a topic" eyebrow="No material needed">
+  {#if research}
+    <div class="video-how">
+      <label class="field">
+        <span class="field__label">What do you want to learn?</span>
+        <textarea class="textarea" rows="4" bind:value={research.topic} placeholder="Fourier analysis for a second-year signals course, up to the discrete Fourier transform"></textarea>
+        <span class="field__hint">Say the level and how far to go. The syllabus is added as a Markdown material you can read, distil and learn from.</span>
+      </label>
+      {#if research.search}
+        <p class="caption faint">Searches the web with {research.search} for each section and cites the sources it used.</p>
+      {:else}
+        <p class="caption faint">No web search key is set, so it writes from the model's own knowledge and says so. Add a Tavily or Brave key in <a href="#/settings/search">Settings</a> to have it cite sources.</p>
+      {/if}
+    </div>
+  {/if}
+  {#snippet footer()}
+    <button type="button" class="btn btn--ghost" disabled={researching} onclick={() => (research = null)}>Cancel</button>
+    <button type="button" class="btn btn--primary" disabled={researching || (research?.topic.trim().length ?? 0) < 3} onclick={startResearch}>{researching ? "Starting…" : "Research"}</button>
+  {/snippet}
+</Dialog>
+
 <Dialog bind:open={() => !!diff, (v) => { if (!v) diff = null; }} title="Removed with the old text" eyebrow={diff?.name ?? ""}>
   {#if diff?.reimport}
     <p class="body-sm">These ledger items were only found in text the new version no longer has, so they left the ledger. Items you added by hand stay.</p>
@@ -225,7 +264,8 @@
 
 <style>
   .dropzone { margin-bottom: var(--s-3); }
-  .link-row { position: relative; display: flex; gap: var(--s-2); align-items: center; margin-bottom: var(--s-5); }
+  .link-row { position: relative; display: flex; gap: var(--s-2); align-items: center; margin-bottom: var(--s-2); }
+  .research-row { margin-bottom: var(--s-5); }
   .link-row .input { flex: 1; min-width: 0; padding-left: 34px; }
   .link-row__icon { position: absolute; left: 11px; display: flex; color: var(--text-faint); pointer-events: none; }
   .source { margin-left: var(--s-2); }

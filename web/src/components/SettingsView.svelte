@@ -11,6 +11,7 @@
   import Icon from "./Icon.svelte";
   import ModelSelect from "./ModelSelect.svelte";
   import Segmented from "./Segmented.svelte";
+  import WebSearchSetting from "./WebSearchSetting.svelte";
   import TextFontSetting from "./TextFontSetting.svelte";
 
   let { section }: { section?: string } = $props();
@@ -18,6 +19,7 @@
   const SECTIONS = [
     { id: "providers", label: "Providers", icon: "key" },
     { id: "models", label: "Models", icon: "layers" },
+    { id: "search", label: "Web search", icon: "search" },
     { id: "limits", label: "Limits", icon: "chart" },
     { id: "learning", label: "Learning", icon: "graph" },
     { id: "appearance", label: "Appearance", icon: "type" },
@@ -224,6 +226,11 @@
           {:else}
             <p class="body-sm muted">Add a provider key above to see its models.</p>
           {/if}
+        </section>
+
+        <section id="search" class="sset">
+          <header><h2 class="display-md">Web search</h2></header>
+          <WebSearchSetting />
         </section>
 
         <section id="limits" class="sset">

@@ -4,6 +4,7 @@ import { z } from "zod";
 import { type ChatDeps, meterFor, prepareTurn, streamTurn } from "./chat.ts";
 import { AppError, notFound } from "./errors.ts";
 import type { Fonts } from "./fonts.ts";
+import type { UsagePeriod } from "./usage.ts";
 import type { Jobs } from "./jobs.ts";
 import { estimateExtraction, type ExtractParams, extractLabel, inRange, visualPages } from "./ledger/extract.ts";
 import type { Ledger } from "./ledger/store.ts";
@@ -34,9 +35,12 @@ import { registerPracticeRoutes } from "./practice/routes.ts";
 import type { Cards } from "./retention/cards.ts";
 import type { Retention } from "./retention/engine.ts";
 import { registerRetentionRoutes } from "./retention/routes.ts";
+import type { Researcher } from "./research/researcher.ts";
+import { registerResearchRoutes } from "./research/routes.ts";
+import type { Secrets } from "./secrets.ts";
 
 export type AppDeps = ChatDeps & { dataDir: string; allowedHosts: string[]; fonts: Fonts; materials: Materials; search: Search; ledger: Ledger; jobs: Jobs; fetch?: FetchFn }
-  & { db: Db; learner: Learner; plans: Plans; briefs: Briefs; local: LocalModels; vectors: Vectors; retrieval: Retrieval; teacher: Teacher; visuals: Visuals; practice: Practice; retention: Retention; cards: Cards };
+  & { db: Db; learner: Learner; plans: Plans; briefs: Briefs; local: LocalModels; vectors: Vectors; retrieval: Retrieval; teacher: Teacher; visuals: Visuals; practice: Practice; retention: Retention; cards: Cards; researcher: Researcher; secrets: Secrets };
 
 const NullableId = z.string().min(1).nullable();
 const ModelRefBody = z.object({ provider: z.string().min(1), id: z.string().min(1), key: z.string().min(1).optional() });
@@ -163,6 +167,14 @@ export function createApp(deps: AppDeps) {
     const s = settings.get();
     const provider = c.req.query("provider") ?? s.models.strong?.provider ?? "";
     return c.json({ ...usage.totals(), cap: usage.capStatus(s.caps, provider) });
+  });
+  const period = (v: string | undefined): UsagePeriod => (v === "day" || v === "month" ? v : "week");
+  app.get("/usage/report", (c) => c.json(usage.report(period(c.req.query("period")))));
+  app.get("/usage/export.csv", (c) => {
+    const report = usage.report(period(c.req.query("period")));
+    c.header("content-type", "text/csv; charset=utf-8");
+    c.header("content-disposition", `attachment; filename="distil-usage-${report.period}.csv"`);
+    return c.body(usage.csv(report.since));
   });
 
   /* ---------- Materials (F-201…F-210) ---------- */
@@ -319,5 +331,6 @@ export function createApp(deps: AppDeps) {
   registerVisualRoutes(app, deps);
   registerPracticeRoutes(app, deps);
   registerRetentionRoutes(app, deps);
+  registerResearchRoutes(app, deps);
   return app;
 }

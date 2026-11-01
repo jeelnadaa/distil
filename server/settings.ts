@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { Db } from "./db.ts";
+import { SEARCH_PROVIDERS } from "./research/search.ts";
 import { DIALS } from "./visuals/reference.ts";
 
 // key: which of the provider's saved keys to use; its default key when absent.
@@ -31,6 +32,8 @@ export const SettingsSchema = z.object({
   // How mastery shows (F-914), and whether streaks and XP are on (F-934, off by default).
   mastery: z.enum(["both", "levels", "percent"]),
   gamification: z.boolean(),
+  // Which web search key the researcher uses (F-1209); none until one is added.
+  webSearch: z.enum(SEARCH_PROVIDERS).nullable(),
   customEndpoints: z.array(z.object({
     id: z.string().regex(/^custom-[a-z0-9-]+$/),
     name: z.string().trim().min(1).max(60),
@@ -51,6 +54,7 @@ export const DEFAULT_SETTINGS: Settings = {
   dial: "balanced",
   mastery: "both",
   gamification: false,
+  webSearch: null,
   customEndpoints: [],
 };
 
