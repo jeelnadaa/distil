@@ -90,10 +90,11 @@ export function createTeacher(deps: TeachDeps) {
     return { phase: s.phase, steps: s.steps, step: s.step, repairs: s.repairs, open: open ? checkView(open) : null };
   };
 
-  // The strong slot's chain, each model on every key, leaving out capped providers. Checked before streaming.
-  const chain = () => {
+  // The model picked for this chat, then the strong slot's chain, each model on every key, leaving out
+  // capped providers. Checked before streaming.
+  const chain = (chat: Chat) => {
     const { caps } = deps.settings.get();
-    const refs = deps.providers.withKeys(chainFor(deps.settings, "strong")).filter((r) => deps.usage.capStatus(caps, r.provider).state !== "blocked");
+    const refs = deps.providers.withKeys([...(chat.model ? [chat.model] : []), ...chainFor(deps.settings, "strong")]).filter((r) => deps.usage.capStatus(caps, r.provider).state !== "blocked");
     if (!refs.length) throw new AppError(429, "cap_reached", "You've reached a token cap. Raise it in Settings or wait for it to reset.");
     return refs;
   };
@@ -343,7 +344,7 @@ export function createTeacher(deps: TeachDeps) {
     async start(chatId: string, signal: AbortSignal): Promise<AsyncGenerator<TeachEvent>> {
       const { chat, lesson, session } = load(chatId);
       let s = session;
-      const refs = chain();
+      const refs = chain(chat);
       if (!s) {
         const steps = await planSteps(chat, lesson, signal);
         s = teach.create({ chatId, lessonId: lesson.id, phase: shouldProbe(chat, lesson) ? "probe" : "teach", steps, step: 0, probe: [] });
@@ -361,7 +362,7 @@ export function createTeacher(deps: TeachDeps) {
       const { chat, session: s } = load(chatId);
       const open = teach.open(chatId);
       if (!s || !open || open.id !== a.checkId) throw new AppError(409, "check_closed", "That question has already been answered.");
-      const refs = chain();
+      const refs = chain(chat);
       const result = await grade(chat, open, a, signal);
       teach.answer(open.id, result);
       const graded = { ...open, result };
@@ -412,7 +413,7 @@ export function createTeacher(deps: TeachDeps) {
     async action(chatId: string, kind: ActionKind, signal: AbortSignal): Promise<AsyncGenerator<TeachEvent>> {
       const { chat, session: s } = load(chatId);
       if (!s || s.phase !== "teach") throw new AppError(409, "not_teaching", "Quick actions work while a step is being taught.");
-      const refs = chain();
+      const refs = chain(chat);
       const step = s.steps[s.step]!;
       const open = !!teach.open(chatId);
       const turn: Turn = {
@@ -429,7 +430,7 @@ export function createTeacher(deps: TeachDeps) {
       const question = text.trim();
       if (!question) throw new AppError(400, "empty_message", "Type a question first.");
       if (!s) throw new AppError(409, "not_started", "Start the lesson first.");
-      const refs = chain();
+      const refs = chain(chat);
       const turn: Turn = {
         note: `The learner asked a question mid-lesson. Answer it briefly from the sources, then say where the lesson picks up again. Don't write a check; the lesson carries on as it was.`,
         passages: chat.folderId ? await deps.retrieval.retrieve(chat.folderId, question, 5, signal) : [],

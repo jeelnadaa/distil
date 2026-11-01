@@ -1,7 +1,7 @@
 <script lang="ts">
   import { untrack } from "svelte";
   import { api, type EmbeddingsView, type Provider, type Settings } from "../lib/api.ts";
-  import { activity } from "../lib/activity.svelte.ts";
+  import { activity, jobPct } from "../lib/activity.svelte.ts";
   import { attempt } from "../lib/state.svelte.ts";
   import Dialog from "./Dialog.svelte";
   import Icon from "./Icon.svelte";
@@ -31,7 +31,12 @@
     if (wasBusy && !now) untrack(load);
     wasBusy = now;
   });
-  const downloading = (size: Size) => busy.some((j) => j.kind === "embed-model" && j.params.size === size);
+  // A model's download job while it runs (progress in megabytes), and the indexing job.
+  const downloadOf = (size: Size) => busy.find((j) => j.kind === "embed-model" && j.params.size === size) ?? null;
+  const downloading = (size: Size) => downloadOf(size) !== null;
+  const indexing = $derived(busy.find((j) => j.kind === "embed" && j.status === "running") ?? null);
+  const runsOn = (m: EmbeddingsView["local"][number]) =>
+    m.device === "gpu" ? "Runs on the graphics card" : m.device === "cpu" ? "Runs on the processor" : view?.gpu ? "Uses the graphics card" : "Runs on the processor";
 
   // The tab shown; the setting itself changes only once a model is picked (or Off is chosen).
   let choice = $state(untrack(() => settings.embeddings.mode));
@@ -101,7 +106,13 @@
         <div class="emb__model" class:is-picked={picked}>
           <button type="button" class="emb__pick" role="radio" aria-checked={picked} disabled={downloading(m.size)} onclick={() => useLocal(m.size)}>
             <strong>{m.label}</strong><span class="caption muted">{m.note}</span>
-            <span class="caption faint">{downloading(m.size) ? "Downloading…" : m.installed ? "Downloaded" : "Not downloaded"}</span>
+            {#if downloadOf(m.size)}
+              {@const job = downloadOf(m.size)!}
+              <span class="caption faint">{job.total > 1 ? `Downloading ${job.done} of ${job.total} MB · ${jobPct(job)} %` : "Starting the download…"}</span>
+              <span class="emb__bar" role="progressbar" aria-label="Download progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={jobPct(job)}><span style:width="{jobPct(job)}%"></span></span>
+            {:else}
+              <span class="caption faint">{m.installed ? `Downloaded · ${runsOn(m).toLowerCase()}` : "Not downloaded"}</span>
+            {/if}
           </button>
           {#if m.installed && !downloading(m.size)}
             <button type="button" class="btn btn--ghost btn--sm" onclick={() => remove(m.size)} aria-label="Remove the {m.label} model">Remove</button>
@@ -113,7 +124,7 @@
 
   {#if mode !== "off" && view?.index}
     <div class="emb__index caption muted">
-      <span>{view.index.done} of {view.index.total} sections indexed</span>
+      <span>{indexing && indexing.total ? `Indexing ${indexing.done} of ${indexing.total} sections` : `${view.index.done} of ${view.index.total} sections indexed`}</span>
       {#if view.index.done < view.index.total && !busy.length}
         <button type="button" class="btn btn--ghost btn--sm" onclick={() => attempt(api.indexNow).then(() => setTimeout(load, 1500))}><Icon name="refresh" size="sm" />Index now</button>
       {/if}
@@ -124,7 +135,7 @@
 <Dialog bind:open={consent.open} eyebrow="Search by meaning" title="Download a search model?">
   {#if consent.size}
     {@const m = view?.local.find((x) => x.size === consent.size)}
-    <p class="body-sm">The <strong>{m?.label}</strong> model ({m?.note}) runs on this computer, so searching costs nothing and nothing leaves your machine.</p>
+    <p class="body-sm">The <strong>{m?.label}</strong> model ({m?.note}) runs on this computer, so searching costs nothing and nothing leaves your machine.{#if view?.gpu} It uses your graphics card, and the processor if the graphics card can't run it.{/if}</p>
     <p class="body-sm muted">
       {#if consent.error}{consent.error}{:else if consent.bytes === null}Checking the download size…{:else}It downloads <strong>{mb(consent.bytes)}</strong> from Hugging Face into your data folder, once. You can remove it here any time.{/if}
     </p>
@@ -143,5 +154,7 @@
   .emb__model.is-picked { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
   .emb__pick { flex: 1; display: grid; gap: 2px; text-align: left; padding: var(--s-2); border-radius: var(--r-xs); min-width: 0; }
   .emb__pick:hover:not(:disabled) { background: var(--surface-sunken); }
+  .emb__bar { display: block; height: 4px; border-radius: var(--r-full); background: var(--surface-sunken); overflow: hidden; margin-top: var(--s-1); }
+  .emb__bar > span { display: block; height: 100%; background: var(--accent); transition: width 300ms var(--ease-out); }
   .emb__index { display: flex; align-items: center; gap: var(--s-3); }
 </style>

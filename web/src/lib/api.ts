@@ -36,7 +36,9 @@ export type LessonDetail = {
 };
 // Search by meaning (F-1005): the local models and how far indexing has got for the chosen model.
 export type EmbeddingsView = {
-  local: { size: LocalSize; label: string; note: string; installed: boolean }[];
+  local: { size: LocalSize; label: string; note: string; installed: boolean; device: "gpu" | "cpu" | null }[];
+  // Whether local models are downloaded in the version that runs on the graphics card.
+  gpu: boolean;
   index: { done: number; total: number } | null;
 };
 export type ProviderKey = { id: string; label: string; preview: string };

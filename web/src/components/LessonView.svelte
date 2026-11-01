@@ -1,16 +1,18 @@
 <script lang="ts">
   import { tick, untrack } from "svelte";
-  import { api, ApiError, type ActionKind, type Answer, type Chat, type CheckView, type Message, type SessionView, type Source, type TeachEvent } from "../lib/api.ts";
+  import { api, ApiError, type ActionKind, type Answer, type Chat, type CheckView, type Message, type ModelRef, type SessionView, type Source, type TeachEvent } from "../lib/api.ts";
   import { attempt, refreshLibrary, toast } from "../lib/state.svelte.ts";
   import CheckCard from "./CheckCard.svelte";
   import Composer from "./Composer.svelte";
   import Icon from "./Icon.svelte";
   import Markdown from "./Markdown.svelte";
+  import ModelSelect from "./ModelSelect.svelte";
 
   // A lesson (Phase 4, §6): the teacher writes a lesson document (F-612), the learner's words are note
   // cards, each step ends in a check card, and a session plan sits on the right (F-603).
-  let { chat, messages = $bindable(), onprogress, oncap }: {
-    chat: Chat; messages: Message[]; onprogress: () => void; oncap: (err: ApiError) => void;
+  // model: the chat's model, picked in the ask box like any chat's; the teacher answers with it first.
+  let { chat, messages = $bindable(), model, onmodel, onprogress, oncap }: {
+    chat: Chat; messages: Message[]; model: ModelRef | null; onmodel: (ref: ModelRef) => void; onprogress: () => void; oncap: (err: ApiError) => void;
   } = $props();
 
   let session = $state<SessionView | null>(null);
@@ -120,7 +122,8 @@
 </script>
 
 <div class="lesson">
-  <div class="scroll" bind:this={scroller} {onscroll}>
+  <div class="lesson__main">
+    <div class="scroll" bind:this={scroller} {onscroll}>
     <div class="page doc">
       {#if loaded && !session && !messages.length}
         <div class="intro">
@@ -185,6 +188,14 @@
       {/if}
     </div>
   </div>
+  {#if session}
+    <div class="composer-wrap">
+      <Composer bind:value={draft} {busy} onsend={ask} onstop={() => controller?.abort()} placeholder="Ask about this lesson…">
+        <ModelSelect value={model} onchange={onmodel} label="Model for this lesson" compact />
+      </Composer>
+    </div>
+  {/if}
+  </div>
 
   {#if session}
     <aside class="plan" class:is-closed={!planOpen} aria-label="Session plan">
@@ -212,15 +223,11 @@
   {/if}
 </div>
 
-{#if session}
-  <div class="composer-wrap">
-    <Composer bind:value={draft} {busy} onsend={ask} onstop={() => controller?.abort()} placeholder="Ask about this lesson…" />
-  </div>
-{/if}
 
 <style>
   .lesson { flex: 1; min-height: 0; display: flex; }
-  .lesson > .scroll { flex: 1; min-width: 0; }
+  /* The ask box sits in the lesson column, so it lines up with the text and moves with the panels. */
+  .lesson__main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
   .doc { display: grid; gap: var(--s-5); padding-bottom: var(--s-8); }
   .intro { display: grid; gap: var(--s-3); padding-top: 10vh; max-width: 56ch; }
   .block { display: grid; gap: var(--s-4); max-width: 72ch; min-width: 0; }

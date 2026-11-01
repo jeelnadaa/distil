@@ -29,7 +29,8 @@ export function registerRetrievalRoutes(app: Hono, deps: AppDeps) {
     const model = retrieval.model();
     const counts = model ? vectors.counts(model, null) : null;
     return c.json({
-      local: LOCAL_SIZES.map((s) => ({ size: s, label: LOCAL_MODELS[s].label, note: LOCAL_MODELS[s].note, installed: local.installed(s) })),
+      local: LOCAL_SIZES.map((s) => ({ size: s, label: LOCAL_MODELS[s].label, note: LOCAL_MODELS[s].note, installed: local.installed(s), device: local.device(s) })),
+      gpu: local.usesGpu,
       index: counts && { done: counts.done ?? 0, total: counts.total },
     });
   });

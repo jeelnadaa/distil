@@ -50,9 +50,11 @@ export function createServer({ port, dataDir = defaultDataDir(), fetch }: { port
   const search = createSearch(db);
   const local = createLocalModels(join(dataDir, "models"));
   const vectors = createVectors(db);
-  const retrieval = createRetrieval({ db, search, vectors, local, providers, settings, usage });
+  const retrieval = createRetrieval({ db, search, vectors, local, providers, settings, usage, log });
   registerIndexing(jobs, retrieval);
+  // A fresh download may be another variant of the model, so its old vectors are dropped and rebuilt.
   registerModelDownload(jobs, local, (size) => {
+    vectors.drop(`local:${size}`);
     const e = settings.get().embeddings;
     if (e.mode === "local" && e.size === size) queueIndexing(jobs, retrieval);
   });

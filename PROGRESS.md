@@ -157,6 +157,9 @@ Living status log. Update in the same commit as every change.
 
 - Local search models (owner): the sizes are named Low, Medium and High. Distil now downloads a model's files itself (each to a `.part` file, the model file last, so a stopped download never looks installed) and loads them only from the data folder: the library's own download cache wrote nothing to disk when run inside the dev server. Checked live: Low (24 MB) downloaded from Settings, indexed all 575 textbook sections on this computer, and meaning search found "Measures of the Spread of the Data" for "how spread out the numbers are". 155 tests.
 
+- Local search models on the graphics card (owner): on Windows Distil downloads each model's half-precision file and runs it through DirectML (any DirectX 12 GPU), falling back to the processor if the GPU can't start it; elsewhere the 8-bit file runs on the processor (the bundled runtime's CUDA build needs a separate CUDA install). Measured on an RTX 3070 Ti with Low: 2.8 s per 64 passages on the GPU against 4.6 s on the processor; the 8-bit file on the GPU was slower (6.5 s), so it is never sent there. A model already downloaded as 8-bit keeps working on the processor. Each model card shows where it runs and, while downloading, megabytes and a progress bar; indexing waits until a model is downloaded, and a re-download rebuilds its vectors.
+- Lesson ask box: sits in the lesson column, so it lines up with the text and moves with the sidebar and session plan; it has the chat's model picker again, and the teacher answers with the picked model first, then the strong slot. 157 tests.
+
 ## Open questions
 
 See `plan.md` §18.

@@ -164,7 +164,7 @@
 </header>
 
 {#if chat?.mode === "teach"}
-  <LessonView {chat} bind:messages onprogress={() => progressTick++} oncap={(err) => (capHit = { open: true, status: err.details as CapStatus })} />
+  <LessonView {chat} bind:messages {model} onmodel={pickModel} onprogress={() => progressTick++} oncap={(err) => (capHit = { open: true, status: err.details as CapStatus })} />
 {:else}
 <div class="scroll" bind:this={scroller} {onscroll}>
   <div class="page thread">

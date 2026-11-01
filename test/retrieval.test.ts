@@ -120,17 +120,18 @@ describe("local models", () => {
     if (url.includes("/tree/main")) {
       return Response.json([
         { path: "config.json", size: 2 }, { path: "tokenizer.json", size: 3 }, { path: "README.md", size: 50 },
-        { path: "onnx/model_quantized.onnx", size: 9, lfs: { size: 4 } }, { path: "onnx/model.onnx", size: 99 },
+        { path: "onnx/model_quantized.onnx", size: 9, lfs: { size: 4 } }, { path: "onnx/model_fp16.onnx", size: 8 }, { path: "onnx/model.onnx", size: 99 },
       ]);
     }
     const file = url.split("/resolve/main/")[1]!;
     if (file === failAt) return new Response("nope", { status: 500 });
-    return new Response({ "config.json": "{}", "tokenizer.json": "tok", "onnx/model_quantized.onnx": "onnx" }[file] ?? "");
+    return new Response({ "config.json": "{}", "tokenizer.json": "tok", "onnx/model_quantized.onnx": "onnx", "onnx/model_fp16.onnx": "fp16" }[file] ?? "");
   }) as unknown as typeof fetch;
 
   it("reports the download size and fetches only the files the model needs, the model file last", async () => {
     const dir = mkdtempSync(join(tmpdir(), "distil-models-"));
-    const local = createLocalModels(dir, hub());
+    const local = createLocalModels(dir, hub(), "linux");
+    expect(local.usesGpu).toBe(false);
     expect(await local.size("low")).toBe(2 + 3 + 4);
     const seen: number[] = [];
     await local.download("low", (done) => seen.push(done));
@@ -143,9 +144,21 @@ describe("local models", () => {
     expect(existsSync(folder)).toBe(false);
   });
 
+  it("downloads the half-precision model on Windows, where it runs on the graphics card", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "distil-models-"));
+    const local = createLocalModels(dir, hub(), "win32");
+    expect(local.usesGpu).toBe(true);
+    expect(await local.size("low")).toBe(2 + 3 + 8);
+    await local.download("low", () => {});
+    const onnx = join(dir, "Xenova", "all-MiniLM-L6-v2", "onnx");
+    expect(readdirSync(onnx)).toEqual(["model_fp16.onnx"]);
+    expect(local.installed("low")).toBe(true);
+    expect(local.device("low")).toBeNull();
+  });
+
   it("doesn't look installed after a failed download", async () => {
     const dir = mkdtempSync(join(tmpdir(), "distil-models-"));
-    const local = createLocalModels(dir, hub("onnx/model_quantized.onnx"));
+    const local = createLocalModels(dir, hub("onnx/model_quantized.onnx"), "linux");
     await expect(local.download("low", () => {})).rejects.toMatchObject({ code: "download_failed" });
     expect(local.installed("low")).toBe(false);
     await expect(local.embed("low", ["x"])).rejects.toMatchObject({ code: "model_missing" });

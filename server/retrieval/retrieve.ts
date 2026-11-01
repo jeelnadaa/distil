@@ -30,6 +30,7 @@ export const embedText = (headings: string[], text: string) => [...headings, tex
 export type RetrievalDeps = {
   db: Db; search: Search; vectors: Vectors; local: LocalModels; providers: Providers; settings: SettingsStore; usage: UsageStore;
   wait?: (ms: number, signal?: AbortSignal) => Promise<void>;
+  log?: (msg: string) => void;
 };
 const ATTEMPTS = 8;
 const BACKOFF_CAP_MS = 60_000;
@@ -45,7 +46,7 @@ export function createRetrieval(deps: RetrievalDeps) {
 
   async function embed(texts: string[], task: "document" | "query", folderId: string | null, signal?: AbortSignal): Promise<number[][]> {
     const e = deps.settings.get().embeddings;
-    if (e.mode === "local") return deps.local.embed(e.size, texts);
+    if (e.mode === "local") return deps.local.embed(e.size, texts, deps.log);
     if (e.mode !== "provider") return [];
     const ref = { provider: e.provider, id: e.id, key: e.key };
     const { vectors: out, tokens } = await deps.providers.embed(ref, { texts, task, signal });
@@ -85,6 +86,11 @@ export function createRetrieval(deps: RetrievalDeps) {
 
   const retrieval = {
     model,
+    // Whether chunks can be embedded now: a local model has to be downloaded first.
+    ready(): boolean {
+      const e = deps.settings.get().embeddings;
+      return model() !== null && (e.mode !== "local" || deps.local.installed(e.size));
+    },
 
     // The folder's best passages for a query. Meaning-based search is skipped (keyword only) when it is
     // off, its model is missing, or the provider fails, so a lesson never stops on it.
@@ -153,7 +159,7 @@ export function registerIndexing(jobs: Jobs, retrieval: Retrieval) {
 
 // Returns whether indexing is now queued or running.
 export function queueIndexing(jobs: Jobs, retrieval: Retrieval): boolean {
-  if (!retrieval.model()) return false;
+  if (!retrieval.ready()) return false;
   if (jobs.list().some((j) => j.kind === "embed" && (j.status === "queued" || j.status === "running"))) return true;
   jobs.enqueue("embed", INDEX_LABEL, {});
   return true;

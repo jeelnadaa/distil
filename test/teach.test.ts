@@ -31,11 +31,13 @@ function setup(o: { teach?: (prompt: string, n: number) => string; judge?: strin
   const usage = createUsage(db);
   const messages = createMessages(db);
   const prompts: string[] = [];
+  const models: string[] = [];
   let taught = 0;
   const providers = {
-    async *stream(_ref: unknown, req: Request) {
+    async *stream(ref: { id: string }, req: Request) {
       const prompt = req.messages.at(-1)!.content;
       prompts.push(prompt);
+      models.push(ref.id);
       const text = req.system.startsWith("You split") ? JSON.stringify(o.plan ?? { orientation: [], steps: [{ title: "Mean", items: [1] }, { title: "Median", items: [2] }] })
         : req.system.startsWith("You grade") ? o.judge ?? `{"verdict":"right","feedback":"Yes."}`
         : (o.teach ?? (() => `Here is the idea [1]. <check>${JSON.stringify(MCQ)}</check>`))(prompt, taught++);
@@ -69,7 +71,7 @@ function setup(o: { teach?: (prompt: string, n: number) => string; judge?: strin
   const status = () => items.map((i) => ledger.get(i.id).status);
   const answer = (chatId: string, value: number | string | null, confidence: "guess" | "unsure" | "sure" | null = null) =>
     run(teacher.answer(chatId, { checkId: teacher.view(chatId).session!.open!.id, value, confidence, thinking: "" }, signal));
-  return { teacher, plans, messages, first: first!, second: second!, chatFor, run, signal, status, answer, prompts };
+  return { teacher, plans, messages, library, first: first!, second: second!, chatFor, run, signal, status, answer, prompts, models };
 }
 
 describe("checks", () => {
@@ -165,6 +167,15 @@ describe("teaching engine", () => {
     const [graded] = await t.answer(chatId, "The sum");
     expect(graded).toMatchObject({ check: { result: { verdict: "partly", feedback: "Say what you divide by." } } });
     await expect(t.teacher.answer(chatId, { checkId, value: "x", confidence: null, thinking: "" }, t.signal)).rejects.toMatchObject({ status: 409 });
+  });
+
+  it("teaches with the model picked for the chat", async () => {
+    const t = setup();
+    const chatId = t.chatFor(t.first);
+    t.library.updateChat(chatId, { model: { provider: "google", id: "picked" } });
+    const events = await t.run(t.teacher.start(chatId, t.signal));
+    expect(t.models.at(-1)).toBe("picked");
+    expect(events.find((e) => e.type === "done")).toMatchObject({ message: { model: "picked" } });
   });
 
   it("re-explains on a quick action without a new check while one is open", async () => {
