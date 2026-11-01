@@ -55,6 +55,8 @@ Read this file fully before doing anything in this repo.
 | `design/` | Clickable design mock-ups (landing, app screens, dialogs) on the real tokens; open `design/index.html` |
 | `design/assets/logo/` | Approved logo SVGs: colour, `-icon` (favicon/app tile), `-mono`, `-animated` (geometry mirrors `design/js/brand.js`) |
 | `design/scripts/fetch-fonts.sh` | Downloads Satoshi (licence forbids committing it) |
+| `.github/workflows/release.yml` | On push to main: test, package, publish a GitHub release and update feed |
+| `site/` | Public website (static, Cloudflare Pages): landing, download page, launch film. Never add Satoshi font files here |
 | `server/` | Local API (Node 24 runs the TypeScript directly): SQLite store, library, chat turns, providers, usage, caps and the usage report |
 | `server/providers/` | Streaming adapters (OpenAI-compatible, Anthropic, Gemini), catalog and key-checked service |
 | `server/fonts.ts` | Saved text fonts (F-1309) in `<data>/fonts/`: installed families by name and uploaded files (validated by signature), each under a name |

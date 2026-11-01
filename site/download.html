@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Download Distil</title>
+  <meta name="description" content="Download Distil for Windows, or run it from source on any OS. Free and open source.">
+  <meta name="theme-color" content="#11100E">
+  <meta property="og:title" content="Download Distil">
+  <meta property="og:image" content="https://distil.solarquack.in/poster.jpg">
+  <link rel="preconnect" href="https://api.fontshare.com">
+  <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@300,400,500,700,900&display=swap">
+  <link rel="icon" href="assets/logo/distil-icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/palettes.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/brand.css">
+  <link rel="stylesheet" href="css/landing.css">
+  <link rel="stylesheet" href="css/site.css">
+</head>
+<body class="landing">
+  <a class="skip" href="#main">Skip to content</a>
+  <header class="nav" data-nav>
+    <div class="nav__inner">
+      <a href="index.html" class="nav__brand" data-slot="lockup" aria-label="Distil home"></a>
+      <nav class="nav__links" aria-label="Primary">
+        <a href="index.html#film">Film</a>
+        <a href="index.html#how">How it works</a>
+        <a href="https://github.com/jeelnadaa/distil">GitHub</a>
+      </nav>
+      <div class="nav__actions">
+        <button class="btn btn--ghost btn--icon btn--sm" data-theme-toggle aria-label="Toggle theme"></button>
+      </div>
+    </div>
+  </header>
+
+  <main id="main" class="dl">
+    <div class="dl__head">
+      <p class="eyebrow">Download</p>
+      <h1 class="display-xl">Get <em>Distil.</em></h1>
+      <p class="body-lg muted dl__lede">Free and open source. It runs on your computer and uses your own model keys, so you only pay your provider, and Google AI Studio has a free tier.</p>
+    </div>
+
+    <div class="panel dl__card">
+      <div>
+        <p class="eyebrow">Windows app</p>
+        <h2 class="heading-md">Distil for Windows</h2>
+        <p class="mono caption faint"><span data-version>Windows 10 and 11, 64-bit</span> · <span data-size>about 230 MB zip</span></p>
+      </div>
+      <a class="btn btn--primary btn--lg" href="https://github.com/jeelnadaa/distil/releases/latest/download/Distil-win-x64.zip"><svg class="icon"><use href="#i-windows"/></svg>Download for Windows</a>
+    </div>
+
+    <section class="dl__section">
+      <h2 class="heading-md">Install</h2>
+      <ol class="dl__steps">
+        <li><span>Unzip the download anywhere.</span></li>
+        <li><span>Right-click <code>Install.ps1</code> and choose <strong>Run with PowerShell</strong>. Distil installs for your user only, with no admin rights.</span></li>
+        <li><span>Open Distil from the Start menu and add a provider key under Settings › Providers.</span></li>
+        <li><span>Open the <strong>How to use Distil</strong> chat for a tour.</span></li>
+      </ol>
+      <p class="dl__note body-sm muted">The app isn't code-signed yet, so Windows may warn you before running the script. Your library lives in <code>~/Distil</code>, and new versions install from inside the app, under Settings › About.</p>
+    </section>
+
+    <section class="dl__section">
+      <h2 class="heading-md">Run from source</h2>
+      <p class="muted" style="margin-bottom:var(--s-4)">On Windows, macOS or Linux, with <a href="https://nodejs.org">Node.js 24</a> or newer.</p>
+      <pre><code>git clone https://github.com/jeelnadaa/distil.git
+cd distil
+npm install
+npm run fonts
+npm run build
+npm start        # http://127.0.0.1:4321</code></pre>
+    </section>
+
+    <section class="dl__section">
+      <h2 class="heading-md">More</h2>
+      <div class="dl__links">
+        <a class="btn btn--secondary" href="https://github.com/jeelnadaa/distil"><svg class="icon"><use href="#i-github"/></svg>Source on GitHub</a>
+        <a class="btn btn--ghost" href="https://github.com/jeelnadaa/distil/releases">All releases</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <span data-slot="lockup-small"></span>
+    <nav class="footer__links caption muted" aria-label="Footer">
+      <a href="https://github.com/jeelnadaa/distil">GitHub</a><a href="index.html">Home</a><a href="https://github.com/jeelnadaa/distil/releases">Releases</a><a href="https://github.com/jeelnadaa/distil/blob/main/LICENSE">Licence</a>
+    </nav>
+    <span class="caption faint">MIT licence · made for people with exams on Thursday</span>
+  </footer>
+  <script type="module" src="js/page.js"></script>
+  <script type="module" src="js/site.js"></script>
+</body>
+</html>

@@ -226,6 +226,13 @@ Living status log. Update in the same commit as every change.
 
 See `plan.md` §18.
 
+## Launch
+
+- Release pipeline: `.github/workflows/release.yml` tests, packages and publishes a release on every push to `main` that changes the app. Versions are `<major>.<minor>` from `package.json` plus the run number, and installed copies read `releases/latest/download/feed.json`. Not run yet: the first push will be its first test.
+- Website: `site/` holds the landing page, download page and the launch film as static files for Cloudflare Pages at distil.solarquack.in. Not deployed yet.
+- Launch film: rendered from the real app. Its sources live in `launch-film/`, which is kept out of git; the published film is `site/film.mp4`.
+- Fixed while filming: opening an item's source in a long PDF landed on the wrong place, because sections above render lazily and change height. `MaterialView` now settles on the quote.
+
 ## Known issues
 
 - Custom installed fonts are found by family name. Chromium (the desktop build) sees user-installed fonts; Safari only exposes system fonts.
@@ -242,7 +249,8 @@ See `plan.md` §18.
 - A cap is checked before each request, so one reply already in flight can finish past 100 %.
 - Keys are in a user-only file, not the OS credential store (F-1206); the Windows build keeps them there too.
 - The release isn't code-signed, so Windows SmartScreen may warn when Install.ps1 or the shortcut first runs; signing needs a certificate.
-- The installer zip bundles the Satoshi font (it's in the built UI). Check its licence (ITF FFL) allows that before handing the zip out publicly.
+- The Windows zip bundles Satoshi inside the built UI. Its licence (ITF FFL) allows embedding in an app; only the repository must not hold the font files, so CI fetches them and the website loads Satoshi from Fontshare.
+- The Windows app and its installer script aren't code-signed, so Windows may warn on first run.
 - No update feed is published yet, so builds don't check for updates until one is built with `--feed`.
 - Inline maths (KaTeX) doesn't wrap, so a long formula in a chat reply widens the column on a phone.
 - The fake model's plans are mechanical (one unit per heading); judge plan quality only with a real model.

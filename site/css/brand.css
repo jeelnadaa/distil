@@ -1,0 +1,52 @@
+/* Distil marks: wordmark, lockup and the animated mark used for loading. */
+
+.wordmark {
+  font-family: var(--font-display);
+  font-size: 30px;
+  line-height: 1;
+  letter-spacing: -.01em;
+  color: var(--text);
+}
+.wordmark__i { position: relative; display: inline-block; }
+.wordmark__i::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: .02em;
+  width: .19em;
+  height: .19em;
+  border-radius: 50%;
+  background: var(--accent);
+  transform: translateX(-46%);
+}
+.lockup { display: inline-flex; align-items: center; gap: 10px; color: var(--text); text-decoration: none; }
+.lockup .mark { color: var(--text); }
+
+/* Animated mark (loading, hero). A 2.8s loop: the strokes condense, then the drop forms and settles. */
+.mark--animate * { transform-box: fill-box; }
+.mark--animate .mk-bar { transform-origin: center; animation: mk-condense 2.8s var(--ease-condense) infinite; }
+.mark--animate .mk-bar--2 { animation-delay: .12s; }
+.mark--animate .mk-bar--3 { animation-delay: .24s; }
+.mark--animate .mk-drop { transform-origin: center bottom; animation: mk-drop 2.8s infinite; }
+
+@keyframes mk-condense {
+  0%   { transform: scaleX(1.5); opacity: .25; }
+  30%  { transform: scaleX(1); opacity: 1; }
+  80%  { transform: scaleX(1); opacity: 1; }
+  100% { transform: scaleX(1.5); opacity: .25; }
+}
+@keyframes mk-drop {
+  0%, 30% { transform: translateY(-8px) scale(.2); opacity: 0; animation-timing-function: cubic-bezier(.5, 0, .9, .5); }
+  46%     { transform: translateY(0) scale(1.08, .86); opacity: 1; animation-timing-function: var(--ease-out); }
+  56%     { transform: translateY(-1px) scale(.96, 1.05); }
+  64%, 82% { transform: none; opacity: 1; }
+  100%    { transform: none; opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mark--animate * { animation: none !important; }
+  .mark--animate .mk-drop { animation: mk-breathe 2s ease-in-out infinite !important; }
+}
+:root[data-motion="reduce"] .mark--animate * { animation: none !important; }
+:root[data-motion="reduce"] .mark--animate .mk-drop { animation: mk-breathe 2s ease-in-out infinite !important; }
+@keyframes mk-breathe { 50% { opacity: .4; } }

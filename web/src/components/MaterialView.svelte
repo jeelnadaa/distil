@@ -50,7 +50,10 @@
       const range = section && quote ? findRange(section, quote) : null;
       if (range) {
         CSS.highlights.set("distil-quote", new Highlight(range));
-        range.startContainer.parentElement?.scrollIntoView({ block: "center" });
+        // Sections above render lazily (content-visibility) and change height as they appear, so settle.
+        const el = range.startContainer.parentElement;
+        const settle = (n: number) => { el?.scrollIntoView({ block: "center" }); if (n) requestAnimationFrame(() => settle(n - 1)); };
+        settle(12);
       } else CSS.highlights.delete("distil-quote");
     });
     return () => { if ("highlights" in CSS) CSS.highlights.delete("distil-quote"); };

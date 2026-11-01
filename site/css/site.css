@@ -1,0 +1,36 @@
+/* What the live site adds to the landing styles: the film and the download page. */
+.film { max-width: 1240px; margin: 0 auto; padding: 0 var(--s-6) var(--s-16, 96px); }
+.film__frame { position: relative; aspect-ratio: 16 / 9; border-radius: 14px; overflow: hidden; background: #11100E; box-shadow: 0 0 0 1px var(--border), 0 40px 120px rgb(0 0 0 / .35); }
+.film__frame video { display: block; width: 100%; height: 100%; object-fit: cover; }
+.film__play { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; border: 0; background: rgb(17 16 14 / .28); color: #F1EDE4; cursor: pointer; transition: background .3s var(--ease-out); }
+.film__play:hover { background: rgb(17 16 14 / .1); }
+.film__play:focus-visible { outline: 2px solid var(--accent); outline-offset: -4px; }
+.film__disc { display: grid; place-items: center; width: 84px; height: 84px; border-radius: 50%; background: var(--accent); color: #11100E; transition: transform .45s var(--ease-out); }
+.film__play:hover .film__disc { transform: scale(1.08); }
+.film__disc .icon { width: 30px; height: 30px; }
+.film__label { font-size: 13px; letter-spacing: .04em; }
+.film__frame.is-playing .film__play { display: none; }
+
+.dl { max-width: 880px; margin: 0 auto; padding: 128px var(--s-6) 96px; }
+.dl__head { margin-bottom: 40px; }
+.dl__head h1 em { color: var(--accent); }
+.dl__lede { margin-top: var(--s-4); max-width: 60ch; }
+.dl__card { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s-4); padding: var(--s-6); margin-bottom: 56px; }
+.dl__card h2 { margin: 2px 0; }
+.dl__section { margin-bottom: 48px; }
+.dl__section > h2 { margin-bottom: var(--s-4); }
+.dl__steps { list-style: none; padding: 0; margin: 0; counter-reset: step; display: grid; gap: var(--s-4); }
+.dl__steps li { counter-increment: step; display: grid; grid-template-columns: 36px 1fr; gap: var(--s-3); align-items: baseline; }
+.dl__steps li::before { content: counter(step); font-family: var(--font-mono); font-size: 13px; color: var(--accent); }
+.dl__note { margin-top: var(--s-4); padding: var(--s-4); border-left: 2px solid var(--accent); }
+.dl pre { margin: 0; padding: var(--s-4); overflow-x: auto; border-radius: 10px; background: var(--surface); border: 1px solid var(--border); font: 400 14px/1.7 var(--font-mono); }
+.dl__links { display: flex; flex-wrap: wrap; gap: var(--s-3); }
+.dl a:not(.btn) { color: var(--accent); }
+.dl code { font-family: var(--font-mono); font-size: .92em; }
+
+@media (max-width: 640px) {
+  .film { padding: 0 16px 64px; }
+  .film__disc { width: 60px; height: 60px; }
+  .dl { padding: 96px 16px 64px; }
+  .dl__card .btn { width: 100%; justify-content: center; }
+}

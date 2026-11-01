@@ -1,0 +1,68 @@
+// Distil icon set: 24px grid, 1.5px stroke, round caps (Phosphor-Regular-compatible proportions).
+// Usage: <svg class="icon"><use href="#i-folder"/></svg> after calling injectIcons().
+
+const ICONS = {
+  today: '<circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M5.6 18.4 7 17M17 7l1.4-1.4"/>',
+  folder: '<path d="M3 7.5A1.5 1.5 0 0 1 4.5 6h4.2l2 2h8.8A1.5 1.5 0 0 1 21 9.5v8a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5z"/>',
+  "folder-open": '<path d="M3 17.5V7.5A1.5 1.5 0 0 1 4.5 6h4.2l2 2h7.8A1.5 1.5 0 0 1 20 9.5V11"/><path d="M3 17.5 5.4 12a1.5 1.5 0 0 1 1.4-1h12.7a1 1 0 0 1 .9 1.4L18 18.1a1.5 1.5 0 0 1-1.4.9H4.5"/>',
+  chat: '<path d="M4 5.5A1.5 1.5 0 0 1 5.5 4h13A1.5 1.5 0 0 1 20 5.5v10a1.5 1.5 0 0 1-1.5 1.5H9l-5 3.5z"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  search: '<circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/>',
+  gear: '<circle cx="12" cy="12" r="3"/><path d="M19.4 13.5a7.6 7.6 0 0 0 0-3l2-1.6-2-3.4-2.4 1a7.5 7.5 0 0 0-2.6-1.5L14 2.5h-4l-.4 2.5A7.5 7.5 0 0 0 7 6.5l-2.4-1-2 3.4 2 1.6a7.6 7.6 0 0 0 0 3l-2 1.6 2 3.4 2.4-1a7.5 7.5 0 0 0 2.6 1.5l.4 2.5h4l.4-2.5a7.5 7.5 0 0 0 2.6-1.5l2.4 1 2-3.4z"/>',
+  chart: '<path d="M4 20V4M4 20h16"/><path d="M8 16v-4M12 16V8M16 16v-6"/>',
+  file: '<path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 12h6M9 16h6"/>',
+  upload: '<path d="M12 15V4M7.5 8.5 12 4l4.5 4.5"/><path d="M4 15v4.5h16V15"/>',
+  link: '<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>',
+  video: '<rect x="3" y="5.5" width="18" height="13" rx="2"/><path d="m10.5 9.5 4 2.5-4 2.5z"/>',
+  image: '<rect x="3.5" y="4.5" width="17" height="15" rx="1.5"/><circle cx="9" cy="10" r="1.5"/><path d="m20.5 16-5-5-8 8.5"/>',
+  check: '<path d="m5 12.5 4.5 4.5L19 7.5"/>',
+  x: '<path d="M6 6l12 12M18 6 6 18"/>',
+  "arrow-right": '<path d="M4 12h16M14 6l6 6-6 6"/>',
+  "arrow-up": '<path d="M12 20V4M6 10l6-6 6 6"/>',
+  "chevron-right": '<path d="m9 6 6 6-6 6"/>',
+  "chevron-down": '<path d="m6 9 6 6 6-6"/>',
+  play: '<path d="M7 4.5v15l12.5-7.5z"/>',
+  pause: '<path d="M8 5v14M16 5v14"/>',
+  cards: '<rect x="3.5" y="7" width="13" height="13" rx="1.5"/><path d="M7.5 4h11.5A1.5 1.5 0 0 1 20.5 5.5V17"/>',
+  target: '<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r=".8" fill="currentColor"/>',
+  clock: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7v5l3 2"/>',
+  book: '<path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H11v16H5.5A1.5 1.5 0 0 1 4 18.5z"/><path d="M20 5.5A1.5 1.5 0 0 0 18.5 4H13v16h5.5a1.5 1.5 0 0 0 1.5-1.5z"/>',
+  graph: '<circle cx="6" cy="6" r="2.2"/><circle cx="18" cy="8" r="2.2"/><circle cx="9" cy="18" r="2.2"/><path d="m8 7 8 .7M7 8l1.6 7.8M16.4 9.6 10.6 16.4"/>',
+  list: '<path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r=".9" fill="currentColor"/><circle cx="4.5" cy="12" r=".9" fill="currentColor"/><circle cx="4.5" cy="18" r=".9" fill="currentColor"/>',
+  sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/>',
+  moon: '<path d="M19.5 14.5A8 8 0 0 1 9.5 4.5a8 8 0 1 0 10 10z"/>',
+  "thumbs-up": '<path d="M7.5 10.5v9H4.5v-9zM7.5 10.5 11 3.5a2.5 2.5 0 0 1 2.5 2.5v3h5a2 2 0 0 1 2 2.3l-1.1 6.5a2 2 0 0 1-2 1.7H7.5"/>',
+  "thumbs-down": '<path d="M7.5 13.5v-9H4.5v9zM7.5 13.5 11 20.5a2.5 2.5 0 0 0 2.5-2.5v-3h5a2 2 0 0 0 2-2.3l-1.1-6.5a2 2 0 0 0-2-1.7H7.5"/>',
+  expand: '<path d="M14 4h6v6M10 20H4v-6M20 4l-6.5 6.5M4 20l6.5-6.5"/>',
+  mic: '<rect x="9" y="3.5" width="6" height="11" rx="3"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v2.5"/>',
+  paperclip: '<path d="m19 11.5-7.4 7.4a4.5 4.5 0 0 1-6.4-6.4l7.8-7.8a3 3 0 0 1 4.2 4.2l-7.6 7.6a1.5 1.5 0 0 1-2.1-2.1l7-7"/>',
+  warning: '<path d="M12 4 2.8 19.5h18.4z"/><path d="M12 10v4.5"/><circle cx="12" cy="17" r=".8" fill="currentColor"/>',
+  trash: '<path d="M4.5 6.5h15M9.5 6.5V4h5v2.5M6.5 6.5l1 13.5h9l1-13.5"/>',
+  key: '<circle cx="8" cy="15" r="4"/><path d="m11 12 8.5-8.5M16.5 6.5l2.5 2.5M14 9l2 2"/>',
+  layers: '<path d="m12 3.5 9 5-9 5-9-5z"/><path d="m3 13 9 5 9-5"/>',
+  sidebar: '<rect x="3.5" y="4.5" width="17" height="15" rx="1.5"/><path d="M9.5 4.5v15"/>',
+  panel: '<rect x="3.5" y="4.5" width="17" height="15" rx="1.5"/><path d="M14.5 4.5v15"/>',
+  dots: '<circle cx="6" cy="12" r="1.2" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.2" fill="currentColor" stroke="none"/><circle cx="18" cy="12" r="1.2" fill="currentColor" stroke="none"/>',
+  shield: '<path d="M12 3.5 19.5 6v6c0 4.5-3.2 7.5-7.5 8.5C7.7 19.5 4.5 16.5 4.5 12V6z"/>',
+  sliders: '<path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/>',
+  refresh: '<path d="M19.5 12a7.5 7.5 0 1 1-2.2-5.3L19.5 9"/><path d="M19.5 4v5h-5"/>',
+  download: '<path d="M12 4v11M7.5 10.5 12 15l4.5-4.5"/><path d="M4 15v4.5h16V15"/>',
+  windows: '<path d="M4 5.5 11 4.5v7H4zM13 4.2 20 3v8.5h-7zM4 12.5h7v7L4 18.5zM13 12.5h7V21l-7-1.2z"/>',
+  github: '<path d="M9 19c-4 1.3-4-2-5.5-2.5M14.5 21v-3.4a3 3 0 0 0-.8-2.3c2.7-.3 5.5-1.3 5.5-6a4.6 4.6 0 0 0-1.3-3.2 4.3 4.3 0 0 0-.1-3.2s-1-.3-3.4 1.3a11.6 11.6 0 0 0-6 0C6 2.6 5 2.9 5 2.9a4.3 4.3 0 0 0-.1 3.2 4.6 4.6 0 0 0-1.3 3.2c0 4.6 2.8 5.7 5.5 6a3 3 0 0 0-.8 2.3V21"/>',
+  flame: '<path d="M12 21a6 6 0 0 0 6-6c0-4-3-6-4-9.5-1.5 2-2 3.5-2 5-1-1-2-2-2-3.5C7.5 9 6 11.5 6 15a6 6 0 0 0 6 6z"/>',
+  lock: '<rect x="5" y="10.5" width="14" height="10" rx="1.5"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/>',
+  wand: '<path d="m4 20 11-11M14 4v3M12.5 5.5h3M19 9v3M17.5 10.5h3"/>',
+  keyboard: '<rect x="2.5" y="6" width="19" height="12" rx="1.5"/><path d="M6 10h1M10 10h1M14 10h1M18 10h0M7 14h10"/>',
+  database: '<ellipse cx="12" cy="6" rx="7.5" ry="2.5"/><path d="M4.5 6v12c0 1.4 3.4 2.5 7.5 2.5s7.5-1.1 7.5-2.5V6M4.5 12c0 1.4 3.4 2.5 7.5 2.5s7.5-1.1 7.5-2.5"/>',
+  type: '<path d="M5 6.5V4.5h14v2M12 4.5v15M9 19.5h6"/>',
+};
+
+export function injectIcons() {
+  if (document.getElementById("distil-icons")) return;
+  const symbols = Object.entries(ICONS)
+    .map(([name, body]) => `<symbol id="i-${name}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${body}</symbol>`)
+    .join("");
+  document.body.insertAdjacentHTML("afterbegin", `<svg id="distil-icons" width="0" height="0" style="position:absolute" aria-hidden="true">${symbols}</svg>`);
+}
+
+export const icon = (name, cls = "icon") => `<svg class="${cls}" aria-hidden="true"><use href="#i-${name}"/></svg>`;

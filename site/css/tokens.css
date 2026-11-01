@@ -1,0 +1,167 @@
+/* Distil design tokens — the single source of truth for DESIGN.md §3–§6. */
+
+@font-face {
+  font-family: "Instrument Serif";
+  src: url("../assets/fonts/InstrumentSerif-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Instrument Serif";
+  src: url("../assets/fonts/InstrumentSerif-Italic.woff2") format("woff2");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("../assets/fonts/JetBrainsMono-Variable.woff2") format("woff2");
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  /* Families */
+  --font-display: "Instrument Serif", "Iowan Old Style", Georgia, serif;
+  --font-text: "Satoshi", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "Cascadia Code", Consolas, monospace;
+
+  /* Type scale (DESIGN.md §3) */
+  --t-display-2xl: clamp(56px, 9vw, 128px);
+  --t-display-xl: clamp(44px, 6vw, 88px);
+  --t-display-lg: clamp(36px, 4vw, 56px);
+  --t-display-md: 36px;
+  --t-heading-lg: 24px;
+  --t-heading-md: 20px;
+  --t-heading-sm: 17px;
+  --t-body-lg: 18px;
+  --t-body: 16px;
+  --t-body-sm: 14px;
+  --t-caption: 12px;
+  --t-eyebrow: 11px;
+  --t-mono: 14px;
+
+  /* Space */
+  --s-1: 4px; --s-2: 8px; --s-3: 12px; --s-4: 16px; --s-5: 24px;
+  --s-6: 32px; --s-7: 48px; --s-8: 64px; --s-9: 96px; --s-10: 144px;
+
+  /* Shape */
+  --r-xs: 2px; --r-sm: 6px; --r-md: 10px; --r-lg: 16px; --r-full: 999px;
+
+  /* Motion (springs are defined in motion.js; these are the timed tokens) */
+  --dur-instant: 80ms;
+  --dur-fast: 140ms;
+  --dur-base: 220ms;
+  --dur-slow: 360ms;
+  --dur-deliberate: 600ms;
+  --dur-signature: 1200ms;
+  --stagger: 32ms;
+  --ease-out: cubic-bezier(.16, 1, .3, 1);
+  --ease-in-out: cubic-bezier(.65, 0, .35, 1);
+  --ease-condense: cubic-bezier(.7, 0, .2, 1);
+  --ease-in: cubic-bezier(.4, 0, 1, 1);
+  /* CSS approximations of the springs, for transitions that cannot run JS */
+  --spring-snappy: linear(0, .3 6%, .72 14%, .92 22%, .99 32%, 1);
+  --spring-smooth: linear(0, .18 8%, .55 20%, .82 34%, .95 50%, 1);
+  --spring-settle: linear(0, .25 8%, .78 20%, 1.06 34%, 1.02 46%, .99 60%, 1);
+
+  /* Layout */
+  --sidebar-w: 272px;
+  --context-w: 336px;
+  --content-max: 880px;
+  --measure: 68ch;
+}
+
+/* ---------- Light theme (default) ---------- */
+:root,
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg: #F5F2EB;
+  --surface: #FBFAF6;
+  --surface-sunken: #ECE8DE;
+  --text: #15130F;
+  --text-muted: #57524A;
+  --text-faint: #6E675E;
+  --border: #DAD4C8;
+  --border-control: #8A8276;
+  --accent: #A8461A;
+  --on-accent: #FFF8F2;
+  --accent-wash: rgb(168 70 26 / .08);
+  --accent-wash-strong: rgb(168 70 26 / .16);
+  --success: #2F6B3F;
+  --success-wash: rgb(47 107 63 / .10);
+  --warning: #855600;
+  --warning-wash: rgb(133 86 0 / .10);
+  --danger: #B3261E;
+  --danger-wash: rgb(179 38 30 / .08);
+  --primary: #15130F;
+  --on-primary: #FBFAF6;
+  --scrim: rgb(245 242 235 / .72);
+  --shadow-float: 0 1px 0 rgb(0 0 0 / .04), 0 12px 32px -8px rgb(40 24 10 / .18);
+
+  --viz-1: #2A2723; --viz-2: #A8461A; --viz-3: #4F6E4B;
+  --viz-4: #4A5F6B; --viz-5: #8A6A1E; --viz-6: #7E4E40;
+}
+
+/* ---------- Dark theme ---------- */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #11100E;
+  --surface: #1A1815;
+  --surface-sunken: #0B0A09;
+  --text: #F1EDE4;
+  --text-muted: #B5AEA2;
+  --text-faint: #948C80;
+  --border: #2E2A25;
+  --border-control: #756E63;
+  --accent: #E07A45;
+  --on-accent: #1A0D05;
+  --accent-wash: rgb(224 122 69 / .12);
+  --accent-wash-strong: rgb(224 122 69 / .22);
+  --success: #7BC48D;
+  --success-wash: rgb(123 196 141 / .12);
+  --warning: #E3B34A;
+  --warning-wash: rgb(227 179 74 / .12);
+  --danger: #F2857B;
+  --danger-wash: rgb(242 133 123 / .10);
+  --primary: #F1EDE4;
+  --on-primary: #11100E;
+  --scrim: rgb(17 16 14 / .72);
+  --shadow-float: 0 12px 40px -8px rgb(0 0 0 / .6);
+
+  --viz-1: #E8E2D6; --viz-2: #E07A45; --viz-3: #8FB58A;
+  --viz-4: #9AB0BC; --viz-5: #D2B062; --viz-6: #C99482;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #11100E;
+    --surface: #1A1815;
+    --surface-sunken: #0B0A09;
+    --text: #F1EDE4;
+    --text-muted: #B5AEA2;
+    --text-faint: #948C80;
+    --border: #2E2A25;
+    --border-control: #756E63;
+    --accent: #E07A45;
+    --on-accent: #1A0D05;
+    --accent-wash: rgb(224 122 69 / .12);
+    --accent-wash-strong: rgb(224 122 69 / .22);
+    --success: #7BC48D;
+    --success-wash: rgb(123 196 141 / .12);
+    --warning: #E3B34A;
+    --warning-wash: rgb(227 179 74 / .12);
+    --danger: #F2857B;
+    --danger-wash: rgb(242 133 123 / .10);
+    --primary: #F1EDE4;
+    --on-primary: #11100E;
+    --scrim: rgb(17 16 14 / .72);
+    --shadow-float: 0 12px 40px -8px rgb(0 0 0 / .6);
+
+    --viz-1: #E8E2D6; --viz-2: #E07A45; --viz-3: #8FB58A;
+    --viz-4: #9AB0BC; --viz-5: #D2B062; --viz-6: #C99482;
+  }
+}
