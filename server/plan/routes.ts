@@ -6,6 +6,7 @@ import { Brief } from "../learning/types.ts";
 import { compileBrief } from "./brief.ts";
 import { planIcs, planMarkdown } from "./export.ts";
 import { type PlanJob, planLabel } from "./planner.ts";
+import { MAX_PLANS } from "../constants.ts";
 import { localDate } from "./schedule.ts";
 import { itemsInOrder, sectionList } from "./sections.ts";
 import { todayView } from "./today.ts";
@@ -38,6 +39,11 @@ export function registerPlanRoutes(app: Hono, deps: AppDeps) {
     if (!plan) throw new AppError(404, "no_plan", "This folder has no plan yet.");
     return plan;
   };
+  const savedPlan = (folderId: string, planId: string) => {
+    const plan = plans.get(planId);
+    if (plan.folderId !== folderId || plan.status === "draft") throw new AppError(404, "no_plan", "That saved plan no longer exists.");
+    return plan;
+  };
   const runningPlanJob = (folderId: string) => jobs.list().find((j) => j.kind === "plan" && j.folderId === folderId && (j.status === "queued" || j.status === "running"));
 
   /* ---------- Study Brief (F-101…F-104) ---------- */
@@ -66,12 +72,17 @@ export function registerPlanRoutes(app: Hono, deps: AppDeps) {
     library.requireFolder(c.req.param("id"));
     return view(c, c.req.param("id"));
   });
-  // Builds a new plan from the whole ledger as a draft; it replaces the current plan when it is complete.
-  app.post("/folders/:id/plan", (c) => {
+  // Builds a new plan from the whole ledger as a draft; it becomes the active plan when it is complete.
+  // Earlier plans are kept to switch back to, up to MAX_PLANS: past that, the learner picks one to replace.
+  app.post("/folders/:id/plan", async (c) => {
+    const { replace } = await body(c, z.object({ replace: z.string().min(1).optional() }));
     const folderId = c.req.param("id");
     const folder = library.requireFolder(folderId);
     const brief = briefs.nearest(folderId);
     if (!brief) throw new AppError(400, "no_brief", "Set up the study brief first.");
+    const saved = plans.saved(folderId);
+    if (replace && !saved.some((p) => p.id === replace)) throw new AppError(404, "no_plan", "That saved plan no longer exists.");
+    if (!replace && saved.length >= MAX_PLANS) throw new AppError(409, "plan_limit", `You have ${MAX_PLANS} saved plans. Pick one for the new plan to replace.`);
     const running = runningPlanJob(folderId);
     if (running) jobs.abort(running.id);
     for (const draft of deps.db.prepare("SELECT id FROM plans WHERE folder_id = ? AND status = 'draft'").all(folderId) as { id: string }[]) plans.remove(draft.id);
@@ -80,7 +91,7 @@ export function registerPlanRoutes(app: Hono, deps: AppDeps) {
     }
     const schedule = plans.active(folderId)?.schedule;
     const planId = plans.createDraft(folderId, brief.kind, schedule && { ...schedule, baselineDay: null, note: null });
-    const params: PlanJob = { planId, mode: "build" };
+    const params: PlanJob = { planId, mode: "build", ...(replace && { replace }) };
     return c.json(jobs.enqueue("plan", planLabel(folder.name, "build"), { folderId, params }), 202);
   });
   // Plans the in-scope items the active plan doesn't map yet (added to the ledger after planning).
@@ -98,6 +109,18 @@ export function registerPlanRoutes(app: Hono, deps: AppDeps) {
     const { bufferDays } = await body(c, z.object({ bufferDays: z.number().int().min(0).max(14) }));
     const plan = activePlan(c.req.param("id"));
     plans.setSchedule(plan.id, { ...plan.schedule, bufferDays, baselineDay: null }, {});
+    return view(c, plan.folderId);
+  });
+  // Switch to a saved plan. Lessons whose items were all taught meanwhile count as done (progress is shared by items).
+  app.post("/folders/:id/plans/:planId/activate", (c) => {
+    const plan = savedPlan(c.req.param("id"), c.req.param("planId"));
+    if (plan.status !== "active") plans.activate(plan.id);
+    return view(c, plan.folderId);
+  });
+  app.delete("/folders/:id/plans/:planId", (c) => {
+    const plan = savedPlan(c.req.param("id"), c.req.param("planId"));
+    if (plan.status === "active") throw new AppError(409, "plan_active", "Switch to another plan before deleting this one.");
+    plans.remove(plan.id);
     return view(c, plan.folderId);
   });
   app.get("/folders/:id/plan/export.md", (c) => {

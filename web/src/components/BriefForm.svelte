@@ -59,34 +59,45 @@
     </div>
   {/each}
 
-  <label class="field"><span class="field__label">Goal</span><input class="input" bind:value={brief.goal} maxlength="300" required /></label>
-  <div class="brief-form__row">
-    <label class="field"><span class="field__label">Exam or deadline <span class="field__hint">· optional</span></span>
-      <input class="input" type="date" value={brief.deadline ?? ""} onchange={(e) => (brief.deadline = e.currentTarget.value || null)} /></label>
-    <label class="field"><span class="field__label">Hours per day <span class="field__hint">· optional</span></span>
-      <input class="input" type="number" min="0.5" max="24" step="0.5" value={brief.hoursPerDay ?? ""}
-        onchange={(e) => (brief.hoursPerDay = Number(e.currentTarget.value) > 0 ? Math.min(24, Number(e.currentTarget.value)) : null)} /></label>
-  </div>
-  <div class="field"><span class="field__label">Depth</span>
-    <Segmented label="Depth" value={brief.depth} onchange={(v) => (brief.depth = v)} options={[...DEPTHS]} />
-  </div>
-  <div class="field"><span class="field__label">Days off</span>
-    <div class="qchips">
-      {#each DAYS as day, d (d)}<button type="button" class="btn btn--secondary btn--sm" aria-pressed={brief.daysOff.includes(d)} onclick={() => toggleDay(d)}>{day}</button>{/each}
+  <div class="brief-form__cols">
+    <div class="brief-form__col">
+      <label class="field"><span class="field__label">Goal</span><input class="input" bind:value={brief.goal} maxlength="300" required /></label>
+      <label class="field"><span class="field__label">Scope <span class="field__hint">· what's in, what's out</span></span><input class="input" bind:value={brief.scope} maxlength="600" /></label>
+      <label class="field"><span class="field__label">What you already know</span><textarea class="textarea" rows="3" bind:value={brief.level} maxlength="300"></textarea></label>
     </div>
-  </div>
-  <label class="field"><span class="field__label">Scope <span class="field__hint">· what's in, what's out</span></span><input class="input" bind:value={brief.scope} maxlength="600" /></label>
-  <label class="field"><span class="field__label">What you already know</span><textarea class="textarea" rows="2" bind:value={brief.level} maxlength="300"></textarea></label>
-  <div class="field"><span class="field__label">Plan</span>
-    <Segmented label="Plan kind" value={kind} onchange={(v) => (kind = v)} options={[
-      { value: "course", label: "Learn the material", tip: "Lessons cover every item in the ledger" },
-      { value: "skill", label: "Build a skill", tip: "Adds hands-on projects; works without material" },
-    ]} />
+    <div class="brief-form__col">
+      <div class="brief-form__row">
+        <label class="field"><span class="field__label">Exam or deadline <span class="field__hint">· optional</span></span>
+          <input class="input" type="date" value={brief.deadline ?? ""} onchange={(e) => (brief.deadline = e.currentTarget.value || null)} /></label>
+        <label class="field"><span class="field__label">Hours per day <span class="field__hint">· optional</span></span>
+          <input class="input" type="number" min="0.5" max="24" step="0.5" value={brief.hoursPerDay ?? ""}
+            onchange={(e) => (brief.hoursPerDay = Number(e.currentTarget.value) > 0 ? Math.min(24, Number(e.currentTarget.value)) : null)} /></label>
+      </div>
+      <div class="field"><span class="field__label">Depth</span>
+        <Segmented label="Depth" value={brief.depth} onchange={(v) => (brief.depth = v)} options={[...DEPTHS]} />
+      </div>
+      <div class="field"><span class="field__label">Days off</span>
+        <div class="qchips">
+          {#each DAYS as day, d (d)}<button type="button" class="btn btn--secondary btn--sm" aria-pressed={brief.daysOff.includes(d)} onclick={() => toggleDay(d)}>{day}</button>{/each}
+        </div>
+      </div>
+      <div class="field"><span class="field__label">Plan</span>
+        <Segmented label="Plan kind" value={kind} onchange={(v) => (kind = v)} options={[
+          { value: "course", label: "Learn the material", tip: "Lessons cover every item in the ledger" },
+          { value: "skill", label: "Build a skill", tip: "Adds hands-on projects; works without material" },
+        ]} />
+      </div>
+    </div>
   </div>
 </div>
 
 <style>
   .brief-ask { display: flex; gap: var(--s-2); }
+  /* Two columns when there is room: what the plan is for, and when and how to study. */
+  .brief-form { container-type: inline-size; }
+  .brief-form__cols { display: grid; gap: var(--s-4); }
+  .brief-form__col { display: grid; gap: var(--s-4); align-content: start; min-width: 0; }
+  @container (min-width: 760px) { .brief-form__cols { grid-template-columns: 1fr 1fr; gap: var(--s-6); } }
   .brief-ask .input { flex: 1; min-width: 0; }
   @media (max-width: 640px) { .brief-ask { flex-direction: column; } }
 </style>

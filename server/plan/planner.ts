@@ -16,7 +16,8 @@ import type { Plans } from "./store.ts";
 // so a stopped or crashed job resumes with the items still unplanned. "build" fills a draft that replaces
 // the active plan when done; "extend" adds lessons for items the active plan doesn't map yet.
 
-export type PlanJob = { planId: string; mode: "build" | "extend" };
+// replace: a saved plan the new one takes the place of, removed once the new plan is active.
+export type PlanJob = { planId: string; mode: "build" | "extend"; replace?: string };
 const ATTEMPTS = 3;
 // The text of exam papers and syllabi shown to the planner, so it can judge what is examined.
 const EXAM_EXCERPT_CHARS = 8000;
@@ -92,7 +93,7 @@ export async function planPart(llm: LlmDeps, p: PartInput): Promise<{ units: Dra
 export function registerPlanner(jobs: Jobs, deps: LlmDeps & { db: Db; plans: Plans; briefs: Briefs; learner: Learner }) {
   const { db, plans, briefs, learner } = deps;
   jobs.register("plan", async (job, { signal, progress, note }) => {
-    const { planId, mode } = job.params as PlanJob;
+    const { planId, mode, replace } = job.params as PlanJob;
     const folderId = job.folderId!;
     const stored = briefs.nearest(folderId);
     const brief = stored ? briefText(stored.brief, localDate()) : "- Goal: learn everything in the material";
@@ -122,6 +123,7 @@ export function registerPlanner(jobs: Jobs, deps: LlmDeps & { db: Db; plans: Pla
     }
     if (mode === "build") {
       plans.activate(planId);
+      if (replace) plans.remove(replace);
       learner.advance(plans.get(planId).lessons.flatMap((l) => l.items), "planned");
     }
     if (problems) note(`${problems} ${problems === 1 ? "part" : "parts"} needed fixing in code after the model's retries`);

@@ -11,13 +11,13 @@ import type { ProviderSpec } from "../../../server/providers/catalog.ts";
 import type { ModelInfo } from "../../../server/providers/types.ts";
 import type { Brief } from "../../../server/learning/types.ts";
 import type { Compiled, StoredBrief } from "../../../server/plan/brief.ts";
-import type { Lesson, Plan, PlanKind, Unit } from "../../../server/plan/store.ts";
+import type { Lesson, Plan, PlanKind, SavedPlan, Unit } from "../../../server/plan/store.ts";
 import type { TodayLesson, TodayView } from "../../../server/plan/today.ts";
 import type { PlanView } from "../../../server/plan/view.ts";
 import type { ModelRef, Settings } from "../../../server/settings.ts";
 import type { CapStatus } from "../../../server/usage.ts";
 
-export type { Brief, Compiled, Lesson, Plan, PlanKind, PlanView, StoredBrief, TodayLesson, TodayView, Unit };
+export type { Brief, Compiled, Lesson, Plan, PlanKind, PlanView, SavedPlan, StoredBrief, TodayLesson, TodayView, Unit };
 export type { CapStatus, Chat, SavedFont, Folder, Item, ItemMark, ItemType, Job, Message, Meter, ModelInfo, ModelRef, Settings, Strategy, TurnEvent };
 export type FolderMaterial = Material & { inherited: boolean };
 export type { Material, StoredChunk };
@@ -127,7 +127,9 @@ export const api = {
   compileBrief: (folderId: string, request: string) => json<Compiled>("POST", `/folders/${folderId}/brief/compile?today=${localDay()}`, { request }),
   saveBrief: (folderId: string, brief: Brief, kind: PlanKind) => json<StoredBrief>("PUT", `/folders/${folderId}/brief`, { brief, kind }),
   plan: (folderId: string) => json<PlanView>("GET", `/folders/${folderId}/plan?today=${localDay()}`),
-  buildPlan: (folderId: string) => json<Job>("POST", `/folders/${folderId}/plan`, {}),
+  buildPlan: (folderId: string, replace?: string) => json<Job>("POST", `/folders/${folderId}/plan`, { replace }),
+  activatePlan: (folderId: string, planId: string) => json<PlanView>("POST", `/folders/${folderId}/plans/${planId}/activate?today=${localDay()}`, {}),
+  deletePlan: (folderId: string, planId: string) => json<PlanView>("DELETE", `/folders/${folderId}/plans/${planId}?today=${localDay()}`),
   extendPlan: (folderId: string) => json<Job>("POST", `/folders/${folderId}/plan/extend`, {}),
   setBufferDays: (folderId: string, bufferDays: number) => json<PlanView>("PATCH", `/folders/${folderId}/plan?today=${localDay()}`, { bufferDays }),
   exportUrl: (folderId: string, format: "md" | "ics") => `/api/folders/${folderId}/plan/export.${format}?today=${localDay()}`,

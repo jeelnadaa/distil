@@ -3,7 +3,7 @@ import type { Jobs, Job } from "../jobs.ts";
 import { type StoredBrief, type Briefs } from "./brief.ts";
 import { coverageOf, untaught } from "./coverage.ts";
 import { addDays, buildSchedule, localDate, rebalance, type Schedule, type ScheduleSettings, type SchedLesson } from "./schedule.ts";
-import type { Plan, Plans } from "./store.ts";
+import type { Plan, Plans, SavedPlan } from "./store.ts";
 
 // What the Plan tab, the ledger highlights and the Today view need about a folder's plan, computed for
 // the learner's local day. Reading it re-balances the schedule once a day (F-505).
@@ -11,7 +11,7 @@ import type { Plan, Plans } from "./store.ts";
 export type PlanDeps = { db: Db; plans: Plans; briefs: Briefs; jobs: Jobs };
 export type Coverage = ReturnType<typeof coverageOf> & { untaught: string[] };
 export type PlanSchedule = Schedule & { settings: ScheduleSettings; note: string | null };
-export type PlanView = { plan: Plan | null; brief: StoredBrief | null; job: Job | null; coverage: Coverage; schedule: PlanSchedule | null };
+export type PlanView = { plan: Plan | null; saved: SavedPlan[]; brief: StoredBrief | null; job: Job | null; coverage: Coverage; schedule: PlanSchedule | null };
 
 // Days before today shown in the schedule strip.
 const PAST_DAYS = 3;
@@ -46,5 +46,5 @@ export function planView(deps: PlanDeps, folderId: string, today: string): PlanV
     const from = [addDays(today, -PAST_DAYS), localDate(new Date(plan.createdAt))].sort()[1]!;
     schedule = { ...buildSchedule(lessons, settings, today, from), settings, note: next.state.note };
   }
-  return { plan, brief, job, coverage, schedule };
+  return { plan, saved: deps.plans.saved(folderId), brief, job, coverage, schedule };
 }

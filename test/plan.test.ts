@@ -119,7 +119,14 @@ async function served() {
     { key: "b", title: "Spread", summary: "", kind: "lesson", minutes: 40, weight: 1, aids: [], items: [items[2]!.id], after: ["a"] },
   ] }], new Map());
   plans.activate(planId);
-  return { call, folder, items, plan: plans.get(planId) };
+  // Another finished plan for the same items, made active (as a completed re-plan would be).
+  const another = () => {
+    const id = plans.createDraft(folder.id, "course");
+    plans.append(id, [{ title: "All", summary: "", lessons: [{ key: "a", title: "Everything", summary: "", kind: "lesson", minutes: 60, weight: 1, aids: [], items: items.map((i) => i.id), after: [] }] }], new Map());
+    plans.activate(id);
+    return id;
+  };
+  return { call, folder, items, plan: plans.get(planId), another };
 }
 
 describe("plan API", () => {
@@ -130,6 +137,24 @@ describe("plan API", () => {
 
     const moved = await call("PATCH", `/lessons/${plan.lessons[1]!.id}`, { move: { unitId: plan.units[0]!.id, index: 0 } });
     expect(moved.status).toBe(409);
+  });
+
+  it("keeps up to three plans, switches between them and asks which to replace", async () => {
+    const { call, folder, plan, another } = await served();
+    await call("PUT", `/folders/${folder.id}/brief`, { brief: { goal: "Learn it" }, kind: "course" });
+    another();
+    const newest = another();
+    const view = (await call("GET", `/folders/${folder.id}/plan`)).body;
+    expect(view.saved.map((p: { id: string; status: string }) => [p.id, p.status])[0]).toEqual([newest, "active"]);
+    expect(view.saved).toHaveLength(3);
+
+    expect((await call("POST", `/folders/${folder.id}/plan`)).body.code).toBe("plan_limit");
+    expect((await call("POST", `/folders/${folder.id}/plan`, { replace: plan.id })).status).toBe(202);
+
+    const switched = (await call("POST", `/folders/${folder.id}/plans/${plan.id}/activate`)).body;
+    expect(switched.plan.id).toBe(plan.id);
+    expect((await call("DELETE", `/folders/${folder.id}/plans/${plan.id}`)).status).toBe(409);
+    expect((await call("DELETE", `/folders/${folder.id}/plans/${newest}`)).body.saved).toHaveLength(2);
   });
 
   it("starts a lesson once and reopens the same chat after", async () => {

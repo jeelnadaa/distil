@@ -60,33 +60,35 @@
 </script>
 
 <div class="plan-map panel">
-  <svg class="pmap" width={layout.width} height={layout.height} viewBox="0 0 {layout.width} {layout.height}" role="group" aria-label="Lesson map">
-    <g class="pmap__units">
-      {#each layout.units as unit, i (i)}
-        <text x={unit.x} y="26">UNIT {i + 1} · {short(unit.title).toUpperCase()}</text>
-        {#if i}<line x1={unit.x - UNIT_GAP / 2} y1="14" x2={unit.x - UNIT_GAP / 2} y2={layout.height - 4} />{/if}
-      {/each}
-    </g>
-    <g class="pmap__edges">
-      {#each layout.edges as d, i (i)}<path {d} />{/each}
-    </g>
-    <g class="pmap__nodes">
-      {#each plan.lessons as lesson (lesson.id)}
-        {@const p = layout.pos.get(lesson.id)}
-        {#if p}
-          <g class="is-{states.get(lesson.id)}" class:is-project={lesson.kind === "project"} role="button" tabindex="0"
-            aria-label="{lesson.title}, {states.get(lesson.id)}" aria-pressed={selected === lesson.id}
-            onclick={() => onselect(lesson.id)} onkeydown={press(lesson.id)}>
-            <title>{lesson.title}</title>
-            <rect x={p.x} y={p.y} width={W} height={H} rx="8" style:stroke={selected === lesson.id ? "var(--accent)" : undefined} />
-            <text x={p.x + 14} y={p.y + 25}>{short(lesson.title)}</text>
-            <text class="count" x={p.x + W - 10} y={p.y + 25}>{lesson.items.length}</text>
-            {#if states.get(lesson.id) === "current"}<circle cx={p.x + W} cy={p.y} r="6" />{/if}
-          </g>
-        {/if}
-      {/each}
-    </g>
-  </svg>
+  <div class="plan-map__scroll">
+    <svg class="pmap" width={layout.width} height={layout.height} viewBox="0 0 {layout.width} {layout.height}" role="group" aria-label="Lesson map">
+      <g class="pmap__units">
+        {#each layout.units as unit, i (i)}
+          <text x={unit.x} y="26">UNIT {i + 1} · {short(unit.title).toUpperCase()}</text>
+          {#if i}<line x1={unit.x - UNIT_GAP / 2} y1="14" x2={unit.x - UNIT_GAP / 2} y2={layout.height - 4} />{/if}
+        {/each}
+      </g>
+      <g class="pmap__edges">
+        {#each layout.edges as d, i (i)}<path {d} />{/each}
+      </g>
+      <g class="pmap__nodes">
+        {#each plan.lessons as lesson (lesson.id)}
+          {@const p = layout.pos.get(lesson.id)}
+          {#if p}
+            <g class="is-{states.get(lesson.id)}" class:is-project={lesson.kind === "project"} role="button" tabindex="0"
+              aria-label="{lesson.title}, {states.get(lesson.id)}" aria-pressed={selected === lesson.id}
+              onclick={() => onselect(lesson.id)} onkeydown={press(lesson.id)}>
+              <title>{lesson.title}</title>
+              <rect x={p.x} y={p.y} width={W} height={H} rx="8" style:stroke={selected === lesson.id ? "var(--accent)" : undefined} />
+              <text x={p.x + 14} y={p.y + 25}>{short(lesson.title)}</text>
+              <text class="count" x={p.x + W - 10} y={p.y + 25}>{lesson.items.length}</text>
+              {#if states.get(lesson.id) === "current"}<circle cx={p.x + W} cy={p.y} r="6" />{/if}
+            </g>
+          {/if}
+        {/each}
+      </g>
+    </svg>
+  </div>
   <div class="pmap__legend caption muted">
     <span><i class="lg lg--done"></i>Done</span><span><i class="lg lg--current"></i>Current</span><span><i class="lg lg--next"></i>Next</span><span><i class="lg"></i>Upcoming</span>
     <span class="spacer"></span><span class="mono">numbers = items per lesson</span>

@@ -1,6 +1,7 @@
 <script lang="ts">
   import { untrack } from "svelte";
-  import { api, localDay, type Brief, type Item, type Lesson, type PlanKind, type PlanView } from "../lib/api.ts";
+  import { MAX_PLANS } from "../../../server/constants.ts";
+  import { api, localDay, type Brief, type Item, type Lesson, type PlanKind, type PlanView, type SavedPlan } from "../lib/api.ts";
   import { attempt, startLesson, toast } from "../lib/state.svelte.ts";
   import BriefForm from "./BriefForm.svelte";
   import Dialog from "./Dialog.svelte";
@@ -27,6 +28,9 @@
   let editingBrief = $state(false);
   let renaming = $state<{ id: string; title: string } | null>(null);
   let busy = $state(false);
+  // The saved-plans dialog: picking the plan a re-plan replaces, or switching and deleting.
+  let choosing = $state<"replace" | "manage" | null>(null);
+  let replaceId = $state<string | null>(null);
 
   const plan = $derived(view.plan);
   const schedule = $derived(view.schedule);
@@ -52,13 +56,25 @@
   async function saveBrief(rebuild: boolean) {
     busy = true;
     const saved = await attempt(() => api.saveBrief(folderId, draft.brief, draft.kind));
-    const started = saved && (!rebuild || (await attempt(() => api.buildPlan(folderId))));
     busy = false;
     if (!saved) return;
     editingBrief = false;
-    if (started && rebuild) toast("Planning. Lessons appear when every item has a place.");
+    if (rebuild) await replan();
+    else onchange();
+  }
+  // A new plan from the whole ledger. With MAX_PLANS saved, the learner first picks one for it to replace.
+  async function replan(replace?: string) {
+    if (!replace && view.saved.length >= MAX_PLANS) {
+      replaceId = view.saved.findLast((p) => p.status !== "active")?.id ?? null;
+      choosing = "replace";
+      return;
+    }
+    choosing = null;
+    const job = await attempt(() => api.buildPlan(folderId, replace));
+    if (job) toast(plan ? "Re-planning. The current plan stays until the new one is complete." : "Planning. Lessons appear when every item has a place.");
     onchange();
   }
+  const planName = (p: SavedPlan) => `Plan of ${new Date(p.createdAt).toLocaleString(undefined, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}`;
   async function edit(fn: () => Promise<PlanView>) {
     const next = await attempt(fn);
     if (next) onview(next);
@@ -136,11 +152,17 @@
         onchange={(v) => edit(() => api.setBufferDays(folderId, Number(v)))}
         options={[0, 1, 2, 3, 4].map((n) => ({ value: String(n), label: n ? `${n} revision ${n === 1 ? "day" : "days"}` : "No revision days" }))} />
     {/if}
+    {#if view.saved.length > 1}
+      <Select compact label="Saved plans" tip="Switch to another saved plan" value={plan.id}
+        onchange={(id) => edit(() => api.activatePlan(folderId, id))}
+        options={view.saved.map((p) => ({ value: p.id, label: `${planName(p)} · ${p.lessons} lessons` }))} />
+    {/if}
     <button type="button" class="btn btn--secondary btn--sm" onclick={openBrief}><Icon name="sliders" size="sm" />Edit brief</button>
     <Menu label="More plan actions" items={[
       { label: "Export as Markdown", icon: "download", run: () => (location.href = api.exportUrl(folderId, "md")) },
       ...(schedule ? [{ label: "Export to calendar", icon: "download", run: () => (location.href = api.exportUrl(folderId, "ics")) }] : []),
-      { label: "Rebuild plan", icon: "refresh", run: () => attempt(() => api.buildPlan(folderId)).then((j) => j && onchange()) },
+      { label: "Re-plan", icon: "refresh", run: () => replan() },
+      ...(view.saved.length > 1 ? [{ label: "Saved plans", icon: "layers", run: () => (choosing = "manage") }] : []),
     ]} />
   </div>
 
@@ -238,6 +260,39 @@
   {/snippet}
 </Dialog>
 
+<Dialog bind:open={() => !!choosing, (v) => { if (!v) choosing = null; }} eyebrow="Saved plans"
+  title={choosing === "replace" ? "Which plan should the new one replace?" : "Your saved plans"}>
+  <p class="body-sm muted">
+    {choosing === "replace"
+      ? `Distil keeps ${MAX_PLANS} plans. The one you pick is deleted once the new plan is ready.`
+      : `Distil keeps up to ${MAX_PLANS} plans. Progress is shared: what you've been taught counts in each of them.`}
+  </p>
+  <ul class="saved">
+    {#each view.saved as p (p.id)}
+      <li><svelte:element this={choosing === "replace" ? "label" : "div"} class="saved__row">
+        {#if choosing === "replace"}<input type="radio" name="replace" value={p.id} bind:group={replaceId} />{/if}
+        <div class="saved__text">
+          <strong>{planName(p)}</strong>
+          <span class="caption muted">{p.units} {p.units === 1 ? "unit" : "units"} · {p.lessons} lessons · {p.done} done</span>
+        </div>
+        {#if p.status === "active"}<span class="status status--done"><i></i>Active</span>
+        {:else if choosing === "manage"}
+          <button type="button" class="btn btn--ghost btn--sm" onclick={() => edit(() => api.activatePlan(folderId, p.id))}>Switch to</button>
+          <button type="button" class="btn btn--ghost btn--sm" aria-label="Delete {planName(p)}" onclick={() => edit(() => api.deletePlan(folderId, p.id))}><Icon name="trash" size="sm" /></button>
+        {/if}
+      </svelte:element></li>
+    {/each}
+  </ul>
+  {#snippet footer()}
+    {#if choosing === "replace"}
+      <button type="button" class="btn btn--ghost" onclick={() => (choosing = null)}>Cancel</button>
+      <button type="button" class="btn btn--primary" disabled={!replaceId} onclick={() => replan(replaceId!)}>Re-plan</button>
+    {:else}
+      <button type="button" class="btn btn--primary" onclick={() => (choosing = null)}>Done</button>
+    {/if}
+  {/snippet}
+</Dialog>
+
 <Dialog bind:open={() => !!renaming, (v) => { if (!v) renaming = null; }} eyebrow="Lesson" title="Rename lesson">
   {#if renaming}
     <form id="rename-lesson" onsubmit={(e) => { e.preventDefault(); const r = renaming!; renaming = null; edit(() => api.updateLesson(r.id, { title: r.title })); }}>
@@ -251,7 +306,13 @@
 </Dialog>
 
 <style>
-  .brief-card { display: grid; gap: var(--s-5); max-width: 760px; padding: var(--s-6); }
+  .brief-card { display: grid; gap: var(--s-5); padding: var(--s-6); }
+  .saved { list-style: none; padding: 0; margin: var(--s-3) 0 0; display: grid; }
+  .saved li { border-bottom: 1px solid var(--border); }
+  .saved__row { display: flex; align-items: center; gap: var(--s-3); padding: var(--s-3) 0; }
+  label.saved__row { cursor: pointer; }
+  .saved__text { flex: 1; display: grid; min-width: 0; }
+  .saved input { accent-color: var(--accent); }
   .brief-card__head { display: grid; gap: var(--s-2); }
   .brief-card__foot { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-3); padding-top: var(--s-4); border-top: 1px solid var(--border); }
   .brief-card__foot .spacer { flex: 1; min-width: 200px; }

@@ -27,6 +27,8 @@ type LessonRow = {
   kind: LessonKind; weight: number; aids: string; scheduled_for: string | null; done_at: number | null;
 };
 
+export type SavedPlan = { id: string; status: "active" | "archived"; createdAt: number; units: number; lessons: number; done: number };
+
 const NO_SCHEDULE: ScheduleState = { bufferDays: 2, baselineDay: null, note: null };
 
 export function createPlans(db: Db, now = () => Date.now()) {
@@ -133,6 +135,17 @@ export function createPlans(db: Db, now = () => Date.now()) {
         db.prepare(`UPDATE lessons SET status = 'done', done_at = ?, updated_at = ? WHERE plan_id = ? AND kind = 'lesson' AND NOT EXISTS (
           SELECT 1 FROM lesson_items li JOIN items i ON i.id = li.item_id WHERE li.lesson_id = lessons.id AND i.status IN ('pending', 'planned'))`).run(now(), now(), planId);
       });
+    },
+
+    // The folder's active and archived plans, newest first.
+    saved(folderId: string): SavedPlan[] {
+      return (db.prepare(`SELECT p.id, p.status, p.created_at,
+          (SELECT COUNT(*) FROM plan_units u WHERE u.plan_id = p.id) AS units,
+          (SELECT COUNT(*) FROM lessons l WHERE l.plan_id = p.id) AS lessons,
+          (SELECT COUNT(*) FROM lessons l WHERE l.plan_id = p.id AND l.status = 'done') AS done
+        FROM plans p WHERE p.folder_id = ? AND p.status IN ('active', 'archived') ORDER BY p.created_at DESC`).all(folderId) as
+        { id: string; status: SavedPlan["status"]; created_at: number; units: number; lessons: number; done: number }[])
+        .map((r) => ({ id: r.id, status: r.status, createdAt: r.created_at, units: r.units, lessons: r.lessons, done: r.done }));
     },
 
     remove(planId: string) {
