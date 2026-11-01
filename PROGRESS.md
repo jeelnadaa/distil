@@ -4,11 +4,11 @@ Living status log. Update in the same commit as every change.
 
 ## Current phase
 
-**Phase 3 — Study Plan** is in progress, on `main`.
+**Phase 4 — Teach** is next, on `main`.
 
 ## Next up
 
-1. Phase 3 UI: Plan tab (brief card, map and outline, schedule strip, editing, export), ledger coverage bars, Today view. The server half (brief, planner, schedule, Start lesson, `/today`) is in.
+1. Phase 4 — Teach: retrieval (keyword index, optional embeddings), probe, session plan panel, checks with confidence, repair loop, item statuses moving, recap. It replaces the lesson-chat prompt Phase 3 put in (`server/plan/context.ts`).
 
 ## Phase checklist
 
@@ -19,7 +19,7 @@ Living status log. Update in the same commit as every change.
 - [x] Phase 0e — Landing page and app mock-ups built and approved
 - [x] Phase 1 — Foundation
 - [x] Phase 2 — Materials & Coverage Ledger
-- [ ] Phase 3 — Study Plan
+- [x] Phase 3 — Study Plan
 - [ ] Phase 4 — Teach
 - [ ] Phase 5 — Interactives
 - [ ] Phase 6 — Practice & Exams
@@ -122,6 +122,16 @@ Living status log. Update in the same commit as every change.
 - A parallel build of Phases 3–8 was tried and stopped by the owner; phases go one at a time on `main` again (`plan.md` §2).
 - Kept from it: migration 9 (briefs, plans, units, lessons, lesson items and prerequisites, `chats.lesson_id`, `items.provenance`, learner evidence `item_events`, `cards`), `server/learning/types.ts` (Brief schema, statuses, event kinds) and `server/learning/learner.ts` (evidence log; statuses only move forward). The later phases build on it. 113 tests.
 
+### 2026-11-01 · Phase 3 — Study Plan
+- Brief Compiler (F-101…F-105) on the cheap slot: a sentence (or nothing) becomes a full brief, with at most three question chips for what it couldn't infer; code drops past dates, bad options and extra questions. Stored per folder, inherited by subfolders, and sent with every chat in the folder.
+- Planner (F-501, F-304, F-508, F-510) on the strong slot, 150 ledger items per part, saved part by part so a stopped job resumes. Code reviews each reply (unknown or missing items, oversized lessons, bad or cyclic prerequisites) and sends the problems back; after three attempts it repairs the plan itself, so coverage is always 100 %. Lessons carry minutes, suggested aids, exam weight (only when a syllabus or past paper is in the folder) and prerequisites. Skill plans add projects and work without material.
+- Deadline mode (F-505): lessons spread over the days left with revision and mock-exam days before the exam, days off respected, more hours a day when the learner's aren't enough (shown as a warning); re-balanced once a day when the learner falls behind or gets ahead. Exports to Markdown and iCalendar.
+- Plan tab: the brief card (Fill in for me, chips, Just go), then a left-to-right lesson map or an outline, the schedule strip, a lesson card with its items, and edits that keep prerequisites in order (rename, move, split, merge, mark done, I know this already). Up to three saved plans to switch between; re-planning with three asks which to replace (owner). "Plan them" plans items added after planning.
+- Start lesson (F-504): one chat per lesson with the brief and the lesson's items in its prompt, until Phase 4's teacher (flagged in `plan.md` §2). Lessons record when they were finished (`done_at`), so a rename doesn't move them on the calendar.
+- Today (F-506): today's lessons across subjects, Up next with Start lesson, cards due, where practice would help, coverage per subject and the week before the nearest exam. Ledger: coverage bars in percent, and a Gaps filter for items with no lesson or not taught in a started lesson (F-305, F-307).
+- Themed scrollbars app-wide; the fake model (`scripts/fake-llm.mjs`) also answers the brief and planner prompts.
+- Checked against the fake model on the textbook (997 items: 153 lessons, 100 % planned) in dark and light, desktop and phone width. Smoke test on the owner's Google key: the brief read "midterm on 20 November, about an hour a day" correctly without questions, and the plan for the 5-item DSP folder was two ordered lessons covering every item, scheduled with mock and revision days. 137 tests.
+
 ## Open questions
 
 See `plan.md` §18.
@@ -137,6 +147,8 @@ See `plan.md` §18.
 - Caps are in tokens only. Cost caps need per-model prices; planned with the usage dashboard (Phase 8).
 - A cap is checked before each request, so one reply already in flight can finish past 100 %.
 - Keys are in a user-only file, not yet the OS credential store; the desktop build (Phase 9) moves them.
+- Inline maths (KaTeX) doesn't wrap, so a long formula in a chat reply widens the column on a phone.
+- The fake model's plans are mechanical (one unit per heading); judge plan quality only with a real model.
 - Ledger quality gaps for Phase 10: some duplicates survive merging on the cheap model (28 repeated titles on the textbook), and 32 quotes don't match their page text exactly.
 - Keyword search has an API but no screen yet; Ask with sources (Phase 4) is its first user.
 - A fallback model answering a chat is shown under the reply only while its model differs from the chat's own model.
