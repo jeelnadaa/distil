@@ -8,6 +8,7 @@ import { createLearner } from "../server/learning/learner.ts";
 import { createLedger } from "../server/ledger/store.ts";
 import { createLibrary } from "../server/library.ts";
 import { createServer } from "../server/main.ts";
+import { Brief } from "../server/learning/types.ts";
 import { createBriefs } from "../server/plan/brief.ts";
 import { chatContext } from "../server/plan/context.ts";
 import { registerPlanner } from "../server/plan/planner.ts";
@@ -120,8 +121,8 @@ async function served() {
   ] }], new Map());
   plans.activate(planId);
   // Another finished plan for the same items, made active (as a completed re-plan would be).
-  const another = () => {
-    const id = plans.createDraft(folder.id, "course");
+  const another = (goal?: string) => {
+    const id = plans.createDraft(folder.id, "course", undefined, goal ? Brief.parse({ goal }) : undefined);
     plans.append(id, [{ title: "All", summary: "", lessons: [{ key: "a", title: "Everything", summary: "", kind: "lesson", minutes: 60, weight: 1, aids: [], items: items.map((i) => i.id), after: [] }] }], new Map());
     plans.activate(id);
     return id;
@@ -155,6 +156,23 @@ describe("plan API", () => {
     expect(switched.plan.id).toBe(plan.id);
     expect((await call("DELETE", `/folders/${folder.id}/plans/${plan.id}`)).status).toBe(409);
     expect((await call("DELETE", `/folders/${folder.id}/plans/${newest}`)).body.saved).toHaveLength(2);
+  });
+
+  it("brings a plan's brief back when switching to it, and re-plans from a saved plan's brief", async () => {
+    const { call, folder, plan, another } = await served();
+    const goal = async () => (await call("GET", `/folders/${folder.id}/brief`)).body.brief.goal;
+    await call("PUT", `/folders/${folder.id}/brief`, { brief: { goal: "Pass the midterm" }, kind: "course" });
+    const second = another("Pass the final");
+
+    await call("POST", `/folders/${folder.id}/plans/${second}/activate`);
+    expect(await goal()).toBe("Pass the final");
+    await call("POST", `/folders/${folder.id}/plans/${plan.id}/activate`);
+    expect(await goal()).toBe("Pass the midterm");
+
+    await call("POST", `/folders/${folder.id}/plan`, { from: second });
+    expect(await goal()).toBe("Pass the final");
+    const saved = (await call("GET", `/folders/${folder.id}/plan`)).body.saved;
+    expect(saved.find((p: { id: string }) => p.id === plan.id).brief.brief.goal).toBe("Pass the midterm");
   });
 
   it("starts a lesson once and reopens the same chat after", async () => {

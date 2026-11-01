@@ -61,10 +61,14 @@ export function registerPlanRoutes(app: Hono, deps: AppDeps) {
       materials: materials.list(folderId).filter((m) => m.status === "ready"), sections: sectionList(items), items: items.length,
     }, c.req.raw.signal));
   });
+  // Editing the brief also updates the active plan's copy, so switching away and back keeps the edit.
   app.put("/folders/:id/brief", async (c) => {
     const { brief, kind } = await body(c, z.object({ brief: Brief, kind: Kind }));
-    library.requireFolder(c.req.param("id"));
-    return c.json(briefs.save(c.req.param("id"), brief, kind));
+    const folderId = c.req.param("id");
+    library.requireFolder(folderId);
+    const active = plans.active(folderId);
+    if (active) plans.setBrief(active.id, brief, kind);
+    return c.json(briefs.save(folderId, brief, kind));
   });
 
   /* ---------- Plan (F-501…F-509) ---------- */
@@ -74,14 +78,22 @@ export function registerPlanRoutes(app: Hono, deps: AppDeps) {
   });
   // Builds a new plan from the whole ledger as a draft; it becomes the active plan when it is complete.
   // Earlier plans are kept to switch back to, up to MAX_PLANS: past that, the learner picks one to replace.
+  // The new plan's brief: one sent with the request, or a saved plan's (from), or the folder's current one.
+  // A sent or reused brief becomes the folder's brief; the active plan keeps its own copy.
   app.post("/folders/:id/plan", async (c) => {
-    const { replace } = await body(c, z.object({ replace: z.string().min(1).optional() }));
+    const { replace, from, brief: sent } = await body(c, z.object({
+      replace: z.string().min(1).optional(), from: z.string().min(1).optional(), brief: z.object({ brief: Brief, kind: Kind }).optional(),
+    }));
     const folderId = c.req.param("id");
     const folder = library.requireFolder(folderId);
-    const brief = briefs.nearest(folderId);
-    if (!brief) throw new AppError(400, "no_brief", "Set up the study brief first.");
     const saved = plans.saved(folderId);
     if (replace && !saved.some((p) => p.id === replace)) throw new AppError(404, "no_plan", "That saved plan no longer exists.");
+    const source = from ? saved.find((p) => p.id === from) : undefined;
+    if (from && !source) throw new AppError(404, "no_plan", "That saved plan no longer exists.");
+    const chosen = sent ?? source?.brief;
+    if (chosen) briefs.save(folderId, chosen.brief, chosen.kind);
+    const brief = briefs.nearest(folderId);
+    if (!brief) throw new AppError(400, "no_brief", "Set up the study brief first.");
     if (!replace && saved.length >= MAX_PLANS) throw new AppError(409, "plan_limit", `You have ${MAX_PLANS} saved plans. Pick one for the new plan to replace.`);
     const running = runningPlanJob(folderId);
     if (running) jobs.abort(running.id);
@@ -90,7 +102,7 @@ export function registerPlanRoutes(app: Hono, deps: AppDeps) {
       throw new AppError(400, "empty_ledger", "There is nothing in the ledger to plan yet. Distil the materials first, or make this a skill plan.");
     }
     const schedule = plans.active(folderId)?.schedule;
-    const planId = plans.createDraft(folderId, brief.kind, schedule && { ...schedule, baselineDay: null, note: null });
+    const planId = plans.createDraft(folderId, brief.kind, schedule && { ...schedule, baselineDay: null, note: null }, brief.brief);
     const params: PlanJob = { planId, mode: "build", ...(replace && { replace }) };
     return c.json(jobs.enqueue("plan", planLabel(folder.name, "build"), { folderId, params }), 202);
   });
@@ -111,10 +123,12 @@ export function registerPlanRoutes(app: Hono, deps: AppDeps) {
     plans.setSchedule(plan.id, { ...plan.schedule, bufferDays, baselineDay: null }, {});
     return view(c, plan.folderId);
   });
-  // Switch to a saved plan. Lessons whose items were all taught meanwhile count as done (progress is shared by items).
+  // Switch to a saved plan, and back to the brief it was built from. Lessons whose items were all taught
+  // meanwhile count as done (progress is shared by items).
   app.post("/folders/:id/plans/:planId/activate", (c) => {
     const plan = savedPlan(c.req.param("id"), c.req.param("planId"));
     if (plan.status !== "active") plans.activate(plan.id);
+    if (plan.brief) briefs.save(plan.folderId, plan.brief.brief, plan.brief.kind);
     return view(c, plan.folderId);
   });
   app.delete("/folders/:id/plans/:planId", (c) => {

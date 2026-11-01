@@ -5,6 +5,7 @@
   import CoverageBars from "./CoverageBars.svelte";
   import Icon from "./Icon.svelte";
   import SoundButton from "./SoundButton.svelte";
+  import { wheelScroll } from "../lib/wheel.ts";
 
   // Today (S1, F-506): today's lessons from every subject with a plan, cards due, where practice would help
   // most, each subject's coverage and the week ahead of the nearest exam.
@@ -99,7 +100,7 @@
       {#if today.week}
         <section class="week">
           <header class="week__head"><span class="eyebrow">This week · {today.week.name}</span><span class="caption faint">Re-balances itself each day</span></header>
-          <div class="week__days">
+          <div class="week__days" use:wheelScroll>
             {#each today.week.days as day (day.date)}
               <div class="day" class:is-today={day.date === localDay()} class:day--exam={day.kind === "exam"}>
                 <span class="eyebrow">{date(day.date, { weekday: "short", day: "numeric" })}</span>

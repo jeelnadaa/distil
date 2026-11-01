@@ -264,6 +264,11 @@ const MIGRATIONS = [
   ALTER TABLE lessons ADD COLUMN done_at INTEGER;
   ALTER TABLE briefs ADD COLUMN kind TEXT NOT NULL DEFAULT 'course' CHECK (kind IN ('course', 'skill'));
   `,
+  `
+  -- Each plan keeps the brief it was built from ({brief, kind} as JSON), so switching to a saved plan brings
+  -- its goal, exam date and hours back, and a re-plan can reuse it.
+  ALTER TABLE plans ADD COLUMN brief TEXT;
+  `,
 ];
 
 export function openDb(file: string): Db {

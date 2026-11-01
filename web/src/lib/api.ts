@@ -127,7 +127,9 @@ export const api = {
   compileBrief: (folderId: string, request: string) => json<Compiled>("POST", `/folders/${folderId}/brief/compile?today=${localDay()}`, { request }),
   saveBrief: (folderId: string, brief: Brief, kind: PlanKind) => json<StoredBrief>("PUT", `/folders/${folderId}/brief`, { brief, kind }),
   plan: (folderId: string) => json<PlanView>("GET", `/folders/${folderId}/plan?today=${localDay()}`),
-  buildPlan: (folderId: string, replace?: string) => json<Job>("POST", `/folders/${folderId}/plan`, { replace }),
+  // replace: the saved plan the new one replaces; from: a saved plan whose brief to reuse; brief: a new brief.
+  buildPlan: (folderId: string, body: { replace?: string; from?: string; brief?: { brief: Brief; kind: PlanKind } } = {}) =>
+    json<Job>("POST", `/folders/${folderId}/plan`, body),
   activatePlan: (folderId: string, planId: string) => json<PlanView>("POST", `/folders/${folderId}/plans/${planId}/activate?today=${localDay()}`, {}),
   deletePlan: (folderId: string, planId: string) => json<PlanView>("DELETE", `/folders/${folderId}/plans/${planId}?today=${localDay()}`),
   extendPlan: (folderId: string) => json<Job>("POST", `/folders/${folderId}/plan/extend`, {}),

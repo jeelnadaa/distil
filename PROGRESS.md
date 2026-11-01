@@ -132,6 +132,11 @@ Living status log. Update in the same commit as every change.
 - Themed scrollbars app-wide; the fake model (`scripts/fake-llm.mjs`) also answers the brief and planner prompts.
 - Checked against the fake model on the textbook (997 items: 153 lessons, 100 % planned) in dark and light, desktop and phone width. Smoke test on the owner's Google key: the brief read "midterm on 20 November, about an hour a day" correctly without questions, and the plan for the 5-item DSP folder was two ordered lessons covering every item, scheduled with mock and revision days. 137 tests.
 
+### 2026-11-01 · Plan tab feedback
+- Each plan keeps the brief it was built from (migration 11); switching plans brings its brief back. Re-plan asks: same brief (the replaced plan's when three are saved, else the active one's) or change the brief, which opens the brief editor first (owner).
+- Plan view filters: search, unit and day (the schedule strip's days also pick a day); the map dims what's filtered out and scrolls to the first match. Units on the map are shaded bands with their number and title.
+- The mouse wheel scrolls horizontal strips (map, Today's week) sideways while hovering anywhere over them (`web/src/lib/wheel.ts`). Fixed: the brief dialog's footer wrapping, and an expanded outline lesson repeating its title and actions. 138 tests.
+
 ## Open questions
 
 See `plan.md` §18.

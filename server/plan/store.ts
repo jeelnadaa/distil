@@ -4,6 +4,7 @@ import { AppError, notFound } from "../errors.ts";
 import type { Aid, DraftUnit, LessonKind } from "./coverage.ts";
 import { misplaced } from "./dag.ts";
 import type { ScheduleState } from "./schedule.ts";
+import type { Brief } from "../learning/types.ts";
 
 // Study plans (F-501, F-507): one active plan per folder, units of lessons in one plan-wide order, each
 // lesson teaching ordered items (its steps) after the lessons it requires. A new plan is built as a draft
@@ -18,16 +19,18 @@ export type Lesson = {
 };
 export type Plan = {
   id: string; folderId: string; status: "draft" | "active" | "archived"; kind: PlanKind;
-  units: Unit[]; lessons: Lesson[]; schedule: ScheduleState; createdAt: number; updatedAt: number;
+  units: Unit[]; lessons: Lesson[]; schedule: ScheduleState; brief: PlanBrief | null; createdAt: number; updatedAt: number;
 };
+// The brief a plan was built from.
+export type PlanBrief = { brief: Brief; kind: PlanKind };
 
-type PlanRow = { id: string; folder_id: string; status: Plan["status"]; kind: PlanKind; schedule: string | null; created_at: number; updated_at: number };
+type PlanRow = { id: string; folder_id: string; status: Plan["status"]; kind: PlanKind; schedule: string | null; brief: string | null; created_at: number; updated_at: number };
 type LessonRow = {
   id: string; unit_id: string; ord: number; title: string; summary: string; minutes: number; status: LessonStatus;
   kind: LessonKind; weight: number; aids: string; scheduled_for: string | null; done_at: number | null;
 };
 
-export type SavedPlan = { id: string; status: "active" | "archived"; createdAt: number; units: number; lessons: number; done: number };
+export type SavedPlan = { id: string; status: "active" | "archived"; createdAt: number; units: number; lessons: number; done: number; brief: PlanBrief | null };
 
 const NO_SCHEDULE: ScheduleState = { bufferDays: 2, baselineDay: null, note: null };
 
@@ -50,7 +53,8 @@ export function createPlans(db: Db, now = () => Date.now()) {
     }));
     return {
       id: row.id, folderId: row.folder_id, status: row.status, kind: row.kind, units, lessons,
-      schedule: row.schedule ? { ...NO_SCHEDULE, ...JSON.parse(row.schedule) as ScheduleState } : NO_SCHEDULE, createdAt: row.created_at, updatedAt: row.updated_at,
+      schedule: row.schedule ? { ...NO_SCHEDULE, ...JSON.parse(row.schedule) as ScheduleState } : NO_SCHEDULE,
+      brief: row.brief ? JSON.parse(row.brief) as PlanBrief : null, createdAt: row.created_at, updatedAt: row.updated_at,
     };
   };
   const get = (id: string): Plan => {
@@ -91,11 +95,11 @@ export function createPlans(db: Db, now = () => Date.now()) {
       return (db.prepare("SELECT DISTINCT folder_id FROM plans WHERE status = 'active'").all() as { folder_id: string }[]).map((r) => r.folder_id);
     },
 
-    createDraft(folderId: string, kind: PlanKind, schedule?: ScheduleState): string {
+    createDraft(folderId: string, kind: PlanKind, schedule?: ScheduleState, brief?: Brief): string {
       const id = randomUUID();
       const at = now();
-      db.prepare("INSERT INTO plans (id, folder_id, status, kind, schedule, created_at, updated_at) VALUES (?, ?, 'draft', ?, ?, ?, ?)")
-        .run(id, folderId, kind, JSON.stringify(schedule ?? NO_SCHEDULE), at, at);
+      db.prepare("INSERT INTO plans (id, folder_id, status, kind, schedule, brief, created_at, updated_at) VALUES (?, ?, 'draft', ?, ?, ?, ?, ?)")
+        .run(id, folderId, kind, JSON.stringify(schedule ?? NO_SCHEDULE), brief ? JSON.stringify({ brief, kind }) : null, at, at);
       return id;
     },
 
@@ -137,15 +141,19 @@ export function createPlans(db: Db, now = () => Date.now()) {
       });
     },
 
+    setBrief(planId: string, brief: Brief, kind: PlanKind) {
+      db.prepare("UPDATE plans SET brief = ? WHERE id = ?").run(JSON.stringify({ brief, kind }), planId);
+    },
+
     // The folder's active and archived plans, newest first.
     saved(folderId: string): SavedPlan[] {
-      return (db.prepare(`SELECT p.id, p.status, p.created_at,
+      return (db.prepare(`SELECT p.id, p.status, p.created_at, p.brief,
           (SELECT COUNT(*) FROM plan_units u WHERE u.plan_id = p.id) AS units,
           (SELECT COUNT(*) FROM lessons l WHERE l.plan_id = p.id) AS lessons,
           (SELECT COUNT(*) FROM lessons l WHERE l.plan_id = p.id AND l.status = 'done') AS done
         FROM plans p WHERE p.folder_id = ? AND p.status IN ('active', 'archived') ORDER BY p.created_at DESC`).all(folderId) as
-        { id: string; status: SavedPlan["status"]; created_at: number; units: number; lessons: number; done: number }[])
-        .map((r) => ({ id: r.id, status: r.status, createdAt: r.created_at, units: r.units, lessons: r.lessons, done: r.done }));
+        { id: string; status: SavedPlan["status"]; created_at: number; brief: string | null; units: number; lessons: number; done: number }[])
+        .map((r) => ({ id: r.id, status: r.status, createdAt: r.created_at, units: r.units, lessons: r.lessons, done: r.done, brief: r.brief ? JSON.parse(r.brief) as PlanBrief : null }));
     },
 
     remove(planId: string) {

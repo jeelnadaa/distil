@@ -15,18 +15,21 @@
 </script>
 
 <script lang="ts">
-  let { plan, states, selected, onselect }: {
-    plan: Plan; states: Map<string, LessonState>; selected: string | null; onselect: (id: string) => void;
+  import { wheelScroll } from "../lib/wheel.ts";
+
+  // matches: lessons that pass the Plan tab's filters (the rest are dimmed), or null for no filter.
+  let { plan, states, selected, matches, onselect }: {
+    plan: Plan; states: Map<string, LessonState>; selected: string | null; matches: Set<string> | null; onselect: (id: string) => void;
   } = $props();
 
   // Left-to-right layering: a lesson sits one column right of its latest prerequisite in the same unit,
-  // units follow each other, and a column taller than MAX_ROWS wraps into the next one.
-  const W = 184, H = 40, COL = 56, ROW = 14, UNIT_GAP = 72, TOP = 48, MAX_ROWS = 6, TITLE_CHARS = 21;
+  // and a column taller than MAX_ROWS wraps into the next one. Each unit is a shaded band with its title.
+  const W = 184, H = 40, COL = 56, ROW = 14, PAD = 18, BAND_GAP = 14, TOP = 72, MAX_ROWS = 6, TITLE_CHARS = 21;
 
   const layout = $derived.by(() => {
     const pos = new Map<string, { x: number; y: number }>();
-    const units: { title: string; x: number; end: number }[] = [];
-    let x = 20;
+    const units: { title: string; x: number; width: number }[] = [];
+    let x = PAD + 2;
     let rows = 0;
     for (const unit of plan.units) {
       const lessons = plan.lessons.filter((l) => l.unitId === unit.id);
@@ -44,43 +47,58 @@
         rows = Math.max(rows, col.length);
         x += W + COL;
       }
-      units.push({ title: unit.title, x: start, end: x - COL });
-      x += UNIT_GAP - COL;
+      const end = x - COL;
+      units.push({ title: unit.title, x: start - PAD, width: end - start + 2 * PAD });
+      x = end + PAD + BAND_GAP + PAD;
     }
     const edges = plan.lessons.flatMap((l) => l.requires.filter((r) => pos.has(r) && pos.has(l.id)).map((r) => {
       const a = pos.get(r)!, b = pos.get(l.id)!;
       const mid = b.x - COL / 2;
-      return `M${a.x + W} ${a.y + H / 2} H${mid} V${b.y + H / 2} H${b.x}`;
+      return { from: r, to: l.id, d: `M${a.x + W} ${a.y + H / 2} H${mid} V${b.y + H / 2} H${b.x}` };
     }));
-    return { pos, units, edges, width: x - UNIT_GAP + 20, height: TOP + rows * (H + ROW) + 4 };
+    const last = units.at(-1);
+    return { pos, units, edges, width: last ? last.x + last.width + 2 : 200, height: TOP + rows * (H + ROW) + PAD - ROW + 6 };
   });
 
-  const short = (t: string) => (t.length > TITLE_CHARS ? `${t.slice(0, TITLE_CHARS - 1).trimEnd()}…` : t);
+  const clip = (t: string, n: number) => (t.length > n ? `${t.slice(0, n - 1).trimEnd()}…` : t);
+  const dim = (id: string) => !!matches && !matches.has(id);
   const press = (id: string) => (e: KeyboardEvent) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onselect(id); } };
+
+  // A filter brings its first lesson into view.
+  let scroller = $state<HTMLElement>();
+  $effect(() => {
+    const first = matches && plan.lessons.find((l) => matches.has(l.id));
+    const p = first && layout.pos.get(first.id);
+    if (p) scroller?.scrollTo({ left: Math.max(0, p.x - PAD - 24), behavior: "smooth" });
+  });
 </script>
 
-<div class="plan-map panel">
-  <div class="plan-map__scroll">
+<div class="plan-map panel" use:wheelScroll={".plan-map__scroll"}>
+  <div class="plan-map__scroll" bind:this={scroller}>
     <svg class="pmap" width={layout.width} height={layout.height} viewBox="0 0 {layout.width} {layout.height}" role="group" aria-label="Lesson map">
       <g class="pmap__units">
         {#each layout.units as unit, i (i)}
-          <text x={unit.x} y="26">UNIT {i + 1} · {short(unit.title).toUpperCase()}</text>
-          {#if i}<line x1={unit.x - UNIT_GAP / 2} y1="14" x2={unit.x - UNIT_GAP / 2} y2={layout.height - 4} />{/if}
+          <g class:is-alt={i % 2 === 1}>
+            <title>Unit {i + 1}: {unit.title}</title>
+            <rect x={unit.x} y="4" width={unit.width} height={layout.height - 8} rx="12" />
+            <text class="pmap__unit-no" x={unit.x + PAD} y="30">UNIT {i + 1}</text>
+            <text class="pmap__unit-title" x={unit.x + PAD} y="50">{clip(unit.title, Math.floor((unit.width - 2 * PAD) / 7.4))}</text>
+          </g>
         {/each}
       </g>
       <g class="pmap__edges">
-        {#each layout.edges as d, i (i)}<path {d} />{/each}
+        {#each layout.edges as e, i (i)}<path d={e.d} class:is-dim={dim(e.from) || dim(e.to)} />{/each}
       </g>
       <g class="pmap__nodes">
         {#each plan.lessons as lesson (lesson.id)}
           {@const p = layout.pos.get(lesson.id)}
           {#if p}
-            <g class="is-{states.get(lesson.id)}" class:is-project={lesson.kind === "project"} role="button" tabindex="0"
+            <g class="is-{states.get(lesson.id)}" class:is-project={lesson.kind === "project"} class:is-dim={dim(lesson.id)} role="button" tabindex="0"
               aria-label="{lesson.title}, {states.get(lesson.id)}" aria-pressed={selected === lesson.id}
               onclick={() => onselect(lesson.id)} onkeydown={press(lesson.id)}>
               <title>{lesson.title}</title>
               <rect x={p.x} y={p.y} width={W} height={H} rx="8" style:stroke={selected === lesson.id ? "var(--accent)" : undefined} />
-              <text x={p.x + 14} y={p.y + 25}>{short(lesson.title)}</text>
+              <text x={p.x + 14} y={p.y + 25}>{clip(lesson.title, TITLE_CHARS)}</text>
               <text class="count" x={p.x + W - 10} y={p.y + 25}>{lesson.items.length}</text>
               {#if states.get(lesson.id) === "current"}<circle cx={p.x + W} cy={p.y} r="6" />{/if}
             </g>
@@ -91,6 +109,6 @@
   </div>
   <div class="pmap__legend caption muted">
     <span><i class="lg lg--done"></i>Done</span><span><i class="lg lg--current"></i>Current</span><span><i class="lg lg--next"></i>Next</span><span><i class="lg"></i>Upcoming</span>
-    <span class="spacer"></span><span class="mono">numbers = items per lesson</span>
+    <span class="spacer"></span><span class="mono">numbers = items per lesson · scroll to move along</span>
   </div>
 </div>
