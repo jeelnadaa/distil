@@ -4,11 +4,11 @@ Living status log. Update in the same commit as every change.
 
 ## Current phase
 
-**Phase 10 — Tune** is next, on `main`.
+**Phase 10 — Tune** is built, on `main`. Its quality bar still needs the owner's agreement (plan.md §2 "Tune decisions").
 
 ## Next up
 
-1. Phase 10 — Tune: ledger and answer quality against saved evaluation sets (plan.md §15).
+1. Needs the owner: agree the quality bar for Phase 10 (plan.md §2 "Tune decisions"). Answer quality beyond retrieval (grounding, teaching, grading) has no saved set yet.
 2. Needs the owner: Sign in with Google (F-1203). It means signing in to a Google account and reusing a Google CLI login, which the build can't do or test unattended; see plan.md §2 "Providers+ decisions".
 3. Still open from Phase 7 (should/could): image-occlusion cards (F-901), graph nodes linked to exact source messages (F-923), clusters and a whole-folder graph across units (F-924), notes import and a table of nodes (F-926, F-927), badges (F-933).
 4. Still open from Phase 4 (should/could): opening recall questions from the previous lesson (F-614), predict-before-reveal prompts (F-608), dictation (F-615).
@@ -29,7 +29,7 @@ Living status log. Update in the same commit as every change.
 - [x] Phase 7 — Retention
 - [x] Phase 8 — Providers+ & usage dashboard (Google sign-in waits for the owner)
 - [x] Phase 9 — Ship
-- [ ] Phase 10 — Tune (ledger and answer quality)
+- [x] Phase 10 — Tune (ledger and retrieval quality; agreeing the bar is with the owner)
 
 ## Log
 
@@ -212,6 +212,16 @@ Living status log. Update in the same commit as every change.
 - Owner feedback: the sidebar's New chat button now lines up with Today and Review, and the current page is shown by fill only, so it no longer looks like a second button.
 - Checked: a release built and installed into a scratch folder, started by its launcher (no window), restarted through the API, updated from 0.1.0 to a test 0.1.1 served from a local feed (download, checksum, switch on restart), and a 33 MB backup of the test library restored into it (6 folders, 8 materials, no keys). The tutorial answered a question about caps from its guide on Gemini 3.5 Flash Lite. Not checked: the real Start menu and desktop shortcuts and the Apps entry (not written to this machine), and the Edge window, which the test ran without. 247 tests.
 
+### 2026-11-01 · Phase 10 — Tune
+- Quote matching (`server/ledger/quote.ts`): both sides are normalised for ligatures, line-break hyphens, curly quotes, dashes, soft hyphens and emphasis, with offsets kept. It also matches text whose spaces extraction lost or added, quotes cut with an ellipsis (on their longest piece), and stitched quotes (on their opening or closing words). A quote not in its own chunk is looked for two chunks either side, and its location points there.
+- Merging: `mergeExact` folds what code can tell is the same before the model step, no tokens. Definitions and concepts match on title, ignoring the word "definition"; formulas and theorems on title and type; anything else also needs a matching statement, so "Example 1" in two chapters stays two. The 37 groups it folded on the textbook were read by eye and all were true duplicates.
+- Why exact repeats survived: long chains of similar titles were cut to 6 items and then all marked checked, so the rest never reached the model again. `mergeCandidates` now sends them in pieces.
+- Bug fixed: `merge` deleted the dropped item, which lost its lessons, evidence, graph links and cards' link to it. It now moves them to the item that stays, repoints ids stored in JSON (checks, questions, teach sessions, papers), and keeps the furthest status and any mark.
+- Existing ledgers: `tidyOnce` runs one time at start (setting `ledger-tidy-1`): it re-locates quotes, merges exact duplicates, and reopens groups that were cut short for the next distil. It took 4.6 s on the test library (1,007 items).
+- Search: when too few chunks hold every word, chunks holding any of them fill the rest. Before, one all-words hit meant one result. This also adds any-word results below all-words ones in the search screen.
+- Measured on the textbook with `scripts/eval-ledger.ts` and `scripts/eval-retrieval.ts`, counts only, in `evals/` (no textbook text): quotes matched 92.18 % with the old matching to 96.72 % (34 of 1,036 unmatched); repeated titles 28 to 1; extra copies 36 to 1; items 997 to 944; near-duplicate groups 126 to 102. Retrieval, keyword only, hit@6 searching by title and statement 89.06 % to 91.09 %, by title alone 67.17 % to 74.66 %; hit@1 74.40 % to 75.72 %.
+- Limits of these numbers: the 34 quotes left are mostly LaTeX the model rewrote, paraphrases and table titles, which can't honestly match. The retrieval set searches for an item's own words, so it shows search can find a known passage, not that answers are good. Embeddings were off. The model merge step wasn't re-run (no tokens spent), so the 102 near-duplicate groups are what code alone leaves. All measured on a copy of the test data, not in the running app. 14 items went back to the merge step on that copy.
+
 ## Open questions
 
 See `plan.md` §18.
@@ -236,7 +246,7 @@ See `plan.md` §18.
 - No update feed is published yet, so builds don't check for updates until one is built with `--feed`.
 - Inline maths (KaTeX) doesn't wrap, so a long formula in a chat reply widens the column on a phone.
 - The fake model's plans are mechanical (one unit per heading); judge plan quality only with a real model.
-- Ledger quality gaps for Phase 10: some duplicates survive merging on the cheap model (28 repeated titles on the textbook), and 32 quotes don't match their page text exactly.
+- After Phase 10 about 3 % of the textbook's quotes still don't match their text (rewritten LaTeX, paraphrases, table titles); those items anchor to the start of their chunk.
 - Keyword search has an API but no screen yet; Ask with sources (Phase 4) is its first user.
 - A fallback model answering a chat is shown under the reply only while its model differs from the chat's own model.
 - `npm audit`: two low-severity advisories in a build-time dependency of the Svelte Vite plugin (deepmerge); nothing ships to users.

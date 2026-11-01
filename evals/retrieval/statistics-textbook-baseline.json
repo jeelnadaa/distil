@@ -1,0 +1,25 @@
+{
+  "name": "statistics-textbook-baseline",
+  "measuredAt": "2026-11-01",
+  "items": 996,
+  "byTitle": {
+    "hitAt": {
+      "1": 0.4468,
+      "3": 0.6034,
+      "6": 0.6717,
+      "20": 0.746
+    },
+    "mrr": 0.5372,
+    "noResults": 0
+  },
+  "byTitleAndStatement": {
+    "hitAt": {
+      "1": 0.744,
+      "3": 0.8574,
+      "6": 0.8906,
+      "20": 0.9277
+    },
+    "mrr": 0.8082,
+    "noResults": 0
+  }
+}

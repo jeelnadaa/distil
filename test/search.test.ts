@@ -43,6 +43,14 @@ describe("keyword search", () => {
     expect(hits[0]!.snippet).toContain(`${HIT_START}standard${HIT_END}`);
   });
 
+  it("fills up with chunks holding any word when too few hold them all", () => {
+    const { search, folder } = setup();
+    const hits = search.search(folder.id, "mean arithmetic");
+    expect(hits[0]!.loc).toBe(1);
+    expect(hits).toHaveLength(2);
+    expect(search.search(folder.id, "mean arithmetic", 1)).toHaveLength(1);
+  });
+
   it("stems words and falls back to any word when no chunk has them all", () => {
     const { search, folder } = setup();
     expect(search.search(folder.id, "averages").map((h) => h.loc)).toEqual([1]);

@@ -57,6 +57,7 @@ export function createServer({ port, dataDir = defaultDataDir(), fetch, restart,
   const materials = createMaterials(db, join(dataDir, "materials"));
   const jobs = createJobs(db, { log });
   const ledger = createLedger(db);
+  ledger.tidyOnce();
   const usage = createUsage(db);
   const secrets = createSecrets(join(dataDir, "secrets.json"));
   const providers = createProviders(settings, secrets);

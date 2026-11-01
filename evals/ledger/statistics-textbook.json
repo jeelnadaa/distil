@@ -1,0 +1,36 @@
+{
+  "name": "statistics-textbook",
+  "measuredAt": "2026-11-01",
+  "items": 944,
+  "anchors": 1037,
+  "byType": {
+    "fact": 339,
+    "diagram": 52,
+    "definition": 108,
+    "concept": 179,
+    "example": 151,
+    "procedure": 77,
+    "formula": 37,
+    "theorem": 1
+  },
+  "quotes": {
+    "total": 1037,
+    "empty": 1,
+    "strict": 955,
+    "full": 934,
+    "partial": 42,
+    "neighbour": 26,
+    "missing": 34,
+    "matchedStrict": 0.9218,
+    "matched": 0.9672,
+    "missesByKind": {
+      "pdf": 34
+    }
+  },
+  "duplicates": {
+    "repeatedTitles": 1,
+    "extraCopies": 1,
+    "exactGroups": 0,
+    "nearDuplicateGroups": 102
+  }
+}

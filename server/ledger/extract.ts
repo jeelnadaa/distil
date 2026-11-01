@@ -99,6 +99,7 @@ export function registerExtraction(jobs: Jobs, deps: LlmDeps & { materials: Mate
   const { materials, ledger } = deps;
 
   async function mergeFolder(llm: LlmDeps, folderId: string, slot: Slot, signal: AbortSignal) {
+    ledger.mergeExact(folderId);
     const groups = ledger.mergeCandidates(folderId);
     for (let i = 0; i < groups.length && !signal.aborted; i += MERGE_GROUPS_PER_CALL) {
       const batch = groups.slice(i, i + MERGE_GROUPS_PER_CALL);

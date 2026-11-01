@@ -40,13 +40,14 @@ export function createSearch(db: Db) {
     }[];
 
   return {
-    // Chunks holding every word first; when none do, chunks holding any of them.
+    // Chunks holding every word first; when too few do, chunks holding any of them fill the rest.
     search(folderId: string, query: string, limit = 20): SearchHit[] {
       const terms = ftsTerms(query);
       if (!terms.length) return [];
       const rows = run(terms.join(" "), folderId, limit);
-      const hits = rows.length || terms.length === 1 ? rows : run(terms.join(" OR "), folderId, limit);
-      return hits.map((r) => {
+      const seen = new Set(rows.map((r) => r.id));
+      const more = rows.length < limit && terms.length > 1 ? run(terms.join(" OR "), folderId, limit).filter((r) => !seen.has(r.id)) : [];
+      return [...rows, ...more].slice(0, limit).map((r) => {
         const word = r.snippet.split(HIT_START)[1]?.split(HIT_END)[0] ?? "";
         const offset = word ? r.text.toLowerCase().indexOf(word.toLowerCase()) : -1;
         return {

@@ -165,7 +165,7 @@ describe("extraction", () => {
 
   it("merges duplicates across materials, keeping every source", async () => {
     const t = setup({
-      extract: (_req, prompt) => json({ items: [item(prompt.includes("slides.md") ? "The Nyquist rate" : "Nyquist rate", "Twice the highest frequency.", "Nyquist rate")] }),
+      extract: (_req, prompt) => json({ items: [item(prompt.includes("slides.md") ? "Nyquist rate rule" : "Nyquist rate", "Twice the highest frequency.", "Nyquist rate")] }),
       merge: (_req, prompt) => {
         const ids = [...prompt.matchAll(/^(i\d+) /gm)].map((m) => m[1]!);
         return json({ merges: ids.length > 1 ? [{ keep: ids[0], drop: ids.slice(1), title: "Nyquist rate", statement: "Sample at twice the top frequency." }] : [] });
